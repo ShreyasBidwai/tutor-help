@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}{{ batch.name }} - Attendance Report{% endblock %}
+
+{% block header_title %}{{ batch.name }} Report{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Last 7 Days</h2>
+        <a href="{{ url_for('reports') }}" style="font-size: 0.875rem; color: #4F46E5; text-decoration: none;">← Back</a>
+    </div>
+    <p style="color: #666; font-size: 0.875rem;">
+        Detailed attendance for each student in this batch
+    </p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title" style="font-size: 1rem;">Filter View</h3>
+    </div>
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <button onclick="showAll()" class="btn btn-secondary btn-sm filter-btn active" data-filter="all">
+            All Students
+        </button>
+        <button onclick="showAbsent()" class="btn btn-secondary btn-sm filter-btn" data-filter="absent">
+            Absent Students
+        </button>
+        <button onclick="showPresent()" class="btn btn-secondary btn-sm filter-btn" data-filter="present">
+            High Attendance (≥80%)
+        </button>
+    </div>
+</div>
+
+{% if student_reports %}
+    {% for student in student_reports %}
+    <div class="card student-card" 
+         data-has-absent="{{ 'true' if student.has_been_absent else 'false' }}"
+         data-high-attendance="{{ 'true' if student.is_high_attendance else 'false' }}">
+        <div class="card-header">
+            <h3 class="card-title" style="font-size: 1rem;">{{ student.student_name }}</h3>
+            <div style="text-align: right;">
+                <div style="font-size: 1.1rem; font-weight: 700; color: {% if student.attendance_percentage >= 80 %}#10B981{% elif student.attendance_percentage >= 60 %}#F59E0B{% else %}#EF4444{% endif %};">
+                    {{ student.attendance_percentage }}%
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 1rem; font-size: 0.875rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span>📱 {{ student.student_phone }}</span>
+            </div>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <span>✓ Present: {{ student.present_count }}</span>
+                <span>⏰ Late: {{ student.late_count }}</span>
+                <span>✗ Absent: {{ student.absent_count }}</span>
+                {% if student.na_count > 0 %}
+                <span style="color: #999;">N/A: {{ student.na_count }}</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div style="overflow-x: auto;">
+            <div style="display: flex; gap: 0.5rem; min-width: fit-content;">
+                {% for date_str in date_range %}
+                {% set status = student.attendance_by_date[date_str] %}
+                {% set day_name = date_str.split('-')[2] %}
+                <div style="min-width: 50px; text-align: center;">
+                    <div style="font-size: 0.75rem; color: #666; margin-bottom: 0.25rem;">
+                        {{ date_str.split('-')[2] }}/{{ date_str.split('-')[1] }}
+                    </div>
+                    <div style="width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin: 0 auto;"
+                         class="{% if status == 1 %}status-present{% elif status == 2 %}status-late{% elif status == 0 %}status-absent{% else %}status-na{% endif %}">
+                        {% if status == 1 %}
+                        ✓
+                        {% elif status == 2 %}
+                        ⏰
+                        {% elif status == 0 %}
+                        ✗
+                        {% else %}
+                        —
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">👥</div>
+        <h3>No students in this batch</h3>
+        <p>Add students to this batch to see attendance reports</p>
+        <a href="{{ url_for('add_student') }}" class="btn btn-primary mt-2">
+            Add Student
+        </a>
+    </div>
+{% endif %}
+
+<style>
+.status-present {
+    background: #D1FAE5;
+    color: #065F46;
+}
+
+.status-late {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.status-absent {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+.status-na {
+    background: #F3F4F6;
+    color: #6B7280;
+}
+
+.filter-btn.active {
+    background: #4F46E5;
+    color: white;
+}
+
+.student-card {
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.student-card.hidden {
+    display: none;
+}
+</style>
+
+<script>
+function showAll() {
+    document.querySelectorAll('.student-card').forEach(card => {
+        card.classList.remove('hidden');
+    });
+    updateFilterButtons('all');
+}
+
+function showAbsent() {
+    document.querySelectorAll('.student-card').forEach(card => {
+        const hasAbsent = card.getAttribute('data-has-absent') === 'true';
+        if (hasAbsent) {
+            card.classList.remove('hidden');
+        } else {
+            card.classList.add('hidden');
+        }
+    });
+    updateFilterButtons('absent');
+}
+
+function showPresent() {
+    document.querySelectorAll('.student-card').forEach(card => {
+        const highAttendance = card.getAttribute('data-high-attendance') === 'true';
+        if (highAttendance) {
+            card.classList.remove('hidden');
+        } else {
+            card.classList.add('hidden');
+        }
+    });
+    updateFilterButtons('present');
+}
+
+function updateFilterButtons(activeFilter) {
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        if (btn.getAttribute('data-filter') === activeFilter) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+}
+</script>
+{% endblock %}
+

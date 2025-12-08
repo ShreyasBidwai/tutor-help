@@ -30,6 +30,69 @@
             >{{ batch.description or '' }}</textarea>
         </div>
         
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label class="form-label" for="start_time">Start Time</label>
+                <input 
+                    type="time" 
+                    id="start_time" 
+                    name="start_time" 
+                    class="form-input"
+                    value="{{ batch.start_time or '' }}"
+                >
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="end_time">End Time</label>
+                <input 
+                    type="time" 
+                    id="end_time" 
+                    name="end_time" 
+                    class="form-input"
+                    value="{{ batch.end_time or '' }}"
+                >
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                <label class="form-label" style="margin-bottom: 0;">Class Days</label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" id="daily" name="daily" onchange="toggleAllDays()" {% if batch_days|length == 7 %}checked{% endif %}>
+                    <span style="font-weight: 600;">Daily</span>
+                </label>
+            </div>
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                <label style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem; cursor: pointer; padding: 0.35rem 0.25rem; background: #f5f5f5; border-radius: 6px; flex: 1; min-width: 0;">
+                    <span style="font-weight: 500; font-size: 0.85rem;">Mo</span>
+                    <input type="checkbox" id="day_mo" name="day_mo" class="day-checkbox" {% if 'mo' in batch_days %}checked{% endif %} style="width: 18px; height: 18px; margin: 0;">
+                </label>
+                <label style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem; cursor: pointer; padding: 0.35rem 0.25rem; background: #f5f5f5; border-radius: 6px; flex: 1; min-width: 0;">
+                    <span style="font-weight: 500; font-size: 0.85rem;">Tu</span>
+                    <input type="checkbox" id="day_tu" name="day_tu" class="day-checkbox" {% if 'tu' in batch_days %}checked{% endif %} style="width: 18px; height: 18px; margin: 0;">
+                </label>
+                <label style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem; cursor: pointer; padding: 0.35rem 0.25rem; background: #f5f5f5; border-radius: 6px; flex: 1; min-width: 0;">
+                    <span style="font-weight: 500; font-size: 0.85rem;">We</span>
+                    <input type="checkbox" id="day_we" name="day_we" class="day-checkbox" {% if 'we' in batch_days %}checked{% endif %} style="width: 18px; height: 18px; margin: 0;">
+                </label>
+                <label style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem; cursor: pointer; padding: 0.35rem 0.25rem; background: #f5f5f5; border-radius: 6px; flex: 1; min-width: 0;">
+                    <span style="font-weight: 500; font-size: 0.85rem;">Th</span>
+                    <input type="checkbox" id="day_th" name="day_th" class="day-checkbox" {% if 'th' in batch_days %}checked{% endif %} style="width: 18px; height: 18px; margin: 0;">
+                </label>
+                <label style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem; cursor: pointer; padding: 0.35rem 0.25rem; background: #f5f5f5; border-radius: 6px; flex: 1; min-width: 0;">
+                    <span style="font-weight: 500; font-size: 0.85rem;">Fr</span>
+                    <input type="checkbox" id="day_fr" name="day_fr" class="day-checkbox" {% if 'fr' in batch_days %}checked{% endif %} style="width: 18px; height: 18px; margin: 0;">
+                </label>
+                <label style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem; cursor: pointer; padding: 0.35rem 0.25rem; background: #f5f5f5; border-radius: 6px; flex: 1; min-width: 0;">
+                    <span style="font-weight: 500; font-size: 0.85rem;">Sa</span>
+                    <input type="checkbox" id="day_sa" name="day_sa" class="day-checkbox" {% if 'sa' in batch_days %}checked{% endif %} style="width: 18px; height: 18px; margin: 0;">
+                </label>
+                <label style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem; cursor: pointer; padding: 0.35rem 0.25rem; background: #f5f5f5; border-radius: 6px; flex: 1; min-width: 0;">
+                    <span style="font-weight: 500; font-size: 0.85rem;">Su</span>
+                    <input type="checkbox" id="day_su" name="day_su" class="day-checkbox" {% if 'su' in batch_days %}checked{% endif %} style="width: 18px; height: 18px; margin: 0;">
+                </label>
+            </div>
+        </div>
+        
         <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
             <a href="{{ url_for('batches') }}" class="btn btn-secondary" style="flex: 1;">
                 Cancel
@@ -40,5 +103,23 @@
         </div>
     </form>
 </div>
-{% endblock %}
 
+<script>
+function toggleAllDays() {
+    const dailyCheckbox = document.getElementById('daily');
+    const dayCheckboxes = document.querySelectorAll('.day-checkbox');
+    
+    dayCheckboxes.forEach(checkbox => {
+        checkbox.checked = dailyCheckbox.checked;
+    });
+}
+
+// Uncheck "Daily" if any individual day is unchecked
+document.querySelectorAll('.day-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        const allChecked = Array.from(document.querySelectorAll('.day-checkbox')).every(cb => cb.checked);
+        document.getElementById('daily').checked = allChecked;
+    });
+});
+</script>
+{% endblock %}

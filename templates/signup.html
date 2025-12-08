@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - Tutor Help{% endblock %}
+
+{% block content %}
+<div style="max-width: 450px; margin: 3rem auto; padding: 1rem;">
+    <div class="card" style="box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        <div style="margin-bottom: 1rem;">
+            <a href="{{ url_for('login') }}" style="color: #666; text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                <span>←</span> Back to Login
+            </a>
+        </div>
+        
+        <div class="text-center mb-3">
+            <div style="font-size: 3rem; margin-bottom: 0.5rem;">🎓</div>
+            <h1 style="font-size: 1.75rem; margin-bottom: 0.5rem; color: #4F46E5; font-weight: 700;">Create Account</h1>
+            <p style="color: #666; margin-bottom: 0.5rem;">Let's set up your tutoring business</p>
+            <p style="color: #999; font-size: 0.875rem;">Mobile: {{ mobile }}</p>
+        </div>
+        
+        {% if error %}
+        <div class="alert alert-error" style="margin-bottom: 1.5rem;">
+            {{ error }}
+        </div>
+        {% endif %}
+        
+        <form method="POST" action="{{ url_for('signup') }}">
+            <div class="form-group">
+                <label class="form-label" for="tuition_name">Tuition Name *</label>
+                <input 
+                    type="text" 
+                    id="tuition_name" 
+                    name="tuition_name" 
+                    class="form-input" 
+                    placeholder="e.g., ABC Coaching Classes, XYZ Tuition"
+                    required
+                    autofocus
+                    maxlength="100"
+                >
+                <p style="font-size: 0.75rem; color: #666; margin-top: 0.5rem;">
+                    This name will be displayed at the top of all pages
+                </p>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem;">
+                Complete Sign Up
+            </button>
+        </form>
+        
+        <p style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem; color: #999;">
+            By signing up, you agree to our terms and conditions
+        </p>
+    </div>
+</div>
+{% endblock %}
+

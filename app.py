@@ -1,5 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_from_directory
-from datetime import datetime, date
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_from_directory, flash
+from datetime import datetime, date, timedelta
 import sqlite3
 import os
 import secrets
@@ -43,6 +43,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             mobile TEXT UNIQUE NOT NULL,
+            tuition_name TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -53,6 +54,9 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             description TEXT,
+            start_time TEXT,
+            end_time TEXT,
+            days TEXT,
             user_id INTEGER NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users (id)
@@ -161,6 +165,16 @@ def migrate_db():
         except sqlite3.OperationalError:
             pass
     
+    # Migrate users table: add tuition_name column
+    cursor.execute("PRAGMA table_info(users)")
+    user_columns = [row[1] for row in cursor.fetchall()]
+    
+    if 'tuition_name' not in user_columns:
+        try:
+            cursor.execute('ALTER TABLE users ADD COLUMN tuition_name TEXT')
+        except sqlite3.OperationalError:
+            pass
+    
     # Migrate homework table: update columns
     cursor.execute("PRAGMA table_info(homework)")
     homework_columns = [row[1] for row in cursor.fetchall()]
@@ -201,10 +215,21 @@ else:
     migrate_db()
 
 def require_login(f):
-    """Decorator to require login"""
+    """Decorator to require login and load user data"""
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
             return redirect(url_for('login'))
+        
+        # Load tuition_name into session if not already there
+        if 'tuition_name' not in session:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute('SELECT tuition_name FROM users WHERE id = ?', (session['user_id'],))
+            user = cursor.fetchone()
+            if user and user['tuition_name']:
+                session['tuition_name'] = user['tuition_name']
+            conn.close()
+        
         return f(*args, **kwargs)
     decorated_function.__name__ = f.__name__
     return decorated_function
@@ -212,47 +237,124 @@ def require_login(f):
 # Authentication Routes
 @app.route('/')
 def index():
-    """Redirect to login or dashboard"""
+    """Welcome page"""
     if 'user_id' in session:
         return redirect(url_for('dashboard'))
-    return redirect(url_for('login'))
+    return redirect(url_for('welcome'))
+
+@app.route('/welcome')
+def welcome():
+    """Welcome page with tutor/student selection"""
+    if 'user_id' in session:
+        return redirect(url_for('dashboard'))
+    return render_template('welcome.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    """OTP-based login simulation"""
+    """OTP-based login for tutors"""
+    if 'user_id' in session:
+        return redirect(url_for('dashboard'))
+    
     if request.method == 'POST':
+        action = request.form.get('action', 'login')  # 'login' or 'signup'
         mobile = request.form.get('mobile', '').strip()
-        if mobile and len(mobile) == 10 and mobile.isdigit():
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            
-            # Check if user exists, if not create
-            cursor.execute('SELECT id FROM users WHERE mobile = ?', (mobile,))
-            user = cursor.fetchone()
-            
+        
+        if not mobile or len(mobile) != 10 or not mobile.isdigit():
+            return render_template('login.html', error='Please enter a valid 10-digit mobile number', active_tab=action)
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if user exists
+        cursor.execute('SELECT id, tuition_name FROM users WHERE mobile = ?', (mobile,))
+        user = cursor.fetchone()
+        
+        if action == 'login':
+            # Login flow
             if not user:
-                cursor.execute('INSERT INTO users (mobile) VALUES (?)', (mobile,))
-                conn.commit()
-                user_id = cursor.lastrowid
-            else:
-                user_id = user['id']
+                conn.close()
+                return render_template('login.html', error='Mobile number not found. Please sign up first.', active_tab='login')
             
-            conn.close()
+            user_id = user['id']
+            tuition_name = user['tuition_name']
             
             # Simulate OTP verification (auto-login)
             session['user_id'] = user_id
             session['mobile'] = mobile
+            if tuition_name:
+                session['tuition_name'] = tuition_name
+            
+            conn.close()
             return redirect(url_for('dashboard'))
-        else:
-            return render_template('login.html', error='Please enter a valid 10-digit mobile number')
+        
+        else:  # signup
+            # Signup flow - check if already exists
+            if user:
+                conn.close()
+                return render_template('login.html', error='Mobile number already registered. Please login instead.', active_tab='signup')
+            
+            # For signup, redirect to signup page to get tuition name
+            session['signup_mobile'] = mobile
+            conn.close()
+            return redirect(url_for('signup'))
     
-    return render_template('login.html')
+    return render_template('login.html', active_tab='login')
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    """Signup page - collect tuition name"""
+    if 'user_id' in session:
+        return redirect(url_for('dashboard'))
+    
+    if 'signup_mobile' not in session:
+        return redirect(url_for('login'))
+    
+    mobile = session['signup_mobile']
+    
+    if request.method == 'POST':
+        tuition_name = request.form.get('tuition_name', '').strip()
+        
+        if not tuition_name:
+            return render_template('signup.html', mobile=mobile, error='Please enter your tuition name')
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if mobile already exists (race condition check)
+        cursor.execute('SELECT id FROM users WHERE mobile = ?', (mobile,))
+        existing_user = cursor.fetchone()
+        
+        if existing_user:
+            conn.close()
+            session.pop('signup_mobile', None)
+            return render_template('login.html', error='Mobile number already registered. Please login instead.', active_tab='login')
+        
+        # Create new user
+        cursor.execute('INSERT INTO users (mobile, tuition_name) VALUES (?, ?)', (mobile, tuition_name))
+        conn.commit()
+        user_id = cursor.lastrowid
+        conn.close()
+        
+        # Clear signup session and set login session
+        session.pop('signup_mobile', None)
+        session['user_id'] = user_id
+        session['mobile'] = mobile
+        session['tuition_name'] = tuition_name
+        
+        return redirect(url_for('dashboard'))
+    
+    return render_template('signup.html', mobile=mobile)
+
+@app.route('/student/login')
+def student_login():
+    """Student login - Coming Soon"""
+    return render_template('student_login.html')
 
 @app.route('/logout')
 def logout():
     """Logout user"""
     session.clear()
-    return redirect(url_for('login'))
+    return redirect(url_for('welcome'))
 
 # Dashboard
 @app.route('/dashboard')
@@ -350,6 +452,50 @@ def batches():
     conn.close()
     return render_template('batches.html', batches=batches)
 
+@app.route('/batches/<int:batch_id>/students')
+@require_login
+def batch_students(batch_id):
+    """View students in a specific batch"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Get batch details
+    cursor.execute('SELECT * FROM batches WHERE id = ? AND user_id = ?', (batch_id, session['user_id']))
+    batch = cursor.fetchone()
+    
+    if not batch:
+        conn.close()
+        flash('Batch not found', 'error')
+        return redirect(url_for('batches'))
+    
+    # Get search query
+    search_query = request.args.get('search', '').strip()
+    
+    # Build query for students in this batch
+    query = '''
+        SELECT s.*, b.name as batch_name 
+        FROM students s 
+        LEFT JOIN batches b ON s.batch_id = b.id 
+        WHERE s.user_id = ? AND s.batch_id = ?
+    '''
+    params = [session['user_id'], batch_id]
+    
+    if search_query:
+        query += ' AND (s.name LIKE ? OR s.phone LIKE ?)'
+        search_pattern = f'%{search_query}%'
+        params.extend([search_pattern, search_pattern])
+    
+    query += ' ORDER BY s.name'
+    
+    cursor.execute(query, params)
+    students = cursor.fetchall()
+    
+    conn.close()
+    return render_template('batch_students.html', 
+                         batch=batch,
+                         students=students,
+                         search_query=search_query)
+
 @app.route('/batches/add', methods=['GET', 'POST'])
 @require_login
 def add_batch():
@@ -357,12 +503,24 @@ def add_batch():
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
         description = request.form.get('description', '').strip()
+        start_time = request.form.get('start_time', '').strip()
+        end_time = request.form.get('end_time', '').strip()
+        
+        # Get selected days
+        days_list = []
+        day_names = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su']
+        for day in day_names:
+            if request.form.get(f'day_{day}') == 'on':
+                days_list.append(day)
+        days = ','.join(days_list) if days_list else ''
         
         if name:
             conn = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute('INSERT INTO batches (name, description, user_id) VALUES (?, ?, ?)',
-                         (name, description, session['user_id']))
+            cursor.execute('''
+                INSERT INTO batches (name, description, start_time, end_time, days, user_id) 
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (name, description, start_time, end_time, days, session['user_id']))
             conn.commit()
             conn.close()
             return redirect(url_for('batches'))
@@ -379,13 +537,23 @@ def edit_batch(batch_id):
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
         description = request.form.get('description', '').strip()
+        start_time = request.form.get('start_time', '').strip()
+        end_time = request.form.get('end_time', '').strip()
+        
+        # Get selected days
+        days_list = []
+        day_names = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su']
+        for day in day_names:
+            if request.form.get(f'day_{day}') == 'on':
+                days_list.append(day)
+        days = ','.join(days_list) if days_list else ''
         
         if name:
             cursor.execute('''
                 UPDATE batches 
-                SET name = ?, description = ? 
+                SET name = ?, description = ?, start_time = ?, end_time = ?, days = ?
                 WHERE id = ? AND user_id = ?
-            ''', (name, description, batch_id, session['user_id']))
+            ''', (name, description, start_time, end_time, days, batch_id, session['user_id']))
             conn.commit()
             conn.close()
             return redirect(url_for('batches'))
@@ -398,8 +566,11 @@ def edit_batch(batch_id):
         conn.close()
         return redirect(url_for('batches'))
     
+    # Parse days string to list for template
+    batch_days = batch['days'].split(',') if batch['days'] else []
+    
     conn.close()
-    return render_template('edit_batch.html', batch=batch)
+    return render_template('edit_batch.html', batch=batch, batch_days=batch_days)
 
 @app.route('/api/batches/<int:batch_id>', methods=['DELETE'])
 @require_login
@@ -640,23 +811,6 @@ def attendance():
             students_by_batch[batch_name] = []
         students_by_batch[batch_name].append(student)
     
-    # Get attendance history (last 7 days)
-    # Use COALESCE to handle both 'present' and 'status' columns during migration
-    # status: 0=absent, 1=present, 2=late
-    # Count distinct students per date to avoid duplicates
-    cursor.execute('''
-        SELECT 
-            date,
-            COUNT(DISTINCT student_id) as total,
-            COUNT(DISTINCT CASE WHEN COALESCE(status, present, 0) = 1 THEN student_id END) as present_count,
-            COUNT(DISTINCT CASE WHEN COALESCE(status, 0) = 2 THEN student_id END) as late_count
-        FROM attendance
-        WHERE user_id = ? AND date >= date('now', '-7 days')
-        GROUP BY date
-        ORDER BY date DESC
-    ''', (session['user_id'],))
-    history = cursor.fetchall()
-    
     # Get all batches for filter dropdown
     cursor.execute('SELECT * FROM batches WHERE user_id = ? ORDER BY name', (session['user_id'],))
     batches = cursor.fetchall()
@@ -668,7 +822,6 @@ def attendance():
                          students=students,  # Keep for backward compatibility
                          selected_date=selected_date,
                          today=date.today().isoformat(),
-                         history=history,
                          batches=batches,
                          batch_filter=batch_filter)
 
@@ -915,6 +1068,227 @@ def delete_homework(homework_id):
 def payments_locked():
     """Locked payment management system"""
     return render_template('payments_locked.html')
+
+# Attendance Reports
+@app.route('/reports')
+@require_login
+def reports():
+    """Attendance summary report for all batches (last 7 days)"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    user_id = session['user_id']
+    today = date.today()
+    
+    # Calculate date range (last 7 days including today)
+    date_range = []
+    for i in range(6, -1, -1):  # 6 days ago to today
+        d = today - timedelta(days=i)
+        date_range.append(d.isoformat())
+    
+    # Get all batches
+    cursor.execute('SELECT * FROM batches WHERE user_id = ? ORDER BY name', (user_id,))
+    batches = cursor.fetchall()
+    
+    batch_reports = []
+    for batch in batches:
+        batch_id = batch['id']
+        
+        # Get all students in this batch
+        cursor.execute('SELECT id FROM students WHERE batch_id = ? AND user_id = ?', (batch_id, user_id))
+        students = cursor.fetchall()
+        student_ids = [s['id'] for s in students]
+        
+        if not student_ids:
+            continue
+        
+        # Calculate attendance for last 7 days
+        # Total expected sessions = number of students * 7 days
+        total_expected = len(student_ids) * 7
+        
+        # Get actual attendance records for these students in the date range
+        # Initialize to 0 to prevent None errors
+        total_sessions = 0
+        attended_sessions = 0
+        
+        if student_ids:
+            placeholders = ','.join(['?'] * len(student_ids))
+            date_placeholders = ','.join(['?'] * len(date_range))
+            
+            # Check if 'present' column exists in attendance table
+            cursor.execute("PRAGMA table_info(attendance)")
+            columns = [row[1] for row in cursor.fetchall()]
+            has_present_column = 'present' in columns
+            has_status_column = 'status' in columns
+            
+            # Build query based on available columns
+            if has_status_column:
+                # Use status column (new schema)
+                query = f'''
+                    SELECT 
+                        COUNT(*) as total_sessions,
+                        COALESCE(SUM(CASE WHEN status IN (1, 2) THEN 1 ELSE 0 END), 0) as attended_sessions
+                    FROM attendance
+                    WHERE student_id IN ({placeholders})
+                    AND user_id = ?
+                    AND date IN ({date_placeholders})
+                '''
+            elif has_present_column:
+                # Use present column (old schema)
+                query = f'''
+                    SELECT 
+                        COUNT(*) as total_sessions,
+                        COALESCE(SUM(CASE WHEN present = 1 THEN 1 ELSE 0 END), 0) as attended_sessions
+                    FROM attendance
+                    WHERE student_id IN ({placeholders})
+                    AND user_id = ?
+                    AND date IN ({date_placeholders})
+                '''
+            else:
+                # No attendance table structure - use defaults (already 0)
+                query = None
+            
+            if query:
+                params = student_ids + [user_id] + date_range
+                cursor.execute(query, params)
+                result = cursor.fetchone()
+                if result:
+                    total_sessions = result['total_sessions'] if result['total_sessions'] is not None else 0
+                    attended_sessions = result['attended_sessions'] if result['attended_sessions'] is not None else 0
+        
+        # Calculate attendance percentage
+        if total_expected > 0:
+            attendance_percentage = round((attended_sessions / total_expected) * 100)
+            attendance_percentage = min(attendance_percentage, 100)
+        else:
+            attendance_percentage = 0
+        
+        batch_reports.append({
+            'batch_id': batch_id,
+            'batch_name': batch['name'],
+            'student_count': len(student_ids),
+            'total_expected': total_expected,
+            'attended_sessions': attended_sessions,
+            'attendance_percentage': attendance_percentage
+        })
+    
+    conn.close()
+    
+    return render_template('reports.html', 
+                         batch_reports=batch_reports,
+                         date_range=date_range)
+
+@app.route('/reports/batch/<int:batch_id>')
+@require_login
+def batch_report_detail(batch_id):
+    """Detailed attendance report for a specific batch (last 7 days)"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    user_id = session['user_id']
+    today = date.today()
+    
+    # Verify batch belongs to user
+    cursor.execute('SELECT * FROM batches WHERE id = ? AND user_id = ?', (batch_id, user_id))
+    batch = cursor.fetchone()
+    
+    if not batch:
+        conn.close()
+        return redirect(url_for('reports'))
+    
+    # Calculate date range (last 7 days including today)
+    date_range = []
+    for i in range(6, -1, -1):  # 6 days ago to today
+        d = today - timedelta(days=i)
+        date_range.append(d.isoformat())
+    
+    # Get all students in this batch
+    cursor.execute('''
+        SELECT s.* 
+        FROM students s
+        WHERE s.batch_id = ? AND s.user_id = ?
+        ORDER BY s.name
+    ''', (batch_id, user_id))
+    students = cursor.fetchall()
+    
+    student_reports = []
+    for student in students:
+        student_id = student['id']
+        
+        # Get attendance for each day in the date range
+        # Check which columns exist
+        cursor.execute("PRAGMA table_info(attendance)")
+        columns = [row[1] for row in cursor.fetchall()]
+        has_present_column = 'present' in columns
+        has_status_column = 'status' in columns
+        
+        attendance_by_date = {}
+        for date_str in date_range:
+            if has_status_column:
+                # Use status column
+                cursor.execute('''
+                    SELECT status
+                    FROM attendance
+                    WHERE student_id = ? AND date = ? AND user_id = ?
+                ''', (student_id, date_str, user_id))
+            elif has_present_column:
+                # Use present column and convert to status format
+                cursor.execute('''
+                    SELECT present
+                    FROM attendance
+                    WHERE student_id = ? AND date = ? AND user_id = ?
+                ''', (student_id, date_str, user_id))
+            else:
+                # No attendance table structure
+                result = None
+            
+            result = cursor.fetchone()
+            if result:
+                if has_status_column:
+                    attendance_by_date[date_str] = result['status'] if result['status'] is not None else -1
+                else:
+                    # Convert present (0/1) to status format (0=absent, 1=present, -1=no record)
+                    attendance_by_date[date_str] = result['present'] if result['present'] is not None else -1
+            else:
+                attendance_by_date[date_str] = -1  # -1 means no record
+        
+        # Calculate student statistics
+        total_days = len(date_range)
+        present_count = sum(1 for status in attendance_by_date.values() if status == 1)
+        late_count = sum(1 for status in attendance_by_date.values() if status == 2)
+        absent_count = sum(1 for status in attendance_by_date.values() if status == 0)
+        na_count = sum(1 for status in attendance_by_date.values() if status == -1)
+        attended_count = present_count + late_count
+        
+        # Calculate attendance percentage (only for days with records)
+        days_with_records = total_days - na_count
+        if days_with_records > 0:
+            attendance_percentage = round((attended_count / days_with_records) * 100)
+        else:
+            attendance_percentage = 0
+        
+        student_reports.append({
+            'student_id': student_id,
+            'student_name': student['name'],
+            'student_phone': student['phone'],
+            'attendance_by_date': attendance_by_date,
+            'total_days': total_days,
+            'present_count': present_count,
+            'late_count': late_count,
+            'absent_count': absent_count,
+            'na_count': na_count,
+            'attended_count': attended_count,
+            'attendance_percentage': attendance_percentage,
+            'has_been_absent': absent_count > 0,
+            'is_high_attendance': attendance_percentage >= 80
+        })
+    
+    conn.close()
+    
+    return render_template('batch_report_detail.html',
+                         batch=batch,
+                         student_reports=student_reports,
+                         date_range=date_range)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

@@ -9,6 +9,11 @@
     <div class="card-header">
         <h2 class="card-title">Mark Attendance</h2>
     </div>
+    <div style="margin-bottom: 1rem;">
+        <a href="{{ url_for('reports') }}" class="btn btn-primary btn-block">
+            📊 View Attendance Reports
+        </a>
+    </div>
     <div class="form-group">
         <label class="form-label" for="date-select">Select Date</label>
         <input 
@@ -46,25 +51,6 @@
     {% endif %}
 </div>
 
-{% if history %}
-<div class="card">
-    <div class="card-header">
-        <h3 class="card-title" style="font-size: 1rem;">Last 7 Days</h3>
-    </div>
-    {% for day in history %}
-    <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f0f0f0;">
-        <span style="color: #666;">{{ day.date }}</span>
-        <span style="font-weight: 600;">
-            {% set total_attended = (day.present_count or 0) + (day.late_count or 0) %}
-            {{ total_attended }}/{{ day.total }}
-            {% if day.late_count and day.late_count > 0 %}
-            <span style="color: #F59E0B; margin-left: 0.5rem;">({{ day.late_count }} late)</span>
-            {% endif %}
-        </span>
-    </div>
-    {% endfor %}
-</div>
-{% endif %}
 
 {% if students_by_batch %}
     {% for batch_name, batch_students in students_by_batch.items() %}

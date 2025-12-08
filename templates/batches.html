@@ -13,14 +13,25 @@
 
 {% if batches %}
     {% for batch in batches %}
-    <div class="list-item">
-        <div class="list-item-content">
+    <div class="list-item" style="cursor: pointer;" onclick="window.location.href='{{ url_for('batch_students', batch_id=batch.id) }}'">
+        <div class="list-item-content" style="flex: 1;">
             <div class="list-item-title">{{ batch.name }}</div>
+            <div class="list-item-subtitle">
+                {% if batch.start_time and batch.end_time %}
+                🕐 {{ batch.start_time }} - {{ batch.end_time }}
+                {% endif %}
+                {% if batch.days %}
+                {% set day_codes = batch.days.split(',') if batch.days else [] %}
+                | 📅 {% for code in day_codes %}{% if code and code.strip() %}{% if code.strip() == 'mo' %}Mo{% elif code.strip() == 'tu' %}Tu{% elif code.strip() == 'we' %}We{% elif code.strip() == 'th' %}Th{% elif code.strip() == 'fr' %}Fr{% elif code.strip() == 'sa' %}Sa{% elif code.strip() == 'su' %}Su{% endif %}{% if not loop.last %}, {% endif %}{% endif %}{% endfor %}
+                {% endif %}
+            </div>
             {% if batch.description %}
-            <div class="list-item-subtitle">{{ batch.description }}</div>
+            <div class="list-item-subtitle" style="margin-top: 0.25rem; font-size: 0.8rem;">
+                {{ batch.description }}
+            </div>
             {% endif %}
         </div>
-        <div class="list-item-actions">
+        <div class="list-item-actions" onclick="event.stopPropagation();">
             <a href="{{ url_for('edit_batch', batch_id=batch.id) }}" class="btn btn-secondary btn-sm">
                 Edit
             </a>
@@ -65,4 +76,3 @@ async function deleteBatch(batchId) {
 }
 </script>
 {% endblock %}
-

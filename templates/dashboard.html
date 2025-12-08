@@ -21,12 +21,7 @@
     <a href="{{ url_for('attendance') }}" style="text-decoration: none; color: inherit;">
         <div class="stat-card">
             <div class="stat-number">{{ attendance_count }}/{{ student_count }}</div>
-            <div class="stat-label">Today's Attendance</div>
-            {% if student_count > 0 %}
-            <div style="font-size: 0.75rem; color: #666; margin-top: 0.25rem;">
-                {{ attendance_percentage }}%
-            </div>
-            {% endif %}
+            <div class="stat-label">Attendance</div>
         </div>
     </a>
 </div>

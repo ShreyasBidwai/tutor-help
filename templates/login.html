@@ -1,53 +1,140 @@
 {% extends "base.html" %}
 
-{% block title %}Login - Tutor Help{% endblock %}
+{% block title %}Tutor Login - Tutor Help{% endblock %}
 
 {% block content %}
-<div style="max-width: 400px; margin: 4rem auto; padding: 2rem;">
-    <div class="card">
-        <div class="text-center mb-2">
-            <h1 style="font-size: 1.75rem; margin-bottom: 0.5rem; color: #4F46E5;">Tutor Help</h1>
-            <p style="color: #666; margin-bottom: 2rem;">Manage your tutoring business</p>
+<div style="max-width: 450px; margin: 3rem auto; padding: 1rem;">
+    <div class="card" style="box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        <div style="margin-bottom: 1rem;">
+            <a href="{{ url_for('welcome') }}" style="color: #666; text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                <span>←</span> Back to Welcome
+            </a>
+        </div>
+        
+        <div class="text-center mb-3">
+            <div style="font-size: 3rem; margin-bottom: 0.5rem;">👨‍🏫</div>
+            <h1 style="font-size: 1.75rem; margin-bottom: 0.5rem; color: #4F46E5; font-weight: 700;">Tutor Portal</h1>
+            <p style="color: #666; margin-bottom: 0;">Manage your tutoring business</p>
+        </div>
+        
+        <!-- Tabs -->
+        <div style="display: flex; gap: 0.5rem; margin: 2rem 0 1.5rem 0; border-bottom: 2px solid #E5E7EB;">
+            <button 
+                onclick="switchTab('login')" 
+                id="tab-login"
+                style="flex: 1; padding: 0.75rem; border: none; background: none; font-size: 1rem; font-weight: 600; color: #4F46E5; border-bottom: 3px solid #4F46E5; cursor: pointer; transition: all 0.2s;"
+            >
+                Login
+            </button>
+            <button 
+                onclick="switchTab('signup')" 
+                id="tab-signup"
+                style="flex: 1; padding: 0.75rem; border: none; background: none; font-size: 1rem; font-weight: 600; color: #999; cursor: pointer; transition: all 0.2s;"
+            >
+                Sign Up
+            </button>
         </div>
         
         {% if error %}
-        <div class="alert alert-error">
+        <div class="alert alert-error" style="margin-bottom: 1.5rem;">
             {{ error }}
         </div>
         {% endif %}
         
-        <form method="POST" action="{{ url_for('login') }}">
-            <div class="form-group">
-                <label class="form-label" for="mobile">Mobile Number</label>
-                <input 
-                    type="tel" 
-                    id="mobile" 
-                    name="mobile" 
-                    class="form-input" 
-                    placeholder="Enter 10-digit mobile number"
-                    pattern="[0-9]{10}"
-                    maxlength="10"
-                    required
-                    autofocus
-                >
-            </div>
-            
-            <button type="submit" class="btn btn-primary btn-block">
-                Continue with OTP
-            </button>
-        </form>
+        <!-- Login Form -->
+        <div id="form-login">
+            <form method="POST" action="{{ url_for('login') }}">
+                <input type="hidden" name="action" value="login">
+                <div class="form-group">
+                    <label class="form-label" for="mobile-login">Mobile Number</label>
+                    <input 
+                        type="tel" 
+                        id="mobile-login" 
+                        name="mobile" 
+                        class="form-input" 
+                        placeholder="Enter 10-digit mobile number"
+                        pattern="[0-9]{10}"
+                        maxlength="10"
+                        required
+                        autofocus
+                    >
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem;">
+                    Continue with OTP
+                </button>
+            </form>
+        </div>
         
-        <p style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem; color: #666;">
+        <!-- Signup Form -->
+        <div id="form-signup" style="display: none;">
+            <form method="POST" action="{{ url_for('login') }}">
+                <input type="hidden" name="action" value="signup">
+                <div class="form-group">
+                    <label class="form-label" for="mobile-signup">Mobile Number</label>
+                    <input 
+                        type="tel" 
+                        id="mobile-signup" 
+                        name="mobile" 
+                        class="form-input" 
+                        placeholder="Enter 10-digit mobile number"
+                        pattern="[0-9]{10}"
+                        maxlength="10"
+                        required
+                    >
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem;">
+                    Continue to Sign Up
+                </button>
+            </form>
+        </div>
+        
+        <p style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem; color: #999;">
             By continuing, you agree to receive an OTP for verification
         </p>
     </div>
 </div>
 
 <script>
-    // Auto-format mobile number input
-    document.getElementById('mobile').addEventListener('input', function(e) {
+    // Initialize tab state
+    const activeTab = '{{ active_tab|default("login") }}';
+    if (activeTab === 'signup') {
+        switchTab('signup');
+    }
+    
+    function switchTab(tab) {
+        // Hide all forms
+        document.getElementById('form-login').style.display = 'none';
+        document.getElementById('form-signup').style.display = 'none';
+        
+        // Reset tab styles
+        document.getElementById('tab-login').style.color = '#999';
+        document.getElementById('tab-login').style.borderBottom = 'none';
+        document.getElementById('tab-signup').style.color = '#999';
+        document.getElementById('tab-signup').style.borderBottom = 'none';
+        
+        // Show selected form and update tab
+        if (tab === 'login') {
+            document.getElementById('form-login').style.display = 'block';
+            document.getElementById('tab-login').style.color = '#4F46E5';
+            document.getElementById('tab-login').style.borderBottom = '3px solid #4F46E5';
+            document.getElementById('mobile-login').focus();
+        } else {
+            document.getElementById('form-signup').style.display = 'block';
+            document.getElementById('tab-signup').style.color = '#4F46E5';
+            document.getElementById('tab-signup').style.borderBottom = '3px solid #4F46E5';
+            document.getElementById('mobile-signup').focus();
+        }
+    }
+    
+    // Auto-format mobile number inputs
+    document.getElementById('mobile-login').addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+    
+    document.getElementById('mobile-signup').addEventListener('input', function(e) {
         this.value = this.value.replace(/[^0-9]/g, '');
     });
 </script>
 {% endblock %}
-
