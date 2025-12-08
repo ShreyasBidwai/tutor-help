@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Payments - Tutor Help{% endblock %}
+
+{% block header_title %}Payment Management{% endblock %}
+
+{% block content %}
+<div class="locked-feature">
+    <div class="locked-icon">🔒</div>
+    <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: #333;">Upgrade to Pro</h2>
+    <p style="color: #666; margin-bottom: 1.5rem; line-height: 1.8;">
+        Unlock powerful payment management features to streamline your tutoring business
+    </p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Pro Features</h2>
+    </div>
+    
+    <div style="margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: start; margin-bottom: 1.5rem;">
+            <div style="font-size: 1.5rem; margin-right: 1rem;">💳</div>
+            <div>
+                <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Automated UPI Fee Collection</h3>
+                <p style="color: #666; font-size: 0.9rem;">
+                    Send payment requests directly to parents via UPI. Track payments automatically and generate digital receipts instantly.
+                </p>
+            </div>
+        </div>
+        
+        <div style="display: flex; align-items: start; margin-bottom: 1.5rem;">
+            <div style="font-size: 1.5rem; margin-right: 1rem;">📄</div>
+            <div>
+                <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Digital Receipts</h3>
+                <p style="color: #666; font-size: 0.9rem;">
+                    Automatically generate and share professional payment receipts via WhatsApp and email. Maintain a complete payment history.
+                </p>
+            </div>
+        </div>
+        
+        <div style="display: flex; align-items: start;">
+            <div style="font-size: 1.5rem; margin-right: 1rem;">📱</div>
+            <div>
+                <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Automated Reminders</h3>
+                <p style="color: #666; font-size: 0.9rem;">
+                    Set up automated SMS and WhatsApp reminders for fee payments, class schedules, and important announcements.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); color: white;">
+    <div style="text-align: center;">
+        <div style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">₹99</div>
+        <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 1.5rem;">per month</div>
+        <button class="btn upgrade-btn" style="background: white; color: #4F46E5; font-weight: 600;">
+            Upgrade to Pro
+        </button>
+        <p style="font-size: 0.8rem; margin-top: 1rem; opacity: 0.8;">
+            Cancel anytime • 7-day free trial
+        </p>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 1rem;">
+    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">What you'll get:</h3>
+    <ul style="list-style: none; padding: 0;">
+        <li style="padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">✓ Unlimited UPI payment requests</li>
+        <li style="padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">✓ Automated payment tracking</li>
+        <li style="padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">✓ Digital receipt generation</li>
+        <li style="padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">✓ SMS & WhatsApp reminders</li>
+        <li style="padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0;">✓ Payment history & reports</li>
+        <li style="padding: 0.5rem 0;">✓ Priority support</li>
+    </ul>
+</div>
+{% endblock %}
+

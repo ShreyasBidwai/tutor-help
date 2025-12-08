@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Tutor Help{% endblock %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 4rem auto; padding: 2rem;">
+    <div class="card">
+        <div class="text-center mb-2">
+            <h1 style="font-size: 1.75rem; margin-bottom: 0.5rem; color: #4F46E5;">Tutor Help</h1>
+            <p style="color: #666; margin-bottom: 2rem;">Manage your tutoring business</p>
+        </div>
+        
+        {% if error %}
+        <div class="alert alert-error">
+            {{ error }}
+        </div>
+        {% endif %}
+        
+        <form method="POST" action="{{ url_for('login') }}">
+            <div class="form-group">
+                <label class="form-label" for="mobile">Mobile Number</label>
+                <input 
+                    type="tel" 
+                    id="mobile" 
+                    name="mobile" 
+                    class="form-input" 
+                    placeholder="Enter 10-digit mobile number"
+                    pattern="[0-9]{10}"
+                    maxlength="10"
+                    required
+                    autofocus
+                >
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">
+                Continue with OTP
+            </button>
+        </form>
+        
+        <p style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem; color: #666;">
+            By continuing, you agree to receive an OTP for verification
+        </p>
+    </div>
+</div>
+
+<script>
+    // Auto-format mobile number input
+    document.getElementById('mobile').addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+</script>
+{% endblock %}
+

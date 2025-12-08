@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Share Homework - Tutor Help{% endblock %}
+
+{% block header_title %}Share Homework{% endblock %}
+
+{% block content %}
+<div class="card">
+    <form method="POST" action="{{ url_for('share_homework') }}" enctype="multipart/form-data">
+        <div class="form-group">
+            <label class="form-label" for="title">Homework Title *</label>
+            <input 
+                type="text" 
+                id="title" 
+                name="title" 
+                class="form-input" 
+                placeholder="e.g., Math Chapter 5 Exercises"
+                required
+                autofocus
+            >
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="content">Homework Details</label>
+            <textarea 
+                id="content" 
+                name="content" 
+                class="form-textarea" 
+                placeholder="Enter homework instructions, questions, or notes..."
+            ></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="file">Upload Document (Image/PDF) - Max 10MB</label>
+            <input 
+                type="file" 
+                id="file" 
+                name="file" 
+                class="form-input" 
+                accept=".png,.jpg,.jpeg,.gif,.pdf,.doc,.docx"
+                onchange="previewFile(this)"
+            >
+            <small style="display: block; margin-top: 0.5rem; color: #666; font-size: 0.875rem;">
+                Supported formats: PNG, JPG, GIF, PDF, DOC, DOCX
+            </small>
+            <div id="file-preview" style="margin-top: 0.5rem; display: none;">
+                <img id="preview-image" src="" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 0.5rem;">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="youtube_url">YouTube Video URL (Optional)</label>
+            <input 
+                type="url" 
+                id="youtube_url" 
+                name="youtube_url" 
+                class="form-input" 
+                placeholder="https://www.youtube.com/watch?v=..."
+            >
+            <small style="display: block; margin-top: 0.5rem; color: #666; font-size: 0.875rem;">
+                Paste a YouTube video link for reference
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="batch_id">Share with Batch (Optional)</label>
+            <select id="batch_id" name="batch_id" class="form-select">
+                <option value="">Select a batch (or leave blank)</option>
+                {% for batch in batches %}
+                <option value="{{ batch.id }}">{{ batch.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="student_id">Or Share with Specific Student (Optional)</label>
+            <select id="student_id" name="student_id" class="form-select">
+                <option value="">Select a student (or leave blank)</option>
+                {% for student in students %}
+                <option value="{{ student.id }}">{{ student.name }} ({{ student.phone }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+            <a href="{{ url_for('homework') }}" class="btn btn-secondary" style="flex: 1;">
+                Cancel
+            </a>
+            <button type="submit" class="btn btn-primary" style="flex: 1;">
+                Share Homework
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+function previewFile(input) {
+    const preview = document.getElementById('file-preview');
+    const previewImage = document.getElementById('preview-image');
+    
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const fileType = file.type.split('/')[0];
+        
+        if (fileType === 'image') {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            preview.style.display = 'none';
+        }
+    } else {
+        preview.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

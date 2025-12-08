@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}{{ student.name }} - Tutor Help{% endblock %}
+
+{% block header_title %}Student Details{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">{{ student.name }}</h2>
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="{{ url_for('edit_student', student_id=student.id) }}" class="btn btn-secondary btn-sm">
+                Edit
+            </a>
+            <a href="{{ url_for('students') }}" class="btn btn-secondary btn-sm">
+                Back
+            </a>
+        </div>
+    </div>
+    
+    <div style="margin-top: 1rem;">
+        <div style="margin-bottom: 1rem;">
+            <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📱 Phone</div>
+            <div style="font-weight: 600;">{{ student.phone }}</div>
+        </div>
+        
+        <div style="margin-bottom: 1rem;">
+            <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📚 Batch</div>
+            <div style="font-weight: 600;">{{ student.batch_name or 'No Batch' }}</div>
+        </div>
+        
+        {% if student.standard %}
+        <div style="margin-bottom: 1rem;">
+            <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">🎓 Standard/Class</div>
+            <div style="font-weight: 600;">{{ student.standard }}</div>
+        </div>
+        {% endif %}
+        
+        {% if student.school_name %}
+        <div style="margin-bottom: 1rem;">
+            <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">🏫 School</div>
+            <div style="font-weight: 600;">{{ student.school_name }}</div>
+        </div>
+        {% endif %}
+        
+        {% if student.address %}
+        <div style="margin-bottom: 1rem;">
+            <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📍 Address</div>
+            <div style="font-weight: 600;">{{ student.address }}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if attendance_stats and attendance_stats.total_days > 0 %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Attendance Summary</h2>
+    </div>
+    <div style="display: flex; justify-content: space-around; padding: 1rem 0; flex-wrap: wrap;">
+        <div style="text-align: center; margin: 0.5rem;">
+            <div style="font-size: 1.5rem; font-weight: 700; color: #4F46E5;">{{ attendance_stats.total_days }}</div>
+            <div style="font-size: 0.875rem; color: #666;">Total Days</div>
+        </div>
+        <div style="text-align: center; margin: 0.5rem;">
+            <div style="font-size: 1.5rem; font-weight: 700; color: #10B981;">{{ attendance_stats.present_days }}</div>
+            <div style="font-size: 0.875rem; color: #666;">Present</div>
+        </div>
+        {% if attendance_stats.late_days %}
+        <div style="text-align: center; margin: 0.5rem;">
+            <div style="font-size: 1.5rem; font-weight: 700; color: #F59E0B;">{{ attendance_stats.late_days }}</div>
+            <div style="font-size: 0.875rem; color: #666;">Late</div>
+        </div>
+        {% endif %}
+        <div style="text-align: center; margin: 0.5rem;">
+            <div style="font-size: 1.5rem; font-weight: 700; color: #EF4444;">{{ attendance_stats.total_days - attendance_stats.present_days - (attendance_stats.late_days or 0) }}</div>
+            <div style="font-size: 0.875rem; color: #666;">Absent</div>
+        </div>
+    </div>
+    {% if attendance_stats.total_days > 0 %}
+    <div style="text-align: center; margin-top: 1rem;">
+        <div style="font-size: 1.1rem; font-weight: 600;">
+            {{ ((attendance_stats.present_days / attendance_stats.total_days) * 100)|round|int }}% Present
+            {% if attendance_stats.late_days %}
+            | {{ ((attendance_stats.late_days / attendance_stats.total_days) * 100)|round|int }}% Late
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if recent_attendance %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Recent Attendance</h2>
+        <a href="{{ url_for('attendance') }}" style="font-size: 0.875rem; color: #4F46E5; text-decoration: none;">View All</a>
+    </div>
+    {% for record in recent_attendance %}
+    <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f0f0f0;">
+        <span style="color: #666;">{{ record.date }}</span>
+        {% if record.status == 1 %}
+        <span class="badge badge-success">Present</span>
+        {% elif record.status == 2 %}
+        <span class="badge" style="background: #FEF3C7; color: #92400E;">Late</span>
+        {% else %}
+        <span class="badge badge-danger">Absent</span>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Quick Actions</h2>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <a href="{{ url_for('attendance') }}?date={{ today }}" class="btn btn-primary">
+            Mark Attendance
+        </a>
+        <a href="tel:{{ student.phone }}" class="btn btn-secondary">
+            📞 Call Parent
+        </a>
+        <a href="https://wa.me/91{{ student.phone }}" target="_blank" class="btn btn-success">
+            💬 WhatsApp Parent
+        </a>
+    </div>
+</div>
+{% endblock %}
+

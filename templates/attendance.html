@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance - Tutor Help{% endblock %}
+
+{% block header_title %}Attendance{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Mark Attendance</h2>
+    </div>
+    <div class="form-group">
+        <label class="form-label" for="date-select">Select Date</label>
+        <input 
+            type="date" 
+            id="date-select" 
+            class="form-input" 
+            value="{{ selected_date }}"
+            onchange="changeDate(this.value)"
+        >
+    </div>
+    <div class="form-group">
+        <label class="form-label" for="batch-filter">Filter by Batch</label>
+        <select id="batch-filter" class="form-select" onchange="handleBatchFilter()">
+            <option value="">All Batches</option>
+            {% for batch in batches %}
+            <option value="{{ batch.id }}" {% if batch_filter == batch.id %}selected{% endif %}>
+                {{ batch.name }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    {% if selected_date != today %}
+    <div style="margin-top: 0.5rem;">
+        <a href="{{ url_for('attendance') }}" class="btn btn-secondary btn-sm">
+            View Today
+        </a>
+    </div>
+    {% endif %}
+    {% if batch_filter %}
+    <div style="margin-top: 0.5rem;">
+        <a href="{{ url_for('attendance') }}?date={{ selected_date }}" class="btn btn-secondary btn-sm">
+            Clear Batch Filter
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% if history %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title" style="font-size: 1rem;">Last 7 Days</h3>
+    </div>
+    {% for day in history %}
+    <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f0f0f0;">
+        <span style="color: #666;">{{ day.date }}</span>
+        <span style="font-weight: 600;">
+            {% set total_attended = (day.present_count or 0) + (day.late_count or 0) %}
+            {{ total_attended }}/{{ day.total }}
+            {% if day.late_count and day.late_count > 0 %}
+            <span style="color: #F59E0B; margin-left: 0.5rem;">({{ day.late_count }} late)</span>
+            {% endif %}
+        </span>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if students_by_batch %}
+    {% for batch_name, batch_students in students_by_batch.items() %}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title" style="font-size: 1rem;">📚 {{ batch_name }}</h3>
+            <span style="font-size: 0.875rem; color: #666;">{{ batch_students|length }} students</span>
+        </div>
+        {% for student in batch_students %}
+        <div class="list-item" style="margin-bottom: 0.75rem; border-bottom: 1px solid #f0f0f0; padding-bottom: 0.75rem;">
+            <div class="list-item-content" style="flex: 1;">
+                <div class="list-item-title">{{ student.name }}</div>
+            </div>
+            <div class="list-item-actions" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <label class="toggle-switch">
+                        <input 
+                            type="checkbox" 
+                            id="present-{{ student.id }}"
+                            {% if student.attendance_status == 1 %}checked{% endif %}
+                            onchange="updateAttendance({{ student.id }}, '{{ selected_date }}')"
+                        >
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span style="font-size: 0.875rem; color: #666; min-width: 60px;">Present</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input 
+                        type="checkbox" 
+                        id="late-{{ student.id }}"
+                        {% if student.attendance_status == 2 %}checked{% endif %}
+                        onchange="updateAttendance({{ student.id }}, '{{ selected_date }}')"
+                        style="width: 20px; height: 20px; cursor: pointer;"
+                    >
+                    <span style="font-size: 0.875rem; color: #666; min-width: 50px;">Late</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+{% elif students %}
+    {# Fallback for backward compatibility #}
+    {% for student in students %}
+    <div class="list-item">
+        <div class="list-item-content">
+            <div class="list-item-title">{{ student.name }}</div>
+            <div class="list-item-subtitle">{{ student.batch_name }}</div>
+        </div>
+        <div class="list-item-actions" style="display: flex; align-items: center; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <label class="toggle-switch">
+                    <input 
+                        type="checkbox" 
+                        id="present-{{ student.id }}"
+                        {% if student.attendance_status == 1 %}checked{% endif %}
+                        onchange="updateAttendance({{ student.id }}, '{{ selected_date }}')"
+                    >
+                    <span class="toggle-slider"></span>
+                </label>
+                <span style="font-size: 0.875rem; color: #666;">Present</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <input 
+                    type="checkbox" 
+                    id="late-{{ student.id }}"
+                    {% if student.attendance_status == 2 %}checked{% endif %}
+                    onchange="updateAttendance({{ student.id }}, '{{ selected_date }}')"
+                    style="width: 20px; height: 20px; cursor: pointer;"
+                >
+                <span style="font-size: 0.875rem; color: #666;">Late</span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">👥</div>
+        <h3>No students found</h3>
+        <p>Add students to start tracking attendance</p>
+        <a href="{{ url_for('add_student') }}" class="btn btn-primary mt-2">
+            Add Student
+        </a>
+    </div>
+{% endif %}
+
+<script>
+function changeDate(date) {
+    const batch = document.getElementById('batch-filter').value;
+    let url = `{{ url_for('attendance') }}?date=${date}`;
+    if (batch) {
+        url += `&batch=${batch}`;
+    }
+    window.location.href = url;
+}
+
+function handleBatchFilter() {
+    const batch = document.getElementById('batch-filter').value;
+    const date = document.getElementById('date-select').value;
+    let url = `{{ url_for('attendance') }}?date=${date}`;
+    if (batch) {
+        url += `&batch=${batch}`;
+    }
+    window.location.href = url;
+}
+
+async function updateAttendance(studentId, dateStr) {
+    const presentCheckbox = document.getElementById(`present-${studentId}`);
+    const lateCheckbox = document.getElementById(`late-${studentId}`);
+    
+    // Determine status based on checkbox states
+    let status = 0; // Default to absent
+    
+    // Logic: 
+    // - If present is checked and late is checked -> status = 2 (Late)
+    // - If present is checked and late is unchecked -> status = 1 (Present)
+    // - If present is unchecked -> status = 0 (Absent), and late must be unchecked
+    
+    if (presentCheckbox.checked) {
+        if (lateCheckbox.checked) {
+            status = 2; // Late
+        } else {
+            status = 1; // Present
+        }
+    } else {
+        // Present is unchecked (absent) - automatically uncheck late
+        status = 0; // Absent
+        if (lateCheckbox.checked) {
+            lateCheckbox.checked = false;
+        }
+    }
+    
+    // If late is checked, ensure present is also checked
+    if (lateCheckbox.checked && !presentCheckbox.checked) {
+        presentCheckbox.checked = true;
+        status = 2; // Late
+    }
+    
+    try {
+        const response = await fetch('/api/attendance/mark', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                student_id: studentId,
+                status: status,
+                date: dateStr || '{{ selected_date }}'
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to mark attendance');
+        }
+        
+        // Visual feedback
+        const listItem = presentCheckbox.closest('.list-item');
+        if (status === 1) {
+            listItem.style.background = '#f0fdf4'; // Light green for present
+        } else if (status === 2) {
+            listItem.style.background = '#fffbeb'; // Light amber for late
+        } else {
+            listItem.style.background = '#fef2f2'; // Light red for absent
+        }
+        
+        // Reset background after animation
+        setTimeout(() => {
+            listItem.style.background = 'white';
+        }, 500);
+    } catch (error) {
+        alert('Error marking attendance. Please try again.');
+        // Revert checkboxes on error
+        location.reload();
+    }
+}
+</script>
+
+<style>
+.btn-warning {
+    background: #F59E0B;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #D97706;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 50px;
+    height: 28px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.3s;
+    border-radius: 28px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: #10B981;
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(22px);
+}
+</style>
+{% endblock %}

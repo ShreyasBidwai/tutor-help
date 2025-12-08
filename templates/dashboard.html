@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Tutor Help{% endblock %}
+
+{% block header_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <a href="{{ url_for('students') }}" style="text-decoration: none; color: inherit;">
+        <div class="stat-card">
+            <div class="stat-number">{{ student_count }}</div>
+            <div class="stat-label">Students</div>
+        </div>
+    </a>
+    <a href="{{ url_for('batches') }}" style="text-decoration: none; color: inherit;">
+        <div class="stat-card">
+            <div class="stat-number">{{ batch_count }}</div>
+            <div class="stat-label">Batches</div>
+        </div>
+    </a>
+    <a href="{{ url_for('attendance') }}" style="text-decoration: none; color: inherit;">
+        <div class="stat-card">
+            <div class="stat-number">{{ attendance_count }}/{{ student_count }}</div>
+            <div class="stat-label">Today's Attendance</div>
+            {% if student_count > 0 %}
+            <div style="font-size: 0.75rem; color: #666; margin-top: 0.25rem;">
+                {{ attendance_percentage }}%
+            </div>
+            {% endif %}
+        </div>
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Quick Actions</h2>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <a href="{{ url_for('add_student') }}" class="btn btn-primary">
+            Add New Student
+        </a>
+        <a href="{{ url_for('add_batch') }}" class="btn btn-secondary">
+            Create Batch
+        </a>
+        <a href="{{ url_for('share_homework') }}" class="btn btn-secondary">
+            Share Homework
+        </a>
+    </div>
+</div>
+
+{% if batch_stats %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Students per Batch</h2>
+        <a href="{{ url_for('batches') }}" style="font-size: 0.875rem; color: #4F46E5; text-decoration: none;">View All</a>
+    </div>
+    {% for batch in batch_stats %}
+    <a href="{{ url_for('batches') }}" style="text-decoration: none; color: inherit;">
+        <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='transparent'">
+            <span style="color: #666;">{{ batch.name }}</span>
+            <span style="font-weight: 600;">{{ batch.student_count }} students</span>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if recent_students %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Recent Students</h2>
+        <a href="{{ url_for('students') }}" style="font-size: 0.875rem; color: #4F46E5; text-decoration: none;">View All</a>
+    </div>
+    {% for student in recent_students %}
+    <a href="{{ url_for('view_student', student_id=student.id) }}" style="text-decoration: none; color: inherit;">
+        <div style="padding: 0.75rem 0; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='transparent'">
+            <div style="font-weight: 600; margin-bottom: 0.25rem;">{{ student.name }}</div>
+            <div style="font-size: 0.875rem; color: #666;">{{ student.batch_name or 'No Batch' }}</div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if recent_homework %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Recent Homework</h2>
+        <a href="{{ url_for('homework') }}" style="font-size: 0.875rem; color: #4F46E5; text-decoration: none;">View All</a>
+    </div>
+    {% for hw in recent_homework %}
+    <a href="{{ url_for('homework') }}" style="text-decoration: none; color: inherit;">
+        <div style="padding: 0.75rem 0; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='transparent'">
+            <div style="font-weight: 600; margin-bottom: 0.25rem;">{{ hw.title }}</div>
+            <div style="font-size: 0.875rem; color: #666;">
+                {% if hw.batch_name %}
+                📚 {{ hw.batch_name }}
+                {% elif hw.student_name %}
+                👤 {{ hw.student_name }}
+                {% endif %}
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if not recent_students and not recent_homework and not batch_stats %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Recent Activity</h2>
+    </div>
+    <div class="text-center" style="padding: 2rem; color: #666;">
+        <p>Your recent activity will appear here</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
