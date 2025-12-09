@@ -6,7 +6,7 @@
 <div style="max-width: 450px; margin: 3rem auto; padding: 1rem;">
     <div class="card" style="box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
         <div style="margin-bottom: 1rem;">
-            <a href="{{ url_for('welcome') }}" style="color: #666; text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+            <a href="{{ url_for('auth.welcome') }}" style="color: #666; text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.25rem;">
                 <span>←</span> Back to Welcome
             </a>
         </div>
@@ -43,7 +43,7 @@
         
         <!-- Login Form -->
         <div id="form-login">
-            <form method="POST" action="{{ url_for('login') }}">
+            <form method="POST" action="{{ url_for('auth.login') }}">
                 <input type="hidden" name="action" value="login">
                 <div class="form-group">
                     <label class="form-label" for="mobile-login">Mobile Number</label>
@@ -68,7 +68,7 @@
         
         <!-- Signup Form -->
         <div id="form-signup" style="display: none;">
-            <form method="POST" action="{{ url_for('login') }}">
+            <form method="POST" action="{{ url_for('auth.login') }}">
                 <input type="hidden" name="action" value="signup">
                 <div class="form-group">
                     <label class="form-label" for="mobile-signup">Mobile Number</label>

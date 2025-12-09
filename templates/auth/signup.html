@@ -6,7 +6,7 @@
 <div style="max-width: 450px; margin: 3rem auto; padding: 1rem;">
     <div class="card" style="box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
         <div style="margin-bottom: 1rem;">
-            <a href="{{ url_for('login') }}" style="color: #666; text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+            <a href="{{ url_for('auth.login') }}" style="color: #666; text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.25rem;">
                 <span>←</span> Back to Login
             </a>
         </div>
@@ -24,7 +24,7 @@
         </div>
         {% endif %}
         
-        <form method="POST" action="{{ url_for('signup') }}">
+        <form method="POST" action="{{ url_for('auth.signup') }}">
             <div class="form-group">
                 <label class="form-label" for="tuition_name">Tuition Name *</label>
                 <input 

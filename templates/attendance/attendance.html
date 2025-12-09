@@ -10,7 +10,7 @@
         <h2 class="card-title">Mark Attendance</h2>
     </div>
     <div style="margin-bottom: 1rem;">
-        <a href="{{ url_for('reports') }}" class="btn btn-primary btn-block">
+        <a href="{{ url_for('reports.reports') }}" class="btn btn-primary btn-block">
             📊 View Attendance Reports
         </a>
     </div>
@@ -37,14 +37,14 @@
     </div>
     {% if selected_date != today %}
     <div style="margin-top: 0.5rem;">
-        <a href="{{ url_for('attendance') }}" class="btn btn-secondary btn-sm">
+        <a href="{{ url_for('attendance.attendance') }}" class="btn btn-secondary btn-sm">
             View Today
         </a>
     </div>
     {% endif %}
     {% if batch_filter %}
     <div style="margin-top: 0.5rem;">
-        <a href="{{ url_for('attendance') }}?date={{ selected_date }}" class="btn btn-secondary btn-sm">
+        <a href="{{ url_for('attendance.attendance') }}?date={{ selected_date }}" class="btn btn-secondary btn-sm">
             Clear Batch Filter
         </a>
     </div>
@@ -131,7 +131,7 @@
         <div class="empty-state-icon">👥</div>
         <h3>No students found</h3>
         <p>Add students to start tracking attendance</p>
-        <a href="{{ url_for('add_student') }}" class="btn btn-primary mt-2">
+        <a href="{{ url_for('students.add_student') }}" class="btn btn-primary mt-2">
             Add Student
         </a>
     </div>
@@ -140,7 +140,7 @@
 <script>
 function changeDate(date) {
     const batch = document.getElementById('batch-filter').value;
-    let url = `{{ url_for('attendance') }}?date=${date}`;
+    let url = `{{ url_for('attendance.attendance') }}?date=${date}`;
     if (batch) {
         url += `&batch=${batch}`;
     }
@@ -150,7 +150,7 @@ function changeDate(date) {
 function handleBatchFilter() {
     const batch = document.getElementById('batch-filter').value;
     const date = document.getElementById('date-select').value;
-    let url = `{{ url_for('attendance') }}?date=${date}`;
+    let url = `{{ url_for('attendance.attendance') }}?date=${date}`;
     if (batch) {
         url += `&batch=${batch}`;
     }

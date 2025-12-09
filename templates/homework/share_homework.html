@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Share Homework - Tutor Help{% endblock %}
+
+{% block header_title %}Share Homework{% endblock %}
+
+{% block content %}
+<div class="card" style="box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+    <form method="POST" action="{{ url_for('homework.share_homework') }}" enctype="multipart/form-data">
+        <div class="form-group">
+            <label class="form-label" for="title">
+                Homework Title *
+            </label>
+            <input 
+                type="text" 
+                id="title" 
+                name="title" 
+                class="form-input" 
+                placeholder="e.g., Math Chapter 5 Exercises"
+                required
+                autofocus
+                style="font-size: 1rem; padding: 0.875rem;"
+            >
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="content">
+                Homework Details
+            </label>
+            <textarea 
+                id="content" 
+                name="content" 
+                class="form-textarea" 
+                placeholder="Enter homework instructions, questions, or notes..."
+                style="min-height: 120px; font-size: 0.95rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;"
+            ></textarea>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="submission_date">
+                    
+                    Submission Date *
+                </label>
+                <input 
+                    type="date" 
+                    id="submission_date" 
+                    name="submission_date" 
+                    class="form-input" 
+                    value="{{ today }}"
+                    required
+                    style="font-size: 0.95rem;"
+                >
+                <small style="display: block; margin-top: 0.5rem; color: #6B7280; font-size: 0.8rem;">
+                    When should students submit this?
+                </small>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="batch_id">
+                    Share with Batch
+                </label>
+                <select id="batch_id" name="batch_id" class="form-select" style="font-size: 0.95rem;">
+                    <option value="">Select a batch (optional)</option>
+                    {% for batch in batches %}
+                    <option value="{{ batch.id }}">{{ batch.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="student_id">
+                Or Share with Specific Student
+            </label>
+            <select id="student_id" name="student_id" class="form-select" style="font-size: 0.95rem;">
+                <option value="">Select a student (optional)</option>
+                {% for student in students %}
+                <option value="{{ student.id }}">{{ student.name }} ({{ student.phone }})</option>
+                {% endfor %}
+            </select>
+            <small style="display: block; margin-top: 0.5rem; color: #6B7280; font-size: 0.8rem;">
+                Leave both blank to share with all students
+            </small>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%); border: 2px solid #E5E7EB; border-radius: 12px; padding: 1.25rem; margin: 1.5rem 0;">
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label" for="file">
+                    <span style="font-size: 1.1rem; margin-right: 0.5rem;">📎</span>
+                    Upload Document (Image/PDF) - Max 10MB
+                </label>
+                <input 
+                    type="file" 
+                    id="file" 
+                    name="file" 
+                    class="form-input" 
+                    accept=".png,.jpg,.jpeg,.gif,.pdf,.doc,.docx"
+                    onchange="previewFile(this)"
+                    style="font-size: 0.95rem; padding: 0.75rem;"
+                >
+                <small style="display: block; margin-top: 0.5rem; color: #6B7280; font-size: 0.8rem;">
+                    Supported: PNG, JPG, GIF, PDF, DOC, DOCX
+                </small>
+                <div id="file-preview" style="margin-top: 0.75rem; display: none;">
+                    <img id="preview-image" src="" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                </div>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="youtube_url">
+                    <span style="font-size: 1.1rem; margin-right: 0.5rem;">🎥</span>
+                    YouTube Video URL (Optional)
+                </label>
+                <input 
+                    type="url" 
+                    id="youtube_url" 
+                    name="youtube_url" 
+                    class="form-input" 
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    style="font-size: 0.95rem;"
+                >
+                <small style="display: block; margin-top: 0.5rem; color: #6B7280; font-size: 0.8rem;">
+                    Add a reference video for students
+                </small>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+            <a href="{{ url_for('homework.homework') }}" class="btn btn-secondary" style="flex: 1;">
+                Cancel
+            </a>
+            <button type="submit" class="btn btn-primary" style="flex: 1; font-size: 1rem; padding: 0.875rem;">
+                Share Homework
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+function previewFile(input) {
+    const preview = document.getElementById('file-preview');
+    const previewImage = document.getElementById('preview-image');
+    
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const fileType = file.type.split('/')[0];
+        
+        if (fileType === 'image') {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            preview.style.display = 'none';
+        }
+    } else {
+        preview.style.display = 'none';
+    }
+}
+
+// Disable student selection when batch is selected and vice versa
+document.getElementById('batch_id').addEventListener('change', function() {
+    if (this.value) {
+        document.getElementById('student_id').disabled = true;
+        document.getElementById('student_id').value = '';
+    } else {
+        document.getElementById('student_id').disabled = false;
+    }
+});
+
+document.getElementById('student_id').addEventListener('change', function() {
+    if (this.value) {
+        document.getElementById('batch_id').disabled = true;
+        document.getElementById('batch_id').value = '';
+    } else {
+        document.getElementById('batch_id').disabled = false;
+    }
+});
+</script>
+{% endblock %}

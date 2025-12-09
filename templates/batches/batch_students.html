@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}Students - Tutor Help{% endblock %}
+{% block title %}{{ batch.name }} - Students{% endblock %}
 
-{% block header_title %}Students{% endblock %}
+{% block header_title %}{{ batch.name }}{% endblock %}
 
 {% block content %}
 <div style="margin-bottom: 1rem;">
-    <a href="{{ url_for('add_student') }}" class="btn btn-primary btn-block">
+    <a href="{{ url_for('students.add_student') }}" class="btn btn-primary btn-block">
         + Add New Student
     </a>
 </div>
 
 <div class="card" style="margin-bottom: 1rem;">
-    <div class="form-group" style="margin-bottom: 0.75rem;">
+    <div class="form-group" style="margin-bottom: 0;">
         <input 
             type="text" 
             id="search-input" 
@@ -22,20 +22,10 @@
             onkeyup="handleSearch()"
         >
     </div>
-    <div class="form-group" style="margin-bottom: 0;">
-        <select id="batch-filter" class="form-select" onchange="handleFilter()">
-            <option value="">All Batches</option>
-            {% for batch in batches %}
-            <option value="{{ batch.id }}" {% if batch_filter == batch.id %}selected{% endif %}>
-                {{ batch.name }}
-            </option>
-            {% endfor %}
-        </select>
-    </div>
-    {% if search_query or batch_filter %}
+    {% if search_query %}
     <div style="margin-top: 0.75rem;">
-        <a href="{{ url_for('students') }}" class="btn btn-secondary btn-sm">
-            Clear Filters
+        <a href="{{ url_for('batches.batch_students', batch_id=batch.id) }}" class="btn btn-secondary btn-sm">
+            Clear Search
         </a>
     </div>
     {% endif %}
@@ -43,23 +33,25 @@
 
 {% if students %}
     {% for student in students %}
-    <div class="list-item" style="cursor: pointer;" onclick="window.location.href='{{ url_for('view_student', student_id=student.id) }}'">
+    <div class="list-item" style="cursor: pointer;" onclick="window.location.href='{{ url_for('students.view_student', student_id=student.id) }}'">
         <div class="list-item-content" style="flex: 1;">
             <div class="list-item-title">{{ student.name }}</div>
             <div class="list-item-subtitle">
-                📚 {{ student.batch_name or 'No Batch' }}
                 {% if student.standard %}
-                | 🎓 {{ student.standard }}
+                🎓 {{ student.standard }}
+                {% endif %}
+                {% if student.school_name %}
+                {% if student.standard %} | {% endif %}🏫 {{ student.school_name }}
                 {% endif %}
             </div>
-            {% if student.school_name %}
+            {% if student.phone %}
             <div class="list-item-subtitle" style="margin-top: 0.25rem; font-size: 0.8rem;">
-                🏫 {{ student.school_name }}
+                📞 {{ student.phone }}
             </div>
             {% endif %}
         </div>
         <div class="list-item-actions" onclick="event.stopPropagation();">
-            <a href="{{ url_for('edit_student', student_id=student.id) }}" class="btn btn-secondary btn-sm">
+            <a href="{{ url_for('students.edit_student', student_id=student.id) }}" class="btn btn-secondary btn-sm">
                 Edit
             </a>
             <button onclick="deleteStudent({{ student.id }})" class="btn btn-danger btn-sm">
@@ -71,9 +63,9 @@
 {% else %}
     <div class="empty-state">
         <div class="empty-state-icon">👥</div>
-        <h3>No students yet</h3>
-        <p>Add your first student to get started</p>
-        <a href="{{ url_for('add_student') }}" class="btn btn-primary mt-2">
+        <h3>No students in this batch</h3>
+        <p>{% if search_query %}No students found matching your search{% else %}Add students to this batch{% endif %}</p>
+        <a href="{{ url_for('students.add_student') }}" class="btn btn-primary mt-2">
             Add Student
         </a>
     </div>
@@ -85,22 +77,14 @@ function handleSearch() {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
         const search = document.getElementById('search-input').value;
-        const batch = document.getElementById('batch-filter').value;
-        updateFilters(search, batch);
+        updateSearch(search);
     }, 300);
 }
 
-function handleFilter() {
-    const search = document.getElementById('search-input').value;
-    const batch = document.getElementById('batch-filter').value;
-    updateFilters(search, batch);
-}
-
-function updateFilters(search, batch) {
+function updateSearch(search) {
     const params = new URLSearchParams();
     if (search) params.set('search', search);
-    if (batch) params.set('batch', batch);
-    window.location.href = `{{ url_for('students') }}?${params.toString()}`;
+    window.location.href = `{{ url_for('batches.batch_students', batch_id=batch.id) }}?${params.toString()}`;
 }
 
 async function deleteStudent(studentId) {

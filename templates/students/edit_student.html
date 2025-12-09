@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Add Student - Tutor Help{% endblock %}
+{% block title %}Edit Student - Tutor Help{% endblock %}
 
-{% block header_title %}Add Student{% endblock %}
+{% block header_title %}Edit Student{% endblock %}
 
 {% block content %}
 <div class="card">
-    <form method="POST" action="{{ url_for('add_student') }}">
+    <form method="POST" action="{{ url_for('students.edit_student', student_id=student.id) }}">
         <div class="form-group">
             <label class="form-label" for="name">Student Name *</label>
             <input 
@@ -14,7 +14,7 @@
                 id="name" 
                 name="name" 
                 class="form-input" 
-                placeholder="Enter student name"
+                value="{{ student.name }}"
                 required
                 autofocus
             >
@@ -27,7 +27,7 @@
                 id="phone" 
                 name="phone" 
                 class="form-input" 
-                placeholder="Enter 10-digit phone number"
+                value="{{ student.phone }}"
                 pattern="[0-9]{10}"
                 maxlength="10"
                 required
@@ -39,7 +39,9 @@
             <select id="batch_id" name="batch_id" class="form-select" required>
                 <option value="">Select a batch</option>
                 {% for batch in batches %}
-                <option value="{{ batch.id }}">{{ batch.name }}</option>
+                <option value="{{ batch.id }}" {% if batch.id == student.batch_id %}selected{% endif %}>
+                    {{ batch.name }}
+                </option>
                 {% endfor %}
             </select>
         </div>
@@ -51,6 +53,7 @@
                 id="standard" 
                 name="standard" 
                 class="form-input" 
+                value="{{ student.standard or '' }}"
                 placeholder="e.g., 10th, 12th, Class 5"
             >
         </div>
@@ -62,6 +65,7 @@
                 id="school_name" 
                 name="school_name" 
                 class="form-input" 
+                value="{{ student.school_name or '' }}"
                 placeholder="Enter school name"
             >
         </div>
@@ -74,21 +78,15 @@
                 class="form-textarea" 
                 placeholder="Enter student address"
                 style="min-height: 80px;"
-            ></textarea>
+            >{{ student.address or '' }}</textarea>
         </div>
-        
-        {% if not batches %}
-        <div class="alert alert-error">
-            No batches available. <a href="{{ url_for('add_batch') }}">Create a batch first</a>
-        </div>
-        {% endif %}
         
         <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
-            <a href="{{ url_for('students') }}" class="btn btn-secondary" style="flex: 1;">
+            <a href="{{ url_for('students.students') }}" class="btn btn-secondary" style="flex: 1;">
                 Cancel
             </a>
-            <button type="submit" class="btn btn-primary" style="flex: 1;" {% if not batches %}disabled{% endif %}>
-                Add Student
+            <button type="submit" class="btn btn-primary" style="flex: 1;">
+                Save Changes
             </button>
         </div>
     </form>

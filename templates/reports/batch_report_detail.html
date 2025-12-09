@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}{{ batch.name }} - Attendance Report{% endblock %}
+
+{% block header_title %}{{ batch.name }} Report{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Last 30 Days</h2>
+        <a href="{{ url_for('reports.reports') }}" style="font-size: 0.875rem; color: #4F46E5; text-decoration: none;">← Back</a>
+    </div>
+    <p style="color: #666; font-size: 0.875rem; padding: 0 1rem 1rem 1rem;">
+        Attendance performance for students in this batch
+    </p>
+</div>
+
+<div class="card" style="margin-bottom: 1rem;">
+    <div class="card-header">
+        <h3 class="card-title" style="font-size: 1rem;">Filter Students</h3>
+    </div>
+    <div style="padding: 1rem;">
+        <select id="filterDropdown" class="form-select" onchange="applyFilter()" style="font-size: 0.95rem;">
+            <option value="all" selected>All Students</option>
+            <option value="today_absent">Today's Absent Students</option>
+            <option value="high_attendance">High Attendance (≥80%)</option>
+            <option value="low_attendance">Low Attendance (&lt;60%)</option>
+        </select>
+    </div>
+</div>
+
+{% if student_reports %}
+    {% for student in student_reports %}
+    <a href="{{ url_for('reports.student_report_detail', student_id=student.student_id) }}" 
+       class="student-card" 
+       data-absent-today="{% if student.is_absent_today %}true{% else %}false{% endif %}"
+       data-high-attendance="{% if student.is_high_attendance %}true{% else %}false{% endif %}"
+       data-low-attendance="{% if student.is_low_attendance %}true{% else %}false{% endif %}"
+       style="text-decoration: none; color: inherit; display: block; margin-bottom: 0.75rem;">
+        <div class="card" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'">
+            <div class="card-header">
+                <h3 class="card-title" style="font-size: 1rem;">👤 {{ student.student_name }}</h3>
+                <div style="text-align: right;">
+                    <div style="font-size: 1.5rem; font-weight: 700; color: {% if student.attendance_percentage >= 80 %}#10B981{% elif student.attendance_percentage >= 60 %}#F59E0B{% else %}#EF4444{% endif %};">
+                        {{ student.attendance_percentage }}%
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.875rem; color: #666; margin-top: 0.5rem; padding: 0 1rem 1rem 1rem;">
+                <span>📚 {{ batch.name }}</span>
+                <span>{{ student.attendance_percentage }}% attendance</span>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">👥</div>
+        <h3>No students in this batch</h3>
+        <p>Add students to this batch to see attendance reports</p>
+        <a href="{{ url_for('students.add_student') }}" class="btn btn-primary mt-2">
+            Add Student
+        </a>
+    </div>
+{% endif %}
+
+<style>
+.student-card {
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.student-card.hidden {
+    display: none;
+}
+</style>
+
+<script>
+function applyFilter() {
+    const filterDropdown = document.getElementById('filterDropdown');
+    if (!filterDropdown) return;
+    
+    const filterValue = filterDropdown.value;
+    const studentCards = document.querySelectorAll('.student-card');
+    
+    if (!studentCards || studentCards.length === 0) return;
+    
+    studentCards.forEach(card => {
+        if (!card) return;
+        
+        let shouldShow = false;
+        
+        switch(filterValue) {
+            case 'all':
+                shouldShow = true;
+                break;
+            case 'today_absent':
+                const absentToday = card.getAttribute('data-absent-today');
+                shouldShow = absentToday === 'true';
+                break;
+            case 'high_attendance':
+                const highAttendance = card.getAttribute('data-high-attendance');
+                shouldShow = highAttendance === 'true';
+                break;
+            case 'low_attendance':
+                const lowAttendance = card.getAttribute('data-low-attendance');
+                shouldShow = lowAttendance === 'true';
+                break;
+            default:
+                shouldShow = true;
+        }
+        
+        if (shouldShow) {
+            card.style.display = 'block';
+            card.classList.remove('hidden');
+        } else {
+            card.style.display = 'none';
+            card.classList.add('hidden');
+        }
+    });
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const filterDropdown = document.getElementById('filterDropdown');
+    if (filterDropdown) {
+        // Ensure filter is applied on load
+        applyFilter();
+    }
+});
+</script>
+{% endblock %}

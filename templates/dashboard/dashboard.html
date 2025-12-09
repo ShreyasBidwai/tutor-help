@@ -1,0 +1,554 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Tutor Help{% endblock %}
+
+{% block header_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <a href="{{ url_for('students.students') }}" style="text-decoration: none; color: inherit;">
+        <div class="stat-card">
+            <div class="stat-number">{{ student_count }}</div>
+            <div class="stat-label">Students</div>
+        </div>
+    </a>
+    <a href="{{ url_for('batches.batches') }}" style="text-decoration: none; color: inherit;">
+        <div class="stat-card">
+            <div class="stat-number">{{ batch_count }}</div>
+            <div class="stat-label">Batches</div>
+        </div>
+    </a>
+    <a href="{{ url_for('attendance.attendance') }}" style="text-decoration: none; color: inherit;">
+        <div class="stat-card">
+            <div class="stat-number">{{ attendance_count }}/{{ student_count }}</div>
+            <div class="stat-label">Attendance</div>
+        </div>
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Quick Actions</h2>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <a href="{{ url_for('students.add_student') }}" class="btn btn-primary">
+            Add New Student
+        </a>
+        <a href="{{ url_for('batches.add_batch') }}" class="btn btn-secondary">
+            Create Batch
+        </a>
+        <a href="{{ url_for('homework.share_homework') }}" class="btn btn-secondary">
+            Share Homework
+        </a>
+    </div>
+</div>
+
+{% if current_batches or upcoming_batches %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title"> Today's Batches</h2>
+    </div>
+    
+    {% if current_batches %}
+    <div style="margin-bottom: 1.5rem;">
+        <div style="font-size: 0.875rem; color: #EF4444; font-weight: 600; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span>⏰</span> <span>Happening Now</span>
+        </div>
+        {% for batch in current_batches %}
+        <div class="batch-card-current" data-batch-id="{{ batch.id }}" data-batch-name="{{ batch.name }}" style="background: #FEE2E2; border-left: 4px solid #EF4444; padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onclick="openAttendanceModal({{ batch.id }}, '{{ batch.name }}')" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(239, 68, 68, 0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+            <div style="display: flex; justify-content: space-between; align-items: start; gap: 1rem;">
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; margin-bottom: 0.25rem; color: #991B1B;">{{ batch.name }}</div>
+                    <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">
+                        🕐 {{ batch.start_time }} - {{ batch.end_time }}
+                    </div>
+                    <div style="font-size: 0.875rem; color: #666;">
+                        👥 {{ batch.student_count }} students
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); openAttendanceModal({{ batch.id }}, '{{ batch.name }}')" style="flex-shrink: 0;">
+                    Take Attendance
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if upcoming_batches %}
+    <div>
+        <div style="font-size: 0.875rem; color: #F59E0B; font-weight: 600; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span>⏳</span> <span>Upcoming (Next 4 Hours)</span>
+        </div>
+        {% for batch in upcoming_batches %}
+        <div class="batch-card-upcoming" style="padding: 0.875rem; border-bottom: 1px solid #f0f0f0; border-left: 4px solid {% if batch.minutes_until <= 15 %}#F59E0B{% else %}#10B981{% endif %}; transition: background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='transparent'">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; margin-bottom: 0.25rem;">{{ batch.name }}</div>
+                    <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">
+                        🕐 {{ batch.start_time }} - {{ batch.end_time }}
+                    </div>
+                    <div style="font-size: 0.875rem; color: #666;">
+                        👥 {{ batch.student_count }} students
+                    </div>
+                </div>
+                <div style="text-align: right; flex-shrink: 0;">
+                    {% if batch.minutes_until <= 15 %}
+                    <div style="font-size: 0.875rem; color: #F59E0B; font-weight: 600; padding: 0.25rem 0.5rem; background: #FEF3C7; border-radius: 6px;">
+                        ⚠️ In {{ batch.minutes_until }} mins
+                    </div>
+                    {% else %}
+                    <div style="font-size: 0.875rem; color: #666;">
+                        In {{ batch.minutes_until }} mins
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if recent_homework %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Recent Homework</h2>
+        <a href="{{ url_for('homework.homework') }}" style="font-size: 0.875rem; color: #4F46E5; text-decoration: none;">View All</a>
+    </div>
+    {% for hw in recent_homework %}
+    <a href="{{ url_for('homework.homework') }}" style="text-decoration: none; color: inherit;">
+        <div style="padding: 0.75rem 0; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='transparent'">
+            <div style="font-weight: 600; margin-bottom: 0.25rem;">{{ hw.title }}</div>
+            <div style="font-size: 0.875rem; color: #666;">
+                {% if hw.batch_name %}
+                📚 {{ hw.batch_name }}
+                {% elif hw.student_name %}
+                👤 {{ hw.student_name }}
+                {% endif %}
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if not current_batches and not upcoming_batches and not recent_homework and not batch_stats %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Recent Activity</h2>
+    </div>
+    <div class="text-center" style="padding: 2rem; color: #666;">
+        <p>No batches scheduled for today. Your recent activity will appear here</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Attendance Modal - redirect to attendance page
+function openAttendanceModal(batchId, batchName) {
+    window.location.href = `{{ url_for('attendance.attendance') }}?batch=${batchId}&date={{ today }}`;
+}
+
+// Check for upcoming batches every minute
+let checkInterval;
+let reminderShown = new Set();
+
+// Storage keys for dismissed and "later" batches
+function getDismissedKey(batchId) {
+    const today = new Date().toISOString().split('T')[0];
+    return `dismissed_batch_${batchId}_${today}`;
+}
+
+function getLaterKey(batchId) {
+    const today = new Date().toISOString().split('T')[0];
+    return `later_batch_${batchId}_${today}`;
+}
+
+function isBatchDismissed(batchId) {
+    return localStorage.getItem(getDismissedKey(batchId)) === 'true';
+}
+
+function isBatchLater(batchId) {
+    const laterTime = localStorage.getItem(getLaterKey(batchId));
+    if (!laterTime) return false;
+    
+    // Check if 15 minutes have passed
+    const now = Date.now();
+    const laterTimestamp = parseInt(laterTime);
+    const timeDiff = now - laterTimestamp;
+    // Return true if still within 15 minutes (batch is in "later" period)
+    // Return false if 15 minutes have passed (should show popup again)
+    return timeDiff < (15 * 60 * 1000);
+}
+
+function dismissBatch(batchId) {
+    localStorage.setItem(getDismissedKey(batchId), 'true');
+    reminderShown.add(`dismissed_${batchId}`);
+}
+
+function setBatchLater(batchId) {
+    localStorage.setItem(getLaterKey(batchId), Date.now().toString());
+    reminderShown.add(`later_${batchId}`);
+    // Schedule to show again after 15 minutes
+    setTimeout(() => {
+        localStorage.removeItem(getLaterKey(batchId));
+        reminderShown.delete(`later_${batchId}`);
+        // Re-check batches to show popup again
+        checkUpcomingBatches();
+    }, 15 * 60 * 1000);
+}
+
+// Storage keys for homework reminders
+function getHomeworkDismissedKey(batchId) {
+    const today = new Date().toISOString().split('T')[0];
+    return `homework_dismissed_${batchId}_${today}`;
+}
+
+function getHomeworkSnoozedKey(batchId) {
+    const today = new Date().toISOString().split('T')[0];
+    return `homework_snoozed_${batchId}_${today}`;
+}
+
+function isHomeworkDismissed(batchId) {
+    return localStorage.getItem(getHomeworkDismissedKey(batchId)) === 'true';
+}
+
+function isHomeworkSnoozed(batchId) {
+    const snoozedTime = localStorage.getItem(getHomeworkSnoozedKey(batchId));
+    if (!snoozedTime) return false;
+    
+    const now = Date.now();
+    const snoozedTimestamp = parseInt(snoozedTime);
+    const timeDiff = now - snoozedTimestamp;
+    // Return true if still within 15 minutes (homework is snoozed)
+    return timeDiff < (15 * 60 * 1000);
+}
+
+function dismissHomework(batchId) {
+    localStorage.setItem(getHomeworkDismissedKey(batchId), 'true');
+    reminderShown.add(`homework_dismissed_${batchId}`);
+}
+
+function snoozeHomework(batchId) {
+    localStorage.setItem(getHomeworkSnoozedKey(batchId), Date.now().toString());
+    reminderShown.add(`homework_snoozed_${batchId}`);
+    // Schedule to show again after 15 minutes
+    setTimeout(() => {
+        localStorage.removeItem(getHomeworkSnoozedKey(batchId));
+        reminderShown.delete(`homework_snoozed_${batchId}`);
+        // Re-check batches to show popup again
+        checkUpcomingBatches();
+    }, 15 * 60 * 1000);
+}
+
+function checkUpcomingBatches() {
+    fetch('{{ url_for("dashboard.upcoming_batches_api") }}')
+        .then(response => response.json())
+        .then(data => {
+            // Show reminder for batches 15 mins away
+            data.reminders.forEach(batch => {
+                if (!reminderShown.has(batch.id) && !isBatchDismissed(batch.id)) {
+                    showReminder(batch);
+                    reminderShown.add(batch.id);
+                }
+            });
+            
+            // Show popup for current batches (if not dismissed and not in "later" period)
+            data.current.forEach(batch => {
+                if (!isBatchDismissed(batch.id) && !isBatchLater(batch.id)) {
+                    if (!reminderShown.has(`current_${batch.id}`)) {
+                        showAttendancePopup(batch);
+                        reminderShown.add(`current_${batch.id}`);
+                    }
+                }
+            });
+            
+            // Show homework check reminders (10 minutes after batch start)
+            data.homework_reminders.forEach(batch => {
+                if (!isHomeworkDismissed(batch.id) && !isHomeworkSnoozed(batch.id)) {
+                    if (!reminderShown.has(`homework_${batch.id}`)) {
+                        showHomeworkCheckPopup(batch);
+                        reminderShown.add(`homework_${batch.id}`);
+                    }
+                }
+            });
+        })
+        .catch(err => console.error('Error checking batches:', err));
+}
+
+function showReminder(batch) {
+    // Browser notification (requires permission)
+    if (Notification.permission === 'granted') {
+        new Notification(`Batch Reminder: ${batch.name}`, {
+            body: `Batch starts in 15 minutes at ${batch.start_time}`,
+            tag: `reminder_${batch.id}`,
+            requireInteraction: false
+        });
+    }
+    
+    // In-app notification
+    const container = document.querySelector('.container');
+    if (container) {
+        const notification = document.createElement('div');
+        notification.className = 'batch-reminder';
+        notification.style.cssText = 'animation: slideDown 0.3s ease;';
+        notification.innerHTML = `
+            <div style="background: #FEF3C7; border-left: 4px solid #F59E0B; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div>
+                    <div style="font-weight: 600; margin-bottom: 0.25rem; color: #92400E;">⏰ Reminder: ${batch.name}</div>
+                    <div style="font-size: 0.875rem; color: #78350F;">Starts in 15 minutes at ${batch.start_time}</div>
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #78350F; padding: 0 0.5rem;">×</button>
+            </div>
+        `;
+        container.insertBefore(notification, container.firstChild);
+        
+        // Auto-remove after 5 minutes
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 5 * 60 * 1000);
+    }
+}
+
+function showHomeworkCheckPopup(batch) {
+    // Check if modal already exists
+    if (document.getElementById('homework-modal-overlay')) {
+        return;
+    }
+    
+    // Check if homework is dismissed or snoozed
+    if (isHomeworkDismissed(batch.id) || isHomeworkSnoozed(batch.id)) {
+        return;
+    }
+    
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'homework-modal-overlay';
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; animation: fadeIn 0.2s ease;';
+    
+    const homeworkList = batch.homework.map(h => `<div style="padding: 0.5rem; background: #F3F4F6; border-radius: 6px; margin-bottom: 0.5rem; font-size: 0.9rem;">📝 ${h.title}</div>`).join('');
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = 'background: white; border-radius: 12px; padding: 2rem; max-width: 450px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease;';
+    modal.innerHTML = `
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+            <div style="font-size: 3rem; margin-bottom: 0.5rem;">📚</div>
+            <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #333;">Check Homework!</h2>
+            <p style="color: #666; font-weight: 600; margin-bottom: 0.25rem;">${batch.name}</p>
+            <p style="font-size: 0.875rem; color: #999; margin-top: 0.5rem;">${batch.start_time} - ${batch.end_time}</p>
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+            <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.75rem; font-weight: 500;">Assigned Homework:</div>
+            <div style="max-height: 200px; overflow-y: auto;">
+                ${homeworkList || '<div style="color: #999; font-size: 0.875rem;">No homework assigned</div>'}
+            </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <button onclick="window.location.href='{{ url_for('homework.homework') }}'; document.getElementById('homework-modal-overlay').remove();" class="btn btn-primary" style="width: 100%;">
+                View Homework
+            </button>
+            <div style="display: flex; gap: 0.75rem;">
+                <button onclick="snoozeHomework(${batch.id}); document.getElementById('homework-modal-overlay').remove();" class="btn btn-secondary" style="flex: 1;">
+                    Snooze (15 min)
+                </button>
+                <button onclick="dismissHomework(${batch.id}); document.getElementById('homework-modal-overlay').remove();" class="btn btn-secondary" style="flex: 1; background: #E5E7EB; color: #6B7280;">
+                    Done
+                </button>
+            </div>
+        </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Close on overlay click
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            overlay.remove();
+        }
+    });
+    
+    // Browser notification
+    if (Notification.permission === 'granted') {
+        new Notification(`Check Homework: ${batch.name}`, {
+            body: `Time to check homework for ${batch.name}`,
+            tag: `homework_${batch.id}`,
+            requireInteraction: true
+        });
+    }
+}
+
+function showAttendancePopup(batch) {
+    // Check if modal already exists
+    if (document.getElementById('attendance-modal-overlay')) {
+        return;
+    }
+    
+    // Check if batch is dismissed or set to "later"
+    if (isBatchDismissed(batch.id) || isBatchLater(batch.id)) {
+        return;
+    }
+    
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'attendance-modal-overlay';
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; animation: fadeIn 0.2s ease;';
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = 'background: white; border-radius: 12px; padding: 2rem; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease;';
+    modal.innerHTML = `
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+            <div style="font-size: 3rem; margin-bottom: 0.5rem;">⏰</div>
+            <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #333;">Time for Attendance!</h2>
+            <p style="color: #666; font-weight: 600; margin-bottom: 0.25rem;">${batch.name}</p>
+            <p style="font-size: 0.875rem; color: #999; margin-top: 0.5rem;">${batch.start_time} - ${batch.end_time}</p>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <button onclick="openAttendanceModal(${batch.id}, '${batch.name.replace(/'/g, "\\'")}'); document.getElementById('attendance-modal-overlay').remove();" class="btn btn-primary" style="width: 100%;">
+                Take Attendance
+            </button>
+            <div style="display: flex; gap: 0.75rem;">
+                <button onclick="setBatchLater(${batch.id}); document.getElementById('attendance-modal-overlay').remove();" class="btn btn-secondary" style="flex: 1;">
+                    Later (15 min)
+                </button>
+                <button onclick="dismissBatch(${batch.id}); document.getElementById('attendance-modal-overlay').remove();" class="btn btn-secondary" style="flex: 1; background: #E5E7EB; color: #6B7280;">
+                    Dismiss
+                </button>
+            </div>
+        </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Close on overlay click
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            overlay.remove();
+        }
+    });
+    
+    // Request notification permission if not granted
+    if (Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+    
+    // Browser notification
+    if (Notification.permission === 'granted') {
+        new Notification(`Batch Started: ${batch.name}`, {
+            body: `Time to take attendance for ${batch.name}`,
+            tag: `attendance_${batch.id}`,
+            requireInteraction: true
+        });
+    }
+}
+
+// Clean up old localStorage entries on page load
+function cleanupOldStorage() {
+    const today = new Date().toISOString().split('T')[0];
+    const keysToRemove = [];
+    
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('dismissed_batch_') || key.startsWith('later_batch_') || 
+                    key.startsWith('homework_dismissed_') || key.startsWith('homework_snoozed_'))) {
+            // Check if it's from a different day
+            if (!key.includes(today)) {
+                keysToRemove.push(key);
+            }
+        }
+    }
+    
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+}
+
+// Start checking when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Clean up old storage entries
+    cleanupOldStorage();
+    
+    // Request notification permission
+    if (Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+    
+    // Check immediately
+    checkUpcomingBatches();
+    
+    // Then check every minute
+    checkInterval = setInterval(checkUpcomingBatches, 60000);
+    
+    // Check for current batches on page load (with slight delay to ensure DOM is ready)
+    {% if current_batches %}
+    setTimeout(() => {
+        {% for batch in current_batches %}
+        if (!isBatchDismissed({{ batch.id }}) && !isBatchLater({{ batch.id }})) {
+            showAttendancePopup({
+                id: {{ batch.id }},
+                name: '{{ batch.name }}',
+                start_time: '{{ batch.start_time }}',
+                end_time: '{{ batch.end_time }}'
+            });
+        }
+        {% endfor %}
+    }, 1000);
+    {% endif %}
+});
+
+// Clean up on page unload
+window.addEventListener('beforeunload', function() {
+    if (checkInterval) {
+        clearInterval(checkInterval);
+    }
+});
+</script>
+
+<style>
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.batch-card-current {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.batch-card-current:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+</style>
+{% endblock %}
+

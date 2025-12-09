@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Edit Batch - Tutor Help{% endblock %}
+{% block title %}Create Batch - Tutor Help{% endblock %}
 
-{% block header_title %}Edit Batch{% endblock %}
+{% block header_title %}Create Batch{% endblock %}
 
 {% block content %}
 <div class="card">
-    <form method="POST" action="{{ url_for('edit_batch', batch_id=batch.id) }}">
+    <form method="POST" action="{{ url_for('batches.add_batch') }}">
         <div class="form-group">
             <label class="form-label" for="name">Batch Name *</label>
             <input 
@@ -14,7 +14,7 @@
                 id="name" 
                 name="name" 
                 class="form-input" 
-                value="{{ batch.name }}"
+                placeholder="e.g., Class 10 PCM, Class 12 Commerce"
                 required
                 autofocus
             >
@@ -27,7 +27,7 @@
                 name="description" 
                 class="form-textarea" 
                 placeholder="Add any additional details about this batch"
-            >{{ batch.description or '' }}</textarea>
+            ></textarea>
         </div>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
@@ -38,7 +38,6 @@
                     id="start_time" 
                     name="start_time" 
                     class="form-input"
-                    value="{{ batch.start_time or '' }}"
                 >
             </div>
             <div class="form-group">
@@ -48,7 +47,6 @@
                     id="end_time" 
                     name="end_time" 
                     class="form-input"
-                    value="{{ batch.end_time or '' }}"
                 >
             </div>
         </div>
@@ -57,48 +55,71 @@
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
                 <label class="form-label" style="margin-bottom: 0;">Class Days</label>
                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                    <input type="checkbox" id="daily" name="daily" onchange="toggleAllDays()" {% if batch_days|length == 7 %}checked{% endif %}>
+                    <input type="checkbox" id="daily" name="daily" onchange="toggleAllDays()">
                     <span style="font-weight: 600;">Daily</span>
                 </label>
             </div>
             <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
                 <label style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem; cursor: pointer; padding: 0.35rem 0.25rem; background: #f5f5f5; border-radius: 6px; flex: 1; min-width: 0;">
                     <span style="font-weight: 500; font-size: 0.85rem;">Mo</span>
-                    <input type="checkbox" id="day_mo" name="day_mo" class="day-checkbox" {% if 'mo' in batch_days %}checked{% endif %} style="width: 18px; height: 18px; margin: 0;">
+                    <input type="checkbox" id="day_mo" name="day_mo" class="day-checkbox" style="width: 18px; height: 18px; margin: 0;">
                 </label>
                 <label style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem; cursor: pointer; padding: 0.35rem 0.25rem; background: #f5f5f5; border-radius: 6px; flex: 1; min-width: 0;">
                     <span style="font-weight: 500; font-size: 0.85rem;">Tu</span>
-                    <input type="checkbox" id="day_tu" name="day_tu" class="day-checkbox" {% if 'tu' in batch_days %}checked{% endif %} style="width: 18px; height: 18px; margin: 0;">
+                    <input type="checkbox" id="day_tu" name="day_tu" class="day-checkbox" style="width: 18px; height: 18px; margin: 0;">
                 </label>
                 <label style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem; cursor: pointer; padding: 0.35rem 0.25rem; background: #f5f5f5; border-radius: 6px; flex: 1; min-width: 0;">
                     <span style="font-weight: 500; font-size: 0.85rem;">We</span>
-                    <input type="checkbox" id="day_we" name="day_we" class="day-checkbox" {% if 'we' in batch_days %}checked{% endif %} style="width: 18px; height: 18px; margin: 0;">
+                    <input type="checkbox" id="day_we" name="day_we" class="day-checkbox" style="width: 18px; height: 18px; margin: 0;">
                 </label>
                 <label style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem; cursor: pointer; padding: 0.35rem 0.25rem; background: #f5f5f5; border-radius: 6px; flex: 1; min-width: 0;">
                     <span style="font-weight: 500; font-size: 0.85rem;">Th</span>
-                    <input type="checkbox" id="day_th" name="day_th" class="day-checkbox" {% if 'th' in batch_days %}checked{% endif %} style="width: 18px; height: 18px; margin: 0;">
+                    <input type="checkbox" id="day_th" name="day_th" class="day-checkbox" style="width: 18px; height: 18px; margin: 0;">
                 </label>
                 <label style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem; cursor: pointer; padding: 0.35rem 0.25rem; background: #f5f5f5; border-radius: 6px; flex: 1; min-width: 0;">
                     <span style="font-weight: 500; font-size: 0.85rem;">Fr</span>
-                    <input type="checkbox" id="day_fr" name="day_fr" class="day-checkbox" {% if 'fr' in batch_days %}checked{% endif %} style="width: 18px; height: 18px; margin: 0;">
+                    <input type="checkbox" id="day_fr" name="day_fr" class="day-checkbox" style="width: 18px; height: 18px; margin: 0;">
                 </label>
                 <label style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem; cursor: pointer; padding: 0.35rem 0.25rem; background: #f5f5f5; border-radius: 6px; flex: 1; min-width: 0;">
                     <span style="font-weight: 500; font-size: 0.85rem;">Sa</span>
-                    <input type="checkbox" id="day_sa" name="day_sa" class="day-checkbox" {% if 'sa' in batch_days %}checked{% endif %} style="width: 18px; height: 18px; margin: 0;">
+                    <input type="checkbox" id="day_sa" name="day_sa" class="day-checkbox" style="width: 18px; height: 18px; margin: 0;">
                 </label>
                 <label style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem; cursor: pointer; padding: 0.35rem 0.25rem; background: #f5f5f5; border-radius: 6px; flex: 1; min-width: 0;">
                     <span style="font-weight: 500; font-size: 0.85rem;">Su</span>
-                    <input type="checkbox" id="day_su" name="day_su" class="day-checkbox" {% if 'su' in batch_days %}checked{% endif %} style="width: 18px; height: 18px; margin: 0;">
+                    <input type="checkbox" id="day_su" name="day_su" class="day-checkbox" style="width: 18px; height: 18px; margin: 0;">
                 </label>
             </div>
         </div>
         
+        <div class="form-group" style="margin-top: 1.5rem; padding: 1.25rem; background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%); border: 2px solid #E5E7EB; border-radius: 12px;">
+            <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; gap: 1rem;">
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <span style="font-size: 1.25rem;">🔔</span>
+                        <div style="font-weight: 600; font-size: 1rem; color: #111827;">Enable Notifications</div>
+                    </div>
+                    <div style="font-size: 0.875rem; color: #6B7280; line-height: 1.4;">
+                        Receive 15-minute reminders and attendance popups for this batch
+                    </div>
+                </div>
+                <div class="toggle-switch" style="flex-shrink: 0;">
+                    <input 
+                        type="checkbox" 
+                        id="notifications_enabled" 
+                        name="notifications_enabled" 
+                        checked
+                    >
+                    <span class="toggle-slider"></span>
+                </div>
+            </label>
+        </div>
+        
         <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
-            <a href="{{ url_for('batches') }}" class="btn btn-secondary" style="flex: 1;">
+            <a href="{{ url_for('batches.batches') }}" class="btn btn-secondary" style="flex: 1;">
                 Cancel
             </a>
             <button type="submit" class="btn btn-primary" style="flex: 1;">
-                Save Changes
+                Create Batch
             </button>
         </div>
     </form>

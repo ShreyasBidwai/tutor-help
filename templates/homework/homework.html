@@ -6,7 +6,7 @@
 
 {% block content %}
 <div style="margin-bottom: 1rem;">
-    <a href="{{ url_for('share_homework') }}" class="btn btn-primary btn-block">
+    <a href="{{ url_for('homework.share_homework') }}" class="btn btn-primary btn-block">
         + Share New Homework
     </a>
 </div>
@@ -17,7 +17,7 @@
         <div class="card-header">
             <h3 class="card-title">{{ hw.title }}</h3>
             <div style="display: flex; gap: 0.5rem;">
-                <a href="{{ url_for('edit_homework', homework_id=hw.id) }}" class="btn btn-secondary btn-sm">
+                <a href="{{ url_for('homework.edit_homework', homework_id=hw.id) }}" class="btn btn-secondary btn-sm">
                     Edit
                 </a>
                 <button onclick="deleteHomework({{ hw.id }})" class="btn btn-danger btn-sm">
@@ -30,12 +30,12 @@
         {% endif %}
         {% if hw.file_path %}
         <div style="margin-bottom: 1rem;">
-            <a href="{{ url_for('uploaded_file', filename=hw.file_path) }}" target="_blank" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+            <a href="{{ url_for('homework.uploaded_file', filename=hw.file_path) }}" target="_blank" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.5rem;">
                 📎 View Document
             </a>
             {% if hw.file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')) %}
             <div style="margin-top: 0.75rem;">
-                <img src="{{ url_for('uploaded_file', filename=hw.file_path) }}" alt="Homework document" style="max-width: 100%; border-radius: 8px;">
+                <img src="{{ url_for('homework.uploaded_file', filename=hw.file_path) }}" alt="Homework document" style="max-width: 100%; border-radius: 8px;">
             </div>
             {% endif %}
         </div>
@@ -90,7 +90,7 @@
         <div class="empty-state-icon">📝</div>
         <h3>No homework shared yet</h3>
         <p>Share homework with your students</p>
-        <a href="{{ url_for('share_homework') }}" class="btn btn-primary mt-2">
+        <a href="{{ url_for('homework.share_homework') }}" class="btn btn-primary mt-2">
             Share Homework
         </a>
     </div>
