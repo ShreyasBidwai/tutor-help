@@ -3,7 +3,9 @@ import multiprocessing
 import os
 
 # Server socket
-bind = f"{os.environ.get('HOST', '0.0.0.0')}:{os.environ.get('PORT', 5000)}"
+# Render sets PORT automatically, ensure it's converted to int
+port = int(os.environ.get('PORT', 5000))
+bind = f"0.0.0.0:{port}"
 backlog = 2048
 
 # Worker processes
