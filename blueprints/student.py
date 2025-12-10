@@ -136,6 +136,10 @@ def dashboard():
                     except:
                         pass
     
+    # For students, we'll use localStorage to track their own onboarding
+    # This allows each student to have their own tour experience
+    # We don't need to pass onboarding_completed for students as it's handled client-side
+    
     conn.close()
     
     return render_template('student/dashboard.html',

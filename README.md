@@ -1,4 +1,4 @@
-# Tutor Help - MVP for Home Tutors
+# TuitionTrack - MVP for Home Tutors
 
 A hyper-simple Progressive Web App (PWA) prototype built with Flask for individual home tutors in India. This MVP provides essential tools for managing students, tracking attendance, and sharing homework, with a freemium model featuring a locked payment management system.
 

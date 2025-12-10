@@ -1,4 +1,4 @@
-"""Configuration settings for the Tutor Help application"""
+"""Configuration settings for the TuitionTrack application"""
 import os
 import secrets
 

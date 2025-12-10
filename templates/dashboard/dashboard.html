@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - Tutor Help{% endblock %}
+{% block title %}Dashboard - TuitionTrack{% endblock %}
 
 {% block header_title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="stats-grid">
+<div class="stats-grid" data-intro-step="1">
     <a href="{{ url_for('students.students') }}" style="text-decoration: none; color: inherit;">
         <div class="stat-card">
             <div class="stat-number">{{ student_count }}</div>
@@ -26,7 +26,7 @@
     </a>
 </div>
 
-<div class="card">
+<div class="card" data-intro-step="2">
     <div class="card-header">
         <h2 class="card-title">Quick Actions</h2>
     </div>
@@ -147,6 +147,15 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/tours.js') }}"></script>
+<script>
+    // Onboarding tours are currently disabled
+    // {% if not onboarding_completed %}
+    // document.addEventListener('DOMContentLoaded', function() {
+    //     checkAndStartTour('tutor');
+    // });
+    // {% endif %}
+</script>
 <script>
 // Attendance Modal - redirect to attendance page
 function openAttendanceModal(batchId, batchName) {

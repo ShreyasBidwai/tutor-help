@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Sign Up - Tutor Help{% endblock %}
+{% block title %}Sign Up - TuitionTrack{% endblock %}
 
 {% block content %}
 <div style="max-width: 450px; margin: 3rem auto; padding: 1rem;">
@@ -12,10 +12,12 @@
         </div>
         
         <div class="text-center mb-3">
-            <div style="font-size: 3rem; margin-bottom: 0.5rem;">🎓</div>
-            <h1 style="font-size: 1.75rem; margin-bottom: 0.5rem; color: #4F46E5; font-weight: 700;">Create Account</h1>
-            <p style="color: #666; margin-bottom: 0.5rem;">Let's set up your tutoring business</p>
-            <p style="color: #999; font-size: 0.875rem;">Mobile: {{ mobile }}</p>
+            <div style="margin-bottom: 0.25rem;">
+                <img src="{{ url_for('static', filename='TutionTrack_logoNoBG.png') }}" alt="TuitionTrack Logo" style="max-width: 250px; height: auto;">
+            </div>
+            <h1 style="font-size: 1.75rem; margin-bottom: 0.25rem; color: #4F46E5; font-weight: 700; margin-top: 0.5rem;">Create Account</h1>
+            <p style="color: #666; margin-bottom: 0.25rem;">Let's set up your tutoring business</p>
+            <p style="color: #999; font-size: 0.875rem; margin-bottom: 0;">Mobile: {{ mobile }}</p>
         </div>
         
         {% if error %}

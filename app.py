@@ -1,4 +1,4 @@
-"""Main Flask application - Tutor Help PWA"""
+"""Main Flask application - TuitionTrack PWA"""
 from flask import Flask, jsonify
 from config import Config
 from database import init_db, migrate_db, add_indexes

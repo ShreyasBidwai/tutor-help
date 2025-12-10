@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Tutor Login - Tutor Help{% endblock %}
+{% block title %}Tutor Login - TuitionTrack{% endblock %}
 
 {% block content %}
 <div style="max-width: 450px; margin: 3rem auto; padding: 1rem;">
@@ -12,13 +12,15 @@
         </div>
         
         <div class="text-center mb-3">
-            <div style="font-size: 3rem; margin-bottom: 0.5rem;">👨‍🏫</div>
-            <h1 style="font-size: 1.75rem; margin-bottom: 0.5rem; color: #4F46E5; font-weight: 700;">Tutor Portal</h1>
-            <p style="color: #666; margin-bottom: 0;">Manage your tutoring business</p>
+            <div style="margin-bottom: 0.25rem;">
+                <img src="{{ url_for('static', filename='TutionTrack_logoNoBG.png') }}" alt="TuitionTrack Logo" style="max-width: 250px; height: auto;">
+            </div>
+            <h1 style="font-size: 1.75rem; margin-bottom: 0.25rem; color: #4F46E5; font-weight: 700; margin-top: 0.5rem;">Tutor Portal</h1>
+            <p style="color: #666; margin-bottom: 0;">Better Tracking. Better Learning.</p>
         </div>
         
         <!-- Tabs -->
-        <div style="display: flex; gap: 0.5rem; margin: 2rem 0 1.5rem 0; border-bottom: 2px solid #E5E7EB;">
+        <div style="display: flex; gap: 0.5rem; margin: 1.5rem 0 1.25rem 0; border-bottom: 2px solid #E5E7EB;">
             <button 
                 onclick="switchTab('login')" 
                 id="tab-login"

@@ -1,15 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}Student Login - Tutor Help{% endblock %}
+{% block title %}Student Login - TuitionTrack{% endblock %}
 
 {% block content %}
 <div style="max-width: 500px; margin: 4rem auto; padding: 2rem;">
     <div class="card">
         <div class="text-center mb-3">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">👨‍🎓</div>
-            <h1 style="font-size: 1.75rem; margin-bottom: 0.5rem; color: #4F46E5;">Student Login</h1>
-            <p style="color: #666; margin-bottom: 2rem; font-size: 1rem;">
-                Enter your phone number to access your dashboard
+            <div style="margin-bottom: 0.25rem;">
+                <img src="{{ url_for('static', filename='TutionTrack_logoNoBG.png') }}" alt="TuitionTrack Logo" style="max-width: 250px; height: auto;">
+            </div>
+            <h1 style="font-size: 1.75rem; margin-bottom: 0.25rem; color: #4F46E5; margin-top: 0.5rem;">Student Login</h1>
+            <p style="color: #666; margin-bottom: 1.5rem; font-size: 1rem;">
+                Better Tracking. Better Learning.
             </p>
         </div>
         

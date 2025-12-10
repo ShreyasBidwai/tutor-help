@@ -1,6 +1,6 @@
 {% extends "student/base.html" %}
 
-{% block title %}My Homework - Tutor Help{% endblock %}
+{% block title %}My Homework - TuitionTrack{% endblock %}
 
 {% block header_title %}My Homework{% endblock %}
 
@@ -34,7 +34,7 @@
         </div>
         <div style="padding: 0.75rem;">
             {% if hw.content %}
-            <div style="margin-bottom: 0.625rem; color: #374151; white-space: pre-wrap; font-size: 0.8125rem; line-height: 1.5; background: #F9FAFB; padding: 0.5rem; border-radius: 4px; border-left: 2px solid #4F46E5;">
+            <div style="margin-bottom: 0.625rem; color: #374151; white-space: pre-line; font-size: 0.8125rem; line-height: 1.5; background: #F9FAFB; padding: 0.5rem; border-radius: 4px; border-left: 2px solid #4F46E5;">
                 {{ hw.content }}
             </div>
             {% endif %}

@@ -14,7 +14,19 @@ def attendance():
     cursor = conn.cursor()
     
     # Get selected date and batch filter from query parameters
-    selected_date = request.args.get('date', date.today().isoformat())
+    date_param = request.args.get('date', '').strip()
+    # Handle empty date - default to today
+    if not date_param:
+        selected_date = date.today().isoformat()
+    else:
+        try:
+            # Validate date format
+            selected_date_obj_test = date.fromisoformat(date_param)
+            selected_date = date_param
+        except (ValueError, AttributeError):
+            # Invalid date format, default to today
+            selected_date = date.today().isoformat()
+    
     batch_filter = request.args.get('batch', type=int)
     
     # Build query for students with attendance status and batch timing
@@ -42,7 +54,14 @@ def attendance():
     now = datetime.now()
     today = date.today()
     yesterday = today - timedelta(days=1)
-    selected_date_obj = date.fromisoformat(selected_date)
+    
+    # Parse selected date with error handling
+    try:
+        selected_date_obj = date.fromisoformat(selected_date)
+    except (ValueError, AttributeError):
+        # If date parsing fails, default to today
+        selected_date = date.today().isoformat()
+        selected_date_obj = today
     
     is_today = selected_date == today.isoformat()
     is_yesterday = selected_date == yesterday.isoformat()

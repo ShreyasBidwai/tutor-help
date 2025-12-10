@@ -1,9 +1,9 @@
 {% extends "student/base.html" %}
 
-{% block title %}Student Dashboard - Tutor Help{% endblock %}
+{% block title %}Student Dashboard - TuitionTrack{% endblock %}
 
 {% block content %}
-<div class="stats-grid">
+<div class="stats-grid" data-intro-step="1">
     <div class="stat-card">
         <div class="stat-number">{{ attendance_percentage }}%</div>
         <div class="stat-label">Attendance</div>
@@ -18,7 +18,7 @@
     </div>
 </div>
 
-<div class="card">
+<div class="card" data-intro-step="2">
     <div class="card-header">
         <h2 class="card-title">Today's Attendance</h2>
     </div>
@@ -69,7 +69,7 @@
 </div>
 
 {% if upcoming_classes %}
-<div class="card">
+<div class="card" data-intro-step="3">
     <div class="card-header">
         <h2 class="card-title">Upcoming Classes</h2>
     </div>
@@ -92,7 +92,7 @@
 {% endif %}
 
 {% if recent_homework %}
-<div class="card">
+<div class="card" data-intro-step="4">
     <div class="card-header">
         <h2 class="card-title">Recent Homework</h2>
         <a href="{{ url_for('student.homework') }}" style="font-size: 0.875rem; color: #4F46E5; text-decoration: none;">View All</a>
@@ -118,6 +118,16 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/tours.js') }}"></script>
+<script>
+    // Onboarding tours are currently disabled
+    // document.addEventListener('DOMContentLoaded', function() {
+    //     checkAndStartTour('student');
+    // });
+    
+    // Make restartTour available globally (disabled)
+    // window.restartTour = restartTour;
+</script>
 <script>
 // Homework reminder tracking
 const homeworkShown = new Set();

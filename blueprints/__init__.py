@@ -1,2 +1,2 @@
-"""Blueprints package for Tutor Help application"""
+"""Blueprints package for TuitionTrack application"""
 

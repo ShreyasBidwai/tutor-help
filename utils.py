@@ -1,4 +1,4 @@
-"""Utility functions for the Tutor Help application"""
+"""Utility functions for the TuitionTrack application"""
 from functools import wraps
 from flask import session, redirect, url_for
 from werkzeug.utils import secure_filename

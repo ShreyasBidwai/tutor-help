@@ -20,7 +20,7 @@ loglevel = os.environ.get('LOG_LEVEL', 'info')
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s'
 
 # Process naming
-proc_name = 'tutor-help'
+proc_name = 'tuitiontrack'
 
 # Server mechanics
 daemon = False

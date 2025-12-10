@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Tutor Help - Production Startup Script
+# TuitionTrack - Production Startup Script
 
 # Load environment variables
 if [ -f .env ]; then
@@ -16,6 +16,6 @@ echo "Initializing database and indexes..."
 python3 -c "from database import migrate_db, add_indexes; migrate_db(); add_indexes()"
 
 # Start Gunicorn
-echo "Starting Tutor Help application..."
+echo "Starting TuitionTrack application..."
 gunicorn -c gunicorn_config.py app:app
 

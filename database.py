@@ -77,6 +77,7 @@ def init_db():
             tuition_name TEXT,
             address TEXT,
             role TEXT DEFAULT 'tutor',
+            onboarding_completed INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -234,6 +235,12 @@ def migrate_db():
     if 'role' not in user_columns:
         try:
             cursor.execute('ALTER TABLE users ADD COLUMN role TEXT DEFAULT \'tutor\'')
+        except sqlite3.OperationalError:
+            pass
+    
+    if 'onboarding_completed' not in user_columns:
+        try:
+            cursor.execute('ALTER TABLE users ADD COLUMN onboarding_completed INTEGER DEFAULT 0')
         except sqlite3.OperationalError:
             pass
     

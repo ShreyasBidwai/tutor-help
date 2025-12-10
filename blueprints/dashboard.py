@@ -132,6 +132,11 @@ def dashboard():
     ''', (user_id, user_id))
     batch_stats = cursor.fetchall()
     
+    # Check onboarding status
+    cursor.execute('SELECT onboarding_completed FROM users WHERE id = ?', (user_id,))
+    user = cursor.fetchone()
+    onboarding_completed = user['onboarding_completed'] if user and 'onboarding_completed' in user.keys() else 0
+    
     conn.close()
     
     return render_template('dashboard/dashboard.html', 
@@ -143,7 +148,32 @@ def dashboard():
                          current_batches=current_batches,
                          recent_homework=recent_homework,
                          batch_stats=batch_stats,
-                         today=today)
+                         today=today,
+                         onboarding_completed=onboarding_completed)
+
+@dashboard_bp.route('/api/onboarding/complete', methods=['POST'])
+@require_login
+def complete_onboarding():
+    """Mark onboarding as completed"""
+    from flask import session
+    from database import get_db_connection
+    
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not logged in'}), 401
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute('UPDATE users SET onboarding_completed = 1 WHERE id = ?', (user_id,))
+        conn.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
 
 @dashboard_bp.route('/api/batches/upcoming', methods=['GET'])
 @require_login

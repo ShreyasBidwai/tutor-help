@@ -1,5 +1,5 @@
 [Unit]
-Description=Tutor Help Application
+Description=TuitionTrack Application
 After=network.target
 
 [Service]
