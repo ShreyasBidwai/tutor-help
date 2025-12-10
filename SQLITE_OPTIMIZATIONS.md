@@ -94,3 +94,4 @@ If you still see "database is locked" errors:
 - [SQLite WAL Mode Documentation](https://www.sqlite.org/wal.html)
 - [SQLite Performance Tuning](https://www.sqlite.org/performance.html)
 
+
