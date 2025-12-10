@@ -5,12 +5,6 @@
 {% block content %}
 <div style="max-width: 450px; margin: 3rem auto; padding: 1rem;">
     <div class="card" style="box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-        <div style="margin-bottom: 1rem;">
-            <a href="{{ url_for('auth.welcome') }}" style="color: #666; text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.25rem;">
-                <span>←</span> Back to Welcome
-            </a>
-        </div>
-        
         <div class="text-center mb-3">
             <div style="margin-bottom: 0.25rem;">
                 <img src="{{ url_for('static', filename='TutionTrack_logoNoBG.png') }}" alt="TuitionTrack Logo" style="max-width: 250px; height: auto;">
@@ -66,6 +60,11 @@
                     Continue with OTP
                 </button>
             </form>
+            <div style="text-align: center; margin-top: 1rem;">
+                <a href="{{ url_for('auth.welcome') }}" style="color: #4F46E5; text-decoration: none; font-size: 0.9375rem; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 500; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all 0.2s; background: rgba(79, 70, 229, 0.05);">
+                    <span style="font-size: 1.125rem;">←</span> Back to Welcome
+                </a>
+            </div>
         </div>
         
         <!-- Signup Form -->
@@ -90,6 +89,11 @@
                     Continue to Sign Up
                 </button>
             </form>
+            <div style="text-align: center; margin-top: 1rem;">
+                <a href="{{ url_for('auth.welcome') }}" style="color: #4F46E5; text-decoration: none; font-size: 0.9375rem; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 500; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all 0.2s; background: rgba(79, 70, 229, 0.05);">
+                    <span style="font-size: 1.125rem;">←</span> Back to Welcome
+                </a>
+            </div>
         </div>
         
         <p style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem; color: #999;">
@@ -97,6 +101,14 @@
         </p>
     </div>
 </div>
+
+<style>
+    a[href*="welcome"]:hover {
+        background: rgba(79, 70, 229, 0.1) !important;
+        color: #4338CA !important;
+        transform: translateX(-2px);
+    }
+</style>
 
 <script>
     // Initialize tab state
