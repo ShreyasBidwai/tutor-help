@@ -35,7 +35,29 @@
             {% endfor %}
         </select>
     </div>
-    {% if selected_date != today %}
+    {% if is_future %}
+    <div class="card" style="background: #FEE2E2; border-left: 4px solid #EF4444;">
+        <div style="padding: 1.5rem; text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔒</div>
+            <div style="font-weight: 600; color: #991B1B; margin-bottom: 0.5rem; font-size: 1.1rem;">Future Attendance Cannot Be Marked</div>
+            <div style="font-size: 0.875rem; color: #7F1D1D; margin-bottom: 1.5rem;">You can only mark attendance for today or yesterday.</div>
+            <a href="{{ url_for('attendance.attendance') }}" class="btn btn-primary">
+                📅 View Today's Attendance
+            </a>
+        </div>
+    </div>
+    {% elif is_past_before_yesterday %}
+    <div class="card" style="background: #FEE2E2; border-left: 4px solid #EF4444;">
+        <div style="padding: 1.5rem; text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔒</div>
+            <div style="font-weight: 600; color: #991B1B; margin-bottom: 0.5rem; font-size: 1.1rem;">Past Attendance Cannot Be Marked</div>
+            <div style="font-size: 0.875rem; color: #7F1D1D; margin-bottom: 1.5rem;">You can only mark attendance for today or yesterday.</div>
+            <a href="{{ url_for('attendance.attendance') }}" class="btn btn-primary">
+                📅 View Today's Attendance
+            </a>
+        </div>
+    </div>
+    {% elif selected_date != today and selected_date != yesterday %}
     <div style="margin-top: 0.5rem;">
         <a href="{{ url_for('attendance.attendance') }}" class="btn btn-secondary btn-sm">
             View Today
@@ -52,13 +74,68 @@
 </div>
 
 
-{% if students_by_batch %}
+{% if attendance_already_saved %}
+<div class="card" style="background: #D1FAE5; border-left: 4px solid #10B981;">
+    <div style="padding: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="font-size: 1.5rem;">🔒</div>
+            <div>
+                <div style="font-weight: 600; color: #065F46; margin-bottom: 0.25rem;">Attendance Already Saved</div>
+                <div style="font-size: 0.875rem; color: #047857;">Attendance for {{ selected_date }} has been marked and cannot be changed.</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% elif not can_mark_attendance and selected_date == today %}
+<div class="card" style="background: #FEF3C7; border-left: 4px solid #F59E0B;">
+    <div style="padding: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="font-size: 1.5rem;">⏰</div>
+            <div>
+                <div style="font-weight: 600; color: #92400E; margin-bottom: 0.25rem;">Attendance Cannot Be Marked Yet</div>
+                <div style="font-size: 0.875rem; color: #78350F;">Please wait until the batch time starts to mark attendance.</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if is_future %}
+    {# Don't show any batch cards for future dates #}
+{% elif students_by_batch %}
     {% for batch_name, batch_students in students_by_batch.items() %}
     <div class="card">
-        <div class="card-header">
-            <h3 class="card-title" style="font-size: 1rem;">📚 {{ batch_name }}</h3>
-            <span style="font-size: 0.875rem; color: #666;">{{ batch_students|length }} students</span>
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <h3 class="card-title" style="font-size: 1rem; margin: 0;">📚 {{ batch_name }}</h3>
+            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                <span style="font-size: 0.875rem; color: #666;">{{ batch_students|length }} students</span>
+                {% if (is_today or is_yesterday) and not attendance_already_saved and not is_future and (is_yesterday or batch_can_mark.get(batch_name, False)) %}
+                <div style="display: flex; gap: 0.25rem;">
+                    <button onclick="markBatchAllPresent('{{ batch_name }}')" class="btn btn-secondary btn-sm" style="padding: 0.4rem 0.6rem; font-size: 0.75rem; white-space: nowrap;" title="Mark all present">
+                        ✓ All
+                    </button>
+                    <button onclick="markBatchAllAbsent('{{ batch_name }}')" class="btn btn-secondary btn-sm" style="padding: 0.4rem 0.6rem; font-size: 0.75rem; white-space: nowrap;" title="Mark all absent">
+                        ✗ All
+                    </button>
+                </div>
+                {% endif %}
+            </div>
         </div>
+        {% if is_yesterday and attendance_already_saved %}
+        <div style="padding: 0.75rem 1rem; background: #D1FAE5; border-left: 4px solid #10B981; margin-bottom: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 1.2rem;">✓</span>
+                <span style="font-size: 0.875rem; color: #047857;">Yesterday's attendance can be marked.</span>
+            </div>
+        </div>
+        {% elif selected_date == today and batch_can_mark.get(batch_name, False) == False %}
+        <div style="padding: 0.75rem 1rem; background: #FEF3C7; border-left: 4px solid #F59E0B; margin-bottom: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 1.2rem;">⏰</span>
+                <span style="font-size: 0.875rem; color: #78350F;">This batch hasn't started yet. Attendance can only be marked after the batch time.</span>
+            </div>
+        </div>
+        {% endif %}
         {% for student in batch_students %}
         <div class="list-item" style="margin-bottom: 0.75rem; border-bottom: 1px solid #f0f0f0; padding-bottom: 0.75rem;">
             <div class="list-item-content" style="flex: 1;">
@@ -70,8 +147,9 @@
                         <input 
                             type="checkbox" 
                             id="present-{{ student.id }}"
-                            {% if student.attendance_status == 1 %}checked{% endif %}
-                            onchange="updateAttendance({{ student.id }}, '{{ selected_date }}')"
+                            {% if student.attendance_status == 1 or student.attendance_status == 2 %}checked{% endif %}
+                            {% if is_future or is_past_before_yesterday or attendance_already_saved or (selected_date == today and batch_can_mark.get(batch_name, False) == False) %}disabled{% endif %}
+                            onchange="updateAttendancePreview({{ student.id }})"
                         >
                         <span class="toggle-slider"></span>
                     </label>
@@ -82,8 +160,9 @@
                         type="checkbox" 
                         id="late-{{ student.id }}"
                         {% if student.attendance_status == 2 %}checked{% endif %}
-                        onchange="updateAttendance({{ student.id }}, '{{ selected_date }}')"
-                        style="width: 20px; height: 20px; cursor: pointer;"
+                        {% if is_future or is_past_before_yesterday or attendance_already_saved or (selected_date == today and batch_can_mark.get(batch_name, False) == False) %}disabled{% endif %}
+                        onchange="updateAttendancePreview({{ student.id }})"
+                        style="width: 20px; height: 20px; cursor: {% if is_future or is_past_before_yesterday or attendance_already_saved or (selected_date == today and batch_can_mark.get(batch_name, False) == False) %}not-allowed{% else %}pointer{% endif %};"
                     >
                     <span style="font-size: 0.875rem; color: #666; min-width: 50px;">Late</span>
                 </div>
@@ -92,6 +171,15 @@
         {% endfor %}
     </div>
     {% endfor %}
+    
+    {# Save Attendance Button - Always show when date is valid and students exist #}
+    {% if (is_today or is_yesterday) and not attendance_already_saved and not is_future and students_by_batch|length > 0 %}
+        <div class="card" style="position: sticky; bottom: 80px; z-index: 10; margin-top: 1rem; box-shadow: 0 -4px 12px rgba(0,0,0,0.1); background: white;">
+            <button id="save-attendance-btn" class="btn btn-primary btn-block" onclick="saveAttendance()" style="font-size: 1.1rem; padding: 1.25rem; font-weight: 600;">
+                💾 Save Attendance
+            </button>
+        </div>
+    {% endif %}
 {% elif students %}
     {# Fallback for backward compatibility #}
     {% for student in students %}
@@ -126,6 +214,15 @@
         </div>
     </div>
     {% endfor %}
+    
+    {# Save Attendance button for fallback students section #}
+    {% if (is_today or is_yesterday) and not attendance_already_saved and not is_future and students %}
+    <div class="card" style="position: sticky; bottom: 80px; z-index: 10; margin-top: 1rem; box-shadow: 0 -4px 12px rgba(0,0,0,0.1);">
+        <button id="save-attendance-btn" class="btn btn-primary btn-block" onclick="saveAttendance()" style="font-size: 1.1rem; padding: 1.25rem; font-weight: 600;">
+            💾 Save Attendance
+        </button>
+    </div>
+    {% endif %}
 {% else %}
     <div class="empty-state">
         <div class="empty-state-icon">👥</div>
@@ -157,12 +254,9 @@ function handleBatchFilter() {
     window.location.href = url;
 }
 
-async function updateAttendance(studentId, dateStr) {
+function updateAttendancePreview(studentId) {
     const presentCheckbox = document.getElementById(`present-${studentId}`);
     const lateCheckbox = document.getElementById(`late-${studentId}`);
-    
-    // Determine status based on checkbox states
-    let status = 0; // Default to absent
     
     // Logic: 
     // - If present is checked and late is checked -> status = 2 (Late)
@@ -170,14 +264,9 @@ async function updateAttendance(studentId, dateStr) {
     // - If present is unchecked -> status = 0 (Absent), and late must be unchecked
     
     if (presentCheckbox.checked) {
-        if (lateCheckbox.checked) {
-            status = 2; // Late
-        } else {
-            status = 1; // Present
-        }
+        // Present is checked
     } else {
         // Present is unchecked (absent) - automatically uncheck late
-        status = 0; // Absent
         if (lateCheckbox.checked) {
             lateCheckbox.checked = false;
         }
@@ -186,45 +275,159 @@ async function updateAttendance(studentId, dateStr) {
     // If late is checked, ensure present is also checked
     if (lateCheckbox.checked && !presentCheckbox.checked) {
         presentCheckbox.checked = true;
-        status = 2; // Late
     }
     
+    // Visual feedback (preview only, not saved yet)
+    const listItem = presentCheckbox.closest('.list-item');
+    let status = 0;
+    if (presentCheckbox.checked) {
+        status = lateCheckbox.checked ? 2 : 1;
+    }
+    
+    if (status === 1) {
+        listItem.style.background = '#f0fdf4'; // Light green for present
+    } else if (status === 2) {
+        listItem.style.background = '#fffbeb'; // Light amber for late
+    } else {
+        listItem.style.background = '#fef2f2'; // Light red for absent
+    }
+}
+
+async function saveAttendance() {
+    const saveBtn = document.getElementById('save-attendance-btn');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '💾 Saving...';
+    
+    const dateStr = document.getElementById('date-select').value || '{{ selected_date }}';
+    const attendanceData = [];
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Collect all student attendance data (only for batches that can be marked)
+    {% for batch_name, batch_students in students_by_batch.items() %}
+        {% for student in batch_students %}
+        const present{{ student.id }} = document.getElementById('present-{{ student.id }}');
+        const late{{ student.id }} = document.getElementById('late-{{ student.id }}');
+        
+        // Skip if not today/yesterday or if this batch can't be marked today
+        {% if is_future or is_past_before_yesterday or (selected_date == today and batch_can_mark.get(batch_name, False) == False) %}
+        // Skip this student - not today/yesterday or batch hasn't started
+        {% else %}
+        let status{{ student.id }} = 0;
+        if (present{{ student.id }} && !present{{ student.id }}.disabled && present{{ student.id }}.checked) {
+            status{{ student.id }} = (late{{ student.id }} && !late{{ student.id }}.disabled && late{{ student.id }}.checked) ? 2 : 1;
+        }
+        
+        attendanceData.push({
+            student_id: {{ student.id }},
+            status: status{{ student.id }},
+            date: dateStr
+        });
+        {% endif %}
+        {% endfor %}
+    {% endfor %}
+    
     try {
-        const response = await fetch('/api/attendance/mark', {
+        const response = await fetch('/api/attendance/save', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                student_id: studentId,
-                status: status,
-                date: dateStr || '{{ selected_date }}'
+                attendance: attendanceData,
+                date: dateStr
             })
         });
         
-        if (!response.ok) {
-            throw new Error('Failed to mark attendance');
+        const result = await response.json();
+        
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Failed to save attendance');
         }
         
-        // Visual feedback
-        const listItem = presentCheckbox.closest('.list-item');
-        if (status === 1) {
-            listItem.style.background = '#f0fdf4'; // Light green for present
-        } else if (status === 2) {
-            listItem.style.background = '#fffbeb'; // Light amber for late
-        } else {
-            listItem.style.background = '#fef2f2'; // Light red for absent
-        }
+        // Success feedback
+        saveBtn.innerHTML = '✓ Saved!';
+        saveBtn.style.background = '#10B981';
         
-        // Reset background after animation
+        // Show success notification
+        showNotification(`Attendance saved for ${result.saved_count} student(s)!`, 'success');
+        
+        // Reload page after a short delay
         setTimeout(() => {
-            listItem.style.background = 'white';
-        }, 500);
+            location.reload();
+        }, 1500);
+        
     } catch (error) {
-        alert('Error marking attendance. Please try again.');
-        // Revert checkboxes on error
-        location.reload();
+        showNotification('Error saving attendance: ' + error.message, 'error');
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalText;
     }
+}
+
+// Bulk operations - Mark all students in a batch as present/absent
+function markBatchAllPresent(batchName) {
+    const batchCard = Array.from(document.querySelectorAll('.card')).find(card => 
+        card.querySelector('.card-title') && card.querySelector('.card-title').textContent.includes(batchName)
+    );
+    
+    if (!batchCard) return;
+    
+    const presentCheckboxes = batchCard.querySelectorAll('input[id^="present-"]:not([disabled])');
+    const lateCheckboxes = batchCard.querySelectorAll('input[id^="late-"]:not([disabled])');
+    
+    presentCheckboxes.forEach(cb => {
+        cb.checked = true;
+        const studentId = cb.id.replace('present-', '');
+        if (typeof updateAttendancePreview === 'function') {
+            updateAttendancePreview(parseInt(studentId));
+        }
+    });
+    
+    lateCheckboxes.forEach(cb => cb.checked = false);
+    
+    // Scroll to save button
+    const saveBtn = document.getElementById('save-attendance-btn');
+    if (saveBtn) {
+        saveBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function markBatchAllAbsent(batchName) {
+    const batchCard = Array.from(document.querySelectorAll('.card')).find(card => 
+        card.querySelector('.card-title') && card.querySelector('.card-title').textContent.includes(batchName)
+    );
+    
+    if (!batchCard) return;
+    
+    const presentCheckboxes = batchCard.querySelectorAll('input[id^="present-"]:not([disabled])');
+    const lateCheckboxes = batchCard.querySelectorAll('input[id^="late-"]:not([disabled])');
+    
+    presentCheckboxes.forEach(cb => {
+        cb.checked = false;
+        const studentId = cb.id.replace('present-', '');
+        if (typeof updateAttendancePreview === 'function') {
+            updateAttendancePreview(parseInt(studentId));
+        }
+    });
+    
+    lateCheckboxes.forEach(cb => cb.checked = false);
+}
+
+// Show notification (mobile-friendly) using SweetAlert2
+function showNotification(message, type = 'success') {
+    Swal.fire({
+        title: type === 'success' ? 'Success!' : 'Error!',
+        text: message,
+        icon: type === 'success' ? 'success' : 'error',
+        timer: 3000,
+        showConfirmButton: false,
+        toast: true,
+        position: 'bottom',
+        width: '90%',
+        customClass: {
+            popup: 'swal2-toast-mobile'
+        }
+    });
 }
 </script>
 
@@ -280,6 +483,46 @@ input:checked + .toggle-slider {
 
 input:checked + .toggle-slider:before {
     transform: translateX(22px);
+}
+
+input:disabled + .toggle-slider {
+    background-color: #E5E7EB;
+    cursor: not-allowed;
+}
+
+input:disabled:checked + .toggle-slider {
+    background-color: #9CA3AF;
+}
+
+input[type="checkbox"]:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.list-item:has(input:disabled) {
+    opacity: 0.7;
+    background-color: #F9FAFB !important;
+}
+
+/* Notification animations */
+@keyframes slideUp {
+    from {
+        transform: translateX(-50%) translateY(100px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
 }
 </style>
 {% endblock %}

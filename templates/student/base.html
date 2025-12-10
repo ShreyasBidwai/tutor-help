@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+
+{% block header_title %}
+{% if session.student_name %}{{ session.student_name }}{% else %}Student Portal{% endif %}
+{% endblock %}
+

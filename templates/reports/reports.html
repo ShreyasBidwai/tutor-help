@@ -53,35 +53,35 @@
 
 <!-- Batches Tab Content -->
 <div id="batchesContent" style="display: {% if active_tab == 'batches' %}block{% else %}none{% endif %}; margin-top: 1rem;">
-    {% if batch_reports %}
-        {% for report in batch_reports %}
+{% if batch_reports %}
+    {% for report in batch_reports %}
         <a href="{{ url_for('reports.batch_report_detail', batch_id=report.batch_id) }}" class="report-item" data-name="{{ report.batch_name }}" style="text-decoration: none; color: inherit; display: block;">
             <div class="card" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; margin-bottom: 0.75rem;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'">
-                <div class="card-header">
-                    <h3 class="card-title" style="font-size: 1rem;">📚 {{ report.batch_name }}</h3>
-                    <div style="text-align: right;">
-                        <div style="font-size: 1.5rem; font-weight: 700; color: {% if report.attendance_percentage >= 80 %}#10B981{% elif report.attendance_percentage >= 60 %}#F59E0B{% else %}#EF4444{% endif %};">
-                            {{ report.attendance_percentage }}%
-                        </div>
+            <div class="card-header">
+                <h3 class="card-title" style="font-size: 1rem;">📚 {{ report.batch_name }}</h3>
+                <div style="text-align: right;">
+                    <div style="font-size: 1.5rem; font-weight: 700; color: {% if report.attendance_percentage >= 80 %}#10B981{% elif report.attendance_percentage >= 60 %}#F59E0B{% else %}#EF4444{% endif %};">
+                        {{ report.attendance_percentage }}%
                     </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; font-size: 0.875rem; color: #666; margin-top: 0.5rem;">
-                    <span>{{ report.student_count }} students</span>
-                    <span>{{ report.attended_sessions }}/{{ report.total_expected }} sessions</span>
-                </div>
             </div>
-        </a>
-        {% endfor %}
-    {% else %}
-        <div class="empty-state">
-            <div class="empty-state-icon">📊</div>
-            <h3>No batches found</h3>
-            <p>Create batches and add students to see attendance reports</p>
-            <a href="{{ url_for('batches.add_batch') }}" class="btn btn-primary mt-2">
-                Create Batch
-            </a>
+            <div style="display: flex; justify-content: space-between; font-size: 0.875rem; color: #666; margin-top: 0.5rem;">
+                <span>{{ report.student_count }} students</span>
+                <span>{{ report.attended_sessions }}/{{ report.total_expected }} sessions</span>
+            </div>
         </div>
-    {% endif %}
+    </a>
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">📊</div>
+        <h3>No batches found</h3>
+        <p>Create batches and add students to see attendance reports</p>
+        <a href="{{ url_for('batches.add_batch') }}" class="btn btn-primary mt-2">
+            Create Batch
+        </a>
+    </div>
+{% endif %}
 </div>
 
 <!-- Students Tab Content -->

@@ -119,6 +119,9 @@
         <a href="{{ url_for('attendance.attendance') }}?date={{ today }}" class="btn btn-primary">
             Mark Attendance
         </a>
+        <a href="{{ url_for('reports.student_report_detail', student_id=student.id) }}" class="btn btn-secondary">
+            📊 Attendance Report
+        </a>
         <a href="tel:{{ student.phone }}" class="btn btn-secondary">
             📞 Call Parent
         </a>

@@ -2,46 +2,103 @@
 
 {% block title %}Homework - Tutor Help{% endblock %}
 
-{% block header_title %}Homework{% endblock %}
+{% block header_title %}Homework Management{% endblock %}
 
 {% block content %}
-<div style="margin-bottom: 1rem;">
-    <a href="{{ url_for('homework.share_homework') }}" class="btn btn-primary btn-block">
+<div style="margin-bottom: 1.25rem;">
+    <a href="{{ url_for('homework.share_homework') }}" class="btn btn-primary btn-block" style="padding: 0.875rem 1rem; font-size: 0.9375rem; font-weight: 600; border-radius: 8px; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);">
         + Share New Homework
     </a>
 </div>
 
 {% if homework_list %}
     {% for hw in homework_list %}
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">{{ hw.title }}</h3>
-            <div style="display: flex; gap: 0.5rem;">
-                <a href="{{ url_for('homework.edit_homework', homework_id=hw.id) }}" class="btn btn-secondary btn-sm">
-                    Edit
-                </a>
-                <button onclick="deleteHomework({{ hw.id }})" class="btn btn-danger btn-sm">
-                    Delete
-                </button>
+    <div class="card" style="margin-bottom: 1rem; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-radius: 8px; overflow: hidden;">
+        <div class="card-header" style="border-bottom: 1px solid #E5E7EB; padding: 1rem; background: #FFFFFF; display: flex; flex-direction: column;">
+            {# Row 1: Title (left) and Edit/Delete buttons (right) #}
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.75rem; width: 100%;">
+                <div style="flex: 1; min-width: 0;">
+                    <h3 class="card-title" style="font-size: 1rem; font-weight: 600; color: #111827; margin: 0; line-height: 1.4; word-wrap: break-word;">{{ hw.title }}</h3>
+                </div>
+                <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+                    <a href="{{ url_for('homework.edit_homework', homework_id=hw.id) }}" class="btn btn-secondary btn-sm" style="padding: 0.5rem 0.75rem; font-size: 0.8125rem; white-space: nowrap; border-radius: 6px; font-weight: 500;">
+                        Edit
+                    </a>
+                    <button onclick="deleteHomework({{ hw.id }})" class="btn btn-danger btn-sm" style="padding: 0.5rem 0.75rem; font-size: 0.8125rem; white-space: nowrap; border-radius: 6px; font-weight: 500;">
+                        Delete
+                    </button>
+                </div>
+            </div>
+            
+            {# Row 2: Due Date - Always on second row #}
+            <div style="margin-bottom: 0.5rem; width: 100%;">
+                {% if hw.submission_date %}
+                <div style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.5rem; background: #FEF3C7; border-radius: 6px;">
+                    <span style="font-size: 0.875rem;">📅</span>
+                    <span style="font-weight: 500; color: #92400E; font-size: 0.8125rem;">Due: {{ hw.submission_date }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            {# Row 3: Batch or Student - Always on third row #}
+            <div style="width: 100%;">
+                {% if hw.batch_name %}
+                <div style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.5rem; background: #F9FAFB; border-radius: 6px;">
+                    <span style="font-size: 0.875rem;">📚</span>
+                    <span style="font-weight: 500; color: #374151; font-size: 0.8125rem;">{{ hw.batch_name }}</span>
+                </div>
+                {% elif hw.student_name %}
+                <div style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.5rem; background: #F9FAFB; border-radius: 6px;">
+                    <span style="font-size: 0.875rem;">👤</span>
+                    <span style="font-weight: 500; color: #374151; font-size: 0.8125rem;">{{ hw.student_name }}</span>
+                </div>
+                {% endif %}
             </div>
         </div>
-        {% if hw.content %}
-        <p style="margin-bottom: 1rem; color: #666;">{{ hw.content }}</p>
-        {% endif %}
-        {% if hw.file_path %}
-        <div style="margin-bottom: 1rem;">
-            <a href="{{ url_for('homework.uploaded_file', filename=hw.file_path) }}" target="_blank" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.5rem;">
-                📎 View Document
-            </a>
-            {% if hw.file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')) %}
-            <div style="margin-top: 0.75rem;">
-                <img src="{{ url_for('homework.uploaded_file', filename=hw.file_path) }}" alt="Homework document" style="max-width: 100%; border-radius: 8px;">
+        <div style="padding: 0.75rem;">
+            {% if hw.content %}
+            <div style="margin-bottom: 0.625rem; color: #374151; white-space: pre-wrap; font-size: 0.8125rem; line-height: 1.5; background: #F9FAFB; padding: 0.5rem; border-radius: 4px; border-left: 2px solid #4F46E5;">
+                {{ hw.content }}
             </div>
             {% endif %}
-        </div>
-        {% endif %}
-        {% if hw.youtube_url %}
-        <div style="margin-bottom: 1rem;">
+            
+            <div style="display: flex; flex-wrap: wrap; gap: 0.375rem; margin-bottom: 0.625rem;">
+                {% if hw.file_path %}
+                <a href="{{ url_for('homework.uploaded_file', filename=hw.file_path) }}" target="_blank" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.375rem 0.5rem; font-size: 0.75rem; border-radius: 4px;">
+                    📎 Document
+                </a>
+                {% endif %}
+                
+                {% if hw.youtube_url %}
+                {% set video_id = '' %}
+                {% if 'v=' in hw.youtube_url %}
+                    {% set video_id = hw.youtube_url.split('v=')[-1].split('&')[0] %}
+                {% elif 'youtu.be/' in hw.youtube_url %}
+                    {% set video_id = hw.youtube_url.split('youtu.be/')[-1].split('?')[0] %}
+                {% elif 'embed/' in hw.youtube_url %}
+                    {% set video_id = hw.youtube_url.split('embed/')[-1].split('?')[0] %}
+                {% else %}
+                    {% set video_id = hw.youtube_url.split('/')[-1] %}
+                {% endif %}
+                {% if video_id %}
+                <a href="{{ hw.youtube_url }}" target="_blank" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.375rem 0.5rem; font-size: 0.75rem; border-radius: 4px;">
+                    🎥 Video
+                </a>
+                {% else %}
+                <a href="{{ hw.youtube_url }}" target="_blank" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.375rem 0.5rem; font-size: 0.75rem; border-radius: 4px;">
+                    📺 Video
+                </a>
+                {% endif %}
+                {% endif %}
+            </div>
+            
+            {% if hw.file_path and hw.file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')) %}
+            <div style="margin-bottom: 0.625rem;">
+                <img src="{{ url_for('homework.uploaded_file', filename=hw.file_path) }}" alt="Homework document" style="max-width: 100%; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+            </div>
+            {% endif %}
+            
+            {% if hw.youtube_url %}
             {% set video_id = '' %}
             {% if 'v=' in hw.youtube_url %}
                 {% set video_id = hw.youtube_url.split('v=')[-1].split('&')[0] %}
@@ -53,7 +110,7 @@
                 {% set video_id = hw.youtube_url.split('/')[-1] %}
             {% endif %}
             {% if video_id %}
-            <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px;">
+            <div style="margin-bottom: 0.625rem; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
                 <iframe 
                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
                     src="https://www.youtube.com/embed/{{ video_id }}" 
@@ -62,27 +119,18 @@
                     allowfullscreen>
                 </iframe>
             </div>
-            {% else %}
-            <a href="{{ hw.youtube_url }}" target="_blank" class="btn btn-secondary btn-sm">
-                📺 Watch Video
+            {% endif %}
+            {% endif %}
+            
+            <a 
+                href="https://wa.me/?text={{ hw.title|urlencode }}%20-%20{{ hw.content|urlencode }}{% if hw.file_path %}%20Document:%20{{ request.url_root }}uploads/{{ hw.file_path|urlencode }}{% endif %}{% if hw.youtube_url %}%20Video:%20{{ hw.youtube_url|urlencode }}{% endif %}" 
+                target="_blank"
+                class="btn btn-success btn-block"
+                style="padding: 0.5rem 0.75rem; font-size: 0.8125rem; font-weight: 500; border-radius: 4px; margin-top: 0.25rem;"
+            >
+                📱 Share via WhatsApp
             </a>
-            {% endif %}
         </div>
-        {% endif %}
-        <div style="margin-bottom: 1rem; font-size: 0.875rem; color: #666;">
-            {% if hw.batch_name %}
-            📚 Batch: {{ hw.batch_name }}
-            {% elif hw.student_name %}
-            👤 Student: {{ hw.student_name }}
-            {% endif %}
-        </div>
-        <a 
-            href="https://wa.me/?text={{ hw.title|urlencode }}%20-%20{{ hw.content|urlencode }}{% if hw.file_path %}%20Document:%20{{ request.url_root }}uploads/{{ hw.file_path|urlencode }}{% endif %}{% if hw.youtube_url %}%20Video:%20{{ hw.youtube_url|urlencode }}{% endif %}" 
-            target="_blank"
-            class="btn btn-success btn-block"
-        >
-            📱 Share via WhatsApp
-        </a>
     </div>
     {% endfor %}
 {% else %}
@@ -96,9 +144,55 @@
     </div>
 {% endif %}
 
+{% if homework_list and total_pages > 1 %}
+<div style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 1.5rem; padding: 1rem; flex-wrap: wrap;">
+    <a href="{{ url_for('homework.homework', page=page-1) if page > 1 else '#' }}" 
+       class="btn btn-secondary btn-sm" 
+       style="padding: 0.5rem 0.75rem; min-width: 80px; {% if page <= 1 %}opacity: 0.5; pointer-events: none;{% endif %}">
+        ← Previous
+    </a>
+    
+    <div style="display: flex; gap: 0.25rem; align-items: center; flex-wrap: wrap;">
+        {% for p in range(1, total_pages + 1) %}
+            {% if p == page %}
+                <span style="padding: 0.5rem 0.75rem; background: #4F46E5; color: white; border-radius: 6px; font-weight: 600; min-width: 40px; text-align: center;">{{ p }}</span>
+            {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+                <a href="{{ url_for('homework.homework', page=p) }}" 
+                   style="padding: 0.5rem 0.75rem; background: white; color: #4F46E5; border: 1px solid #E5E7EB; border-radius: 6px; text-decoration: none; min-width: 40px; text-align: center; font-weight: 500;">
+                    {{ p }}
+                </a>
+            {% elif p == page - 3 or p == page + 3 %}
+                <span style="padding: 0.5rem 0.25rem; color: #6B7280;">...</span>
+            {% endif %}
+        {% endfor %}
+    </div>
+    
+    <a href="{{ url_for('homework.homework', page=page+1) if page < total_pages else '#' }}" 
+       class="btn btn-secondary btn-sm" 
+       style="padding: 0.5rem 0.75rem; min-width: 80px; {% if page >= total_pages %}opacity: 0.5; pointer-events: none;{% endif %}">
+        Next →
+    </a>
+</div>
+<div style="text-align: center; margin-top: 0.5rem; color: #6B7280; font-size: 0.875rem;">
+    Showing {{ ((page - 1) * per_page) + 1 }} - {{ [page * per_page, total_count]|min }} of {{ total_count }} homework
+</div>
+{% endif %}
+
 <script>
 async function deleteHomework(homeworkId) {
-    if (!confirm('Are you sure you want to delete this homework?')) {
+    const result = await Swal.fire({
+        title: 'Delete Homework?',
+        text: 'Are you sure you want to delete this homework? This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#EF4444',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: 'Yes, delete it',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true
+    });
+    
+    if (!result.isConfirmed) {
         return;
     }
     
@@ -108,12 +202,29 @@ async function deleteHomework(homeworkId) {
         });
         
         if (response.ok) {
+            await Swal.fire({
+                title: 'Deleted!',
+                text: 'Homework has been deleted successfully.',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
             location.reload();
         } else {
-            alert('Failed to delete homework');
+            await Swal.fire({
+                title: 'Error!',
+                text: 'Failed to delete homework. Please try again.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
         }
     } catch (error) {
-        alert('Error deleting homework');
+        await Swal.fire({
+            title: 'Error!',
+            text: 'An error occurred while deleting the homework.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
     }
 }
 </script>

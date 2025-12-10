@@ -6,9 +6,16 @@
 
 {% block content %}
 <div class="card">
-    <div class="card-header">
-        <h2 class="card-title">Last 30 Days</h2>
-        <a href="{{ url_for('reports.reports') }}" style="font-size: 0.875rem; color: #4F46E5; text-decoration: none;">← Back</a>
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+        <h2 class="card-title" style="margin: 0;">Last 30 Days</h2>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            {% if student_reports %}
+            <a href="{{ url_for('export.export_batch_report', batch_id=batch.id) }}" class="btn btn-secondary btn-sm" style="display: flex; align-items: center; gap: 0.25rem; padding: 0.5rem 0.75rem; font-size: 0.875rem;">
+                <span>📥</span> <span>Export CSV</span>
+            </a>
+            {% endif %}
+            <a href="{{ url_for('reports.reports') }}" style="font-size: 0.875rem; color: #4F46E5; text-decoration: none; padding: 0.5rem 0.75rem; display: flex; align-items: center;">← Back</a>
+        </div>
     </div>
     <p style="color: #666; font-size: 0.875rem; padding: 0 1rem 1rem 1rem;">
         Attendance performance for students in this batch
@@ -38,11 +45,11 @@
        data-low-attendance="{% if student.is_low_attendance %}true{% else %}false{% endif %}"
        style="text-decoration: none; color: inherit; display: block; margin-bottom: 0.75rem;">
         <div class="card" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'">
-            <div class="card-header">
+        <div class="card-header">
                 <h3 class="card-title" style="font-size: 1rem;">👤 {{ student.student_name }}</h3>
-                <div style="text-align: right;">
+            <div style="text-align: right;">
                     <div style="font-size: 1.5rem; font-weight: 700; color: {% if student.attendance_percentage >= 80 %}#10B981{% elif student.attendance_percentage >= 60 %}#F59E0B{% else %}#EF4444{% endif %};">
-                        {{ student.attendance_percentage }}%
+                    {{ student.attendance_percentage }}%
                     </div>
                 </div>
             </div>
@@ -125,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (filterDropdown) {
         // Ensure filter is applied on load
         applyFilter();
-    }
-});
+        }
+    });
 </script>
 {% endblock %}

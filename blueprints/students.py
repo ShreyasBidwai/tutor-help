@@ -1,23 +1,37 @@
 """Student management blueprint"""
-from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, flash
 from datetime import date
 from database import get_db_connection
 from utils import require_login
+import sqlite3
 
 students_bp = Blueprint('students', __name__, url_prefix='')
 
 @students_bp.route('/students')
 @require_login
 def students():
-    """List all students"""
+    """List all students with pagination"""
     conn = get_db_connection()
     cursor = conn.cursor()
+    
+    # Get pagination parameters
+    page = max(1, request.args.get('page', 1, type=int))
+    per_page = 20
+    offset = (page - 1) * per_page
     
     # Get search and filter parameters
     search_query = request.args.get('search', '').strip()
     batch_filter = request.args.get('batch', type=int)
     
-    # Build query
+    # Build base query for counting
+    count_query = '''
+        SELECT COUNT(*) as total
+        FROM students s 
+        WHERE s.user_id = ?
+    '''
+    count_params = [session['user_id']]
+    
+    # Build query for fetching data
     query = '''
         SELECT s.*, b.name as batch_name 
         FROM students s 
@@ -28,15 +42,33 @@ def students():
     
     if search_query:
         query += ' AND (s.name LIKE ? OR s.phone LIKE ?)'
+        count_query += ' AND (s.name LIKE ? OR s.phone LIKE ?)'
         search_pattern = f'%{search_query}%'
         params.extend([search_pattern, search_pattern])
+        count_params.extend([search_pattern, search_pattern])
     
     if batch_filter:
         query += ' AND s.batch_id = ?'
+        count_query += ' AND s.batch_id = ?'
         params.append(batch_filter)
+        count_params.append(batch_filter)
     
-    query += ' ORDER BY s.name'
+    query += ' ORDER BY s.name LIMIT ? OFFSET ?'
+    params.extend([per_page, offset])
     
+    # Get total count
+    cursor.execute(count_query, count_params)
+    total_count = cursor.fetchone()['total']
+    total_pages = (total_count + per_page - 1) // per_page if total_count > 0 else 1
+    
+    # Validate page number
+    if page > total_pages and total_pages > 0:
+        page = total_pages
+        offset = (page - 1) * per_page
+        params[-2] = per_page
+        params[-1] = offset
+    
+    # Get paginated students
     cursor.execute(query, params)
     students = cursor.fetchall()
     
@@ -49,7 +81,11 @@ def students():
                          students=students, 
                          batches=batches,
                          search_query=search_query,
-                         batch_filter=batch_filter)
+                         batch_filter=batch_filter,
+                         page=page,
+                         total_pages=total_pages,
+                         total_count=total_count,
+                         per_page=per_page)
 
 @students_bp.route('/students/add', methods=['GET', 'POST'])
 @require_login
@@ -57,6 +93,10 @@ def add_student():
     """Add a new student"""
     conn = get_db_connection()
     cursor = conn.cursor()
+    
+    # Get batches for dropdown (needed for both GET and error cases)
+    cursor.execute('SELECT * FROM batches WHERE user_id = ? ORDER BY name', (session['user_id'],))
+    batches = cursor.fetchall()
     
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
@@ -66,20 +106,47 @@ def add_student():
         school_name = request.form.get('school_name', '').strip()
         standard = request.form.get('standard', '').strip()
         
-        if name and phone and batch_id:
-            cursor.execute('''
-                INSERT INTO students (name, phone, batch_id, address, school_name, standard, user_id) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (name, phone, int(batch_id), address, school_name, standard, session['user_id']))
-            conn.commit()
+        # Validation
+        if not name or not name.strip():
+            flash('Student name is required', 'error')
             conn.close()
-            return redirect(url_for('students.students'))
+            return render_template('students/add_student.html', batches=batches)
+        
+        if not phone or len(phone) != 10 or not phone.isdigit():
+            flash('Please enter a valid 10-digit phone number', 'error')
+            conn.close()
+            return render_template('students/add_student.html', batches=batches)
+        
+        if not batch_id:
+            flash('Please select a batch', 'error')
+            conn.close()
+            return render_template('students/add_student.html', batches=batches)
+        
+        # Check for duplicate phone number
+        cursor.execute('SELECT id FROM students WHERE phone = ? AND user_id = ?', (phone, session['user_id']))
+        if cursor.fetchone():
+            flash('A student with this phone number already exists', 'error')
+            conn.close()
+            return render_template('students/add_student.html', batches=batches)
+        
+        if name and phone and batch_id:
+            try:
+                cursor.execute('''
+                    INSERT INTO students (name, phone, batch_id, address, school_name, standard, user_id) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', (name, phone, int(batch_id), address, school_name, standard, session['user_id']))
+                conn.commit()
+                conn.close()
+                flash('Student added successfully!', 'success')
+                return redirect(url_for('students.students'))
+            except sqlite3.IntegrityError:
+                conn.rollback()
+                conn.close()
+                flash('A student with this phone number already exists', 'error')
+                return render_template('students/add_student.html', batches=batches)
     
-    # Get batches for dropdown
-    cursor.execute('SELECT * FROM batches WHERE user_id = ? ORDER BY name', (session['user_id'],))
-    batches = cursor.fetchall()
+    # GET request - batches already fetched above
     conn.close()
-    
     return render_template('students/add_student.html', batches=batches)
 
 @students_bp.route('/students/<int:student_id>/edit', methods=['GET', 'POST'])
@@ -97,15 +164,70 @@ def edit_student(student_id):
         school_name = request.form.get('school_name', '').strip()
         standard = request.form.get('standard', '').strip()
         
-        if name and phone and batch_id:
-            cursor.execute('''
-                UPDATE students 
-                SET name = ?, phone = ?, batch_id = ?, address = ?, school_name = ?, standard = ?
-                WHERE id = ? AND user_id = ?
-            ''', (name, phone, int(batch_id), address, school_name, standard, student_id, session['user_id']))
-            conn.commit()
+        # Validation
+        if not name or not name.strip():
+            flash('Student name is required', 'error')
             conn.close()
-            return redirect(url_for('students.students'))
+            cursor.execute('SELECT * FROM batches WHERE user_id = ? ORDER BY name', (session['user_id'],))
+            batches = cursor.fetchall()
+            cursor.execute('SELECT * FROM students WHERE id = ? AND user_id = ?', (student_id, session['user_id']))
+            student = cursor.fetchone()
+            conn.close()
+            return render_template('students/edit_student.html', student=student, batches=batches)
+        
+        if not phone or len(phone) != 10 or not phone.isdigit():
+            flash('Please enter a valid 10-digit phone number', 'error')
+            conn.close()
+            cursor.execute('SELECT * FROM batches WHERE user_id = ? ORDER BY name', (session['user_id'],))
+            batches = cursor.fetchall()
+            cursor.execute('SELECT * FROM students WHERE id = ? AND user_id = ?', (student_id, session['user_id']))
+            student = cursor.fetchone()
+            conn.close()
+            return render_template('students/edit_student.html', student=student, batches=batches)
+        
+        if not batch_id:
+            flash('Please select a batch', 'error')
+            conn.close()
+            cursor.execute('SELECT * FROM batches WHERE user_id = ? ORDER BY name', (session['user_id'],))
+            batches = cursor.fetchall()
+            cursor.execute('SELECT * FROM students WHERE id = ? AND user_id = ?', (student_id, session['user_id']))
+            student = cursor.fetchone()
+            conn.close()
+            return render_template('students/edit_student.html', student=student, batches=batches)
+        
+        # Check for duplicate phone number (excluding current student)
+        cursor.execute('SELECT id FROM students WHERE phone = ? AND user_id = ? AND id != ?', (phone, session['user_id'], student_id))
+        if cursor.fetchone():
+            flash('A student with this phone number already exists', 'error')
+            conn.close()
+            cursor.execute('SELECT * FROM batches WHERE user_id = ? ORDER BY name', (session['user_id'],))
+            batches = cursor.fetchall()
+            cursor.execute('SELECT * FROM students WHERE id = ? AND user_id = ?', (student_id, session['user_id']))
+            student = cursor.fetchone()
+            conn.close()
+            return render_template('students/edit_student.html', student=student, batches=batches)
+        
+        if name and phone and batch_id:
+            try:
+                cursor.execute('''
+                    UPDATE students 
+                    SET name = ?, phone = ?, batch_id = ?, address = ?, school_name = ?, standard = ?
+                    WHERE id = ? AND user_id = ?
+                ''', (name, phone, int(batch_id), address, school_name, standard, student_id, session['user_id']))
+                conn.commit()
+                conn.close()
+                flash('Student updated successfully!', 'success')
+                return redirect(url_for('students.students'))
+            except sqlite3.IntegrityError:
+                conn.rollback()
+                conn.close()
+                flash('A student with this phone number already exists', 'error')
+                cursor.execute('SELECT * FROM batches WHERE user_id = ? ORDER BY name', (session['user_id'],))
+                batches = cursor.fetchall()
+                cursor.execute('SELECT * FROM students WHERE id = ? AND user_id = ?', (student_id, session['user_id']))
+                student = cursor.fetchone()
+                conn.close()
+                return render_template('students/edit_student.html', student=student, batches=batches)
     
     # Get student
     cursor.execute('SELECT * FROM students WHERE id = ? AND user_id = ?', (student_id, session['user_id']))

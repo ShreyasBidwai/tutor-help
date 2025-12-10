@@ -1,0 +1,71 @@
+{% extends "student/base.html" %}
+
+{% block title %}My Profile - Tutor Help{% endblock %}
+
+{% block header_title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header" style="padding-bottom: 0.5rem;">
+        <h2 class="card-title" style="font-size: 1.5rem; margin: 0;">{{ student.name }}</h2>
+    </div>
+    <div style="padding: 1rem; padding-top: 0;">
+        <div style="display: grid; gap: 1rem;">
+            <div>
+                <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📱 Phone Number</div>
+                <div style="font-weight: 600; color: #111827; font-size: 1rem;">{{ student.phone }}</div>
+            </div>
+            
+            <div>
+                <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📚 Batch</div>
+                <div style="font-weight: 600; color: #111827; font-size: 1rem;">{{ student.batch_name or 'No Batch' }}</div>
+                {% if student.batch_description %}
+                <div style="font-size: 0.875rem; color: #6B7280; margin-top: 0.25rem;">{{ student.batch_description }}</div>
+                {% endif %}
+            </div>
+            
+            {% if student.standard %}
+            <div>
+                <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📖 Class/Standard</div>
+                <div style="font-weight: 600; color: #111827; font-size: 1rem;">{{ student.standard }}</div>
+            </div>
+            {% endif %}
+            
+            {% if student.school_name %}
+            <div>
+                <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">🏫 School Name</div>
+                <div style="font-weight: 600; color: #111827; font-size: 1rem;">{{ student.school_name }}</div>
+            </div>
+            {% endif %}
+            
+            {% if student.address %}
+            <div>
+                <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📍 Address</div>
+                <div style="font-weight: 600; color: #111827; font-size: 1rem;">{{ student.address }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Quick Actions</h2>
+    </div>
+    <div style="padding: 1rem;">
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <a href="{{ url_for('student.dashboard') }}" class="btn btn-primary">
+                📊 View Dashboard
+            </a>
+            <a href="{{ url_for('student.attendance') }}" class="btn btn-secondary">
+                📅 View Attendance
+            </a>
+            <a href="{{ url_for('student.homework') }}" class="btn btn-secondary">
+                📚 View Homework
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

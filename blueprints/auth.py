@@ -27,11 +27,16 @@ def login():
         return redirect(url_for('dashboard.dashboard'))
     
     if request.method == 'POST':
-        action = request.form.get('action', 'login')  # 'login' or 'signup'
+        action = request.form.get('action', '').strip().lower()  # Explicitly get action
         mobile = request.form.get('mobile', '').strip()
         
+        # Validate mobile number
         if not mobile or len(mobile) != 10 or not mobile.isdigit():
-            return render_template('auth/login.html', error='Please enter a valid 10-digit mobile number', active_tab=action)
+            return render_template('auth/login.html', error='Please enter a valid 10-digit mobile number', active_tab=action or 'login')
+        
+        # Validate action - must be either 'login' or 'signup'
+        if action not in ['login', 'signup']:
+            return render_template('auth/login.html', error='Invalid action. Please use the login or signup form.', active_tab='login')
         
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -41,29 +46,39 @@ def login():
         user = cursor.fetchone()
         
         if action == 'login':
-            # Login flow
+            # Login flow - user MUST exist
             if not user:
                 conn.close()
+                flash('Mobile number not found. Please sign up first.', 'error')
                 return render_template('auth/login.html', error='Mobile number not found. Please sign up first.', active_tab='login')
             
+            # Additional validation: ensure user has completed signup (has tuition_name)
+            # This prevents login if signup was incomplete
             user_id = user['id']
             tuition_name = user['tuition_name']
             role = user['role'] or Config.ROLE_TUTOR
+            
+            # If tuition_name is missing, redirect to signup to complete profile
+            if not tuition_name:
+                conn.close()
+                session['signup_mobile'] = mobile
+                flash('Please complete your signup by providing your tuition name.', 'error')
+                return redirect(url_for('auth.signup'))
             
             # Simulate OTP verification (auto-login)
             session['user_id'] = user_id
             session['mobile'] = mobile
             session['role'] = role
-            if tuition_name:
-                session['tuition_name'] = tuition_name
+            session['tuition_name'] = tuition_name
             
             conn.close()
             return redirect(url_for('dashboard.dashboard'))
         
-        else:  # signup
-            # Signup flow - check if already exists
+        else:  # action == 'signup'
+            # Signup flow - user must NOT exist
             if user:
                 conn.close()
+                flash('Mobile number already registered. Please login instead.', 'error')
                 return render_template('auth/login.html', error='Mobile number already registered. Please login instead.', active_tab='signup')
             
             # For signup, redirect to signup page to get tuition name
@@ -120,9 +135,48 @@ def signup():
     
     return render_template('auth/signup.html', mobile=mobile)
 
-@auth_bp.route('/student/login')
+@auth_bp.route('/student/login', methods=['GET', 'POST'])
 def student_login():
-    """Student login - Coming Soon"""
+    """OTP-based login for students"""
+    if 'user_id' in session and session.get('role') == 'student':
+        return redirect(url_for('student.dashboard'))
+    
+    if request.method == 'POST':
+        phone = request.form.get('phone', '').strip()
+        
+        if not phone or len(phone) != 10 or not phone.isdigit():
+            return render_template('auth/student_login.html', error='Please enter a valid 10-digit phone number')
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if student exists
+        cursor.execute('''
+            SELECT s.id, s.name, s.phone, s.batch_id, b.name as batch_name
+            FROM students s
+            LEFT JOIN batches b ON s.batch_id = b.id
+            WHERE s.phone = ?
+            LIMIT 1
+        ''', (phone,))
+        student = cursor.fetchone()
+        
+        if not student:
+            conn.close()
+            return render_template('auth/student_login.html', error='Phone number not found. Please contact your tutor.')
+        
+        # Simulate OTP verification (auto-login)
+        session['user_id'] = student['id']
+        session['mobile'] = phone
+        session['role'] = 'student'
+        session['student_name'] = student['name']
+        session['student_id'] = student['id']
+        session['batch_id'] = student['batch_id']
+        if student['batch_name']:
+            session['batch_name'] = student['batch_name']
+        
+        conn.close()
+        return redirect(url_for('student.dashboard'))
+    
     return render_template('auth/student_login.html')
 
 @auth_bp.route('/enterprise/login')

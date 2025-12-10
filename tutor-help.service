@@ -1,0 +1,18 @@
+[Unit]
+Description=Tutor Help Application
+After=network.target
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/path/to/tutor-help
+Environment="PATH=/path/to/tutor-help/venv/bin"
+EnvironmentFile=/path/to/tutor-help/.env
+ExecStart=/path/to/tutor-help/venv/bin/gunicorn -c gunicorn_config.py app:app
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+

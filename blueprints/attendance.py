@@ -1,6 +1,6 @@
 """Attendance management blueprint"""
-from flask import Blueprint, render_template, request, session, jsonify
-from datetime import date
+from flask import Blueprint, render_template, request, session, jsonify, flash
+from datetime import date, datetime, timedelta
 from database import get_db_connection
 from utils import require_login
 
@@ -17,9 +17,9 @@ def attendance():
     selected_date = request.args.get('date', date.today().isoformat())
     batch_filter = request.args.get('batch', type=int)
     
-    # Build query for students with attendance status
+    # Build query for students with attendance status and batch timing
     query = '''
-        SELECT s.*, b.name as batch_name,
+        SELECT s.*, b.name as batch_name, b.start_time as batch_start_time,
                COALESCE(a.status, -1) as attendance_status
         FROM students s
         LEFT JOIN batches b ON s.batch_id = b.id
@@ -37,13 +37,65 @@ def attendance():
     cursor.execute(query, params)
     students = cursor.fetchall()
     
-    # Group students by batch
+    # Logic: Allow marking attendance for today and yesterday only
+    attendance_already_saved = False
+    now = datetime.now()
+    today = date.today()
+    yesterday = today - timedelta(days=1)
+    selected_date_obj = date.fromisoformat(selected_date)
+    
+    is_today = selected_date == today.isoformat()
+    is_yesterday = selected_date == yesterday.isoformat()
+    is_future = selected_date_obj > today
+    is_past_before_yesterday = selected_date_obj < yesterday
+    
+    # Check if attendance already exists for the selected date
+    if students and (is_today or is_yesterday):
+        # Check if any student already has attendance marked for this date
+        student_ids = [s['id'] for s in students]
+        placeholders = ','.join(['?' for _ in student_ids])
+        cursor.execute(f'''
+            SELECT COUNT(*) as count
+            FROM attendance
+            WHERE student_id IN ({placeholders}) AND date = ?
+        ''', student_ids + [selected_date])
+        result = cursor.fetchone()
+        if result and result['count'] > 0:
+            attendance_already_saved = True
+    
+    # Group students by batch and check batch-specific timing
     students_by_batch = {}
-    for student in students:
-        batch_name = student['batch_name'] or 'No Batch'
-        if batch_name not in students_by_batch:
-            students_by_batch[batch_name] = []
-        students_by_batch[batch_name].append(student)
+    batch_can_mark = {}  # Track which batches can have attendance marked
+    
+    # Only process batches if not a future date
+    if not is_future:
+        for student in students:
+            batch_name = student['batch_name'] or 'No Batch'
+            
+            if batch_name not in students_by_batch:
+                students_by_batch[batch_name] = []
+                # Allow marking for today and yesterday
+                can_mark_this_batch = is_today or is_yesterday
+                
+                # If today, check if batch time has started
+                if is_today:
+                    batch_start_time = student['batch_start_time'] if 'batch_start_time' in student.keys() else None
+                    if batch_start_time:
+                        try:
+                            batch_start = datetime.strptime(batch_start_time, '%H:%M').time()
+                            batch_datetime = datetime.combine(today, batch_start)
+                            # Only allow marking if batch has started
+                            if now < batch_datetime:
+                                can_mark_this_batch = False
+                        except:
+                            pass
+                # For yesterday, allow marking without time restrictions
+                elif is_yesterday:
+                    can_mark_this_batch = True
+                
+                batch_can_mark[batch_name] = can_mark_this_batch
+            
+            students_by_batch[batch_name].append(student)
     
     # Get all batches for filter dropdown
     cursor.execute('SELECT * FROM batches WHERE user_id = ? ORDER BY name', (session['user_id'],))
@@ -51,47 +103,116 @@ def attendance():
     
     conn.close()
     
+    # Global can_mark_attendance: true if it's today or yesterday and at least one batch can be marked
+    can_mark_attendance = (is_today or is_yesterday) and (any(batch_can_mark.values()) if batch_can_mark else False)
+    
     return render_template('attendance/attendance.html', 
                          students_by_batch=students_by_batch,
                          students=students,  # Keep for backward compatibility
                          selected_date=selected_date,
                          today=date.today().isoformat(),
+                         yesterday=yesterday.isoformat(),
                          batches=batches,
-                         batch_filter=batch_filter)
+                         batch_filter=batch_filter,
+                         can_mark_attendance=can_mark_attendance,
+                         batch_can_mark=batch_can_mark,  # Per-batch marking permission
+                         attendance_already_saved=attendance_already_saved,
+                         is_today=is_today,
+                         is_yesterday=is_yesterday,
+                         is_future=is_future,
+                         is_past_before_yesterday=is_past_before_yesterday)
 
-@attendance_bp.route('/api/attendance/mark', methods=['POST'])
+@attendance_bp.route('/api/attendance/save', methods=['POST'])
 @require_login
-def mark_attendance():
-    """Mark attendance for a student
-    status: 0 = absent, 1 = present, 2 = late
-    """
+def save_attendance():
+    """Save attendance for multiple students at once"""
     data = request.get_json()
-    student_id = data.get('student_id')
-    status = data.get('status', 1)  # Default to present
+    attendance_data = data.get('attendance', [])  # List of {student_id, status, date}
     date_str = data.get('date', date.today().isoformat())
     
-    # Validate status
-    if status not in [0, 1, 2]:
-        return jsonify({'success': False, 'error': 'Invalid status'}), 400
+    if not attendance_data:
+        return jsonify({'success': False, 'error': 'No attendance data provided'}), 400
     
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Check if student belongs to user
-    cursor.execute('SELECT id FROM students WHERE id = ? AND user_id = ?', (student_id, session['user_id']))
-    if not cursor.fetchone():
-        conn.close()
-        return jsonify({'success': False, 'error': 'Student not found'}), 404
+    now = datetime.now()
+    today = date.today()
     
-    # Insert or update attendance
-    # Use status column, fallback to present for migration compatibility
-    cursor.execute('''
-        INSERT OR REPLACE INTO attendance (student_id, date, status, user_id)
-        VALUES (?, ?, ?, ?)
-    ''', (student_id, date_str, status, session['user_id']))
+    # Only allow saving attendance for today or yesterday
+    yesterday = today - timedelta(days=1)
+    if date_str != today.isoformat() and date_str != yesterday.isoformat():
+        conn.close()
+        return jsonify({'success': False, 'error': 'Attendance can only be marked for today or yesterday'}), 400
+    
+    # Validate and save attendance
+    saved_students = []
+    for item in attendance_data:
+        student_id = item.get('student_id')
+        status = item.get('status', 0)
+        
+        # Validate status
+        if status not in [0, 1, 2]:
+            continue
+        
+        # Check if student belongs to user
+        cursor.execute('SELECT id, batch_id FROM students WHERE id = ? AND user_id = ?', (student_id, session['user_id']))
+        student = cursor.fetchone()
+        if not student:
+            continue
+        
+        # Check if attendance already exists for this student and date
+        cursor.execute('SELECT id FROM attendance WHERE student_id = ? AND date = ?', (student_id, date_str))
+        existing_attendance = cursor.fetchone()
+        if existing_attendance:
+            # Attendance already saved, skip (locked)
+            continue
+        
+        # For today's attendance, check if batch time has started
+        if date_str == today.isoformat() and student['batch_id']:
+            cursor.execute('SELECT start_time FROM batches WHERE id = ?', (student['batch_id'],))
+            batch = cursor.fetchone()
+            if batch and batch['start_time']:
+                try:
+                    batch_start = datetime.strptime(batch['start_time'], '%H:%M').time()
+                    batch_datetime = datetime.combine(today, batch_start)
+                    if now < batch_datetime:
+                        continue  # Skip if batch hasn't started yet
+                except:
+                    pass
+        
+        # Insert attendance (only if not already saved)
+        cursor.execute('''
+            INSERT INTO attendance (student_id, date, status, user_id)
+            VALUES (?, ?, ?, ?)
+        ''', (student_id, date_str, status, session['user_id']))
+        
+        saved_students.append(student_id)
     
     conn.commit()
+    
+    # Notify students about attendance being marked
+    # Update last_attendance_notification timestamp for each student
+    if saved_students:
+        placeholders = ','.join(['?' for _ in saved_students])
+        cursor.execute(f'''
+            UPDATE students 
+            SET last_attendance_notification = CURRENT_TIMESTAMP
+            WHERE id IN ({placeholders})
+        ''', saved_students)
+        conn.commit()
+    
     conn.close()
     
-    return jsonify({'success': True})
+    if len(saved_students) > 0:
+        return jsonify({
+            'success': True, 
+            'saved_count': len(saved_students),
+            'message': f'Attendance saved for {len(saved_students)} student(s)'
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'error': 'No attendance was saved. Attendance may already be marked or batch time has not started.'
+        }), 400
 

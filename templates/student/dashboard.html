@@ -1,0 +1,501 @@
+{% extends "student/base.html" %}
+
+{% block title %}Student Dashboard - Tutor Help{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ attendance_percentage }}%</div>
+        <div class="stat-label">Attendance</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ recent_homework|length }}</div>
+        <div class="stat-label">Recent Homework</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ student.batch_name or 'N/A' }}</div>
+        <div class="stat-label">Batch</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Today's Attendance</h2>
+    </div>
+    <div style="padding: 1rem;">
+        {% if today_attendance %}
+            {% if today_attendance['status'] is not none %}
+                {% set status = today_attendance['status'] %}
+            {% elif today_attendance['present'] is not none %}
+                {% set status = today_attendance['present'] %}
+            {% else %}
+                {% set status = none %}
+            {% endif %}
+            {% if status == 1 %}
+                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: #D1FAE5; border-radius: 8px;">
+                    <div style="font-size: 2rem;">✓</div>
+                    <div>
+                        <div style="font-weight: 600; color: #065F46; margin-bottom: 0.25rem;">Present</div>
+                        <div style="font-size: 0.875rem; color: #047857;">Marked for today</div>
+                    </div>
+                </div>
+            {% elif status == 2 %}
+                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: #FEF3C7; border-radius: 8px;">
+                    <div style="font-size: 2rem;">⏰</div>
+                    <div>
+                        <div style="font-weight: 600; color: #92400E; margin-bottom: 0.25rem;">Late</div>
+                        <div style="font-size: 0.875rem; color: #B45309;">Marked for today</div>
+                    </div>
+                </div>
+            {% elif status == 0 %}
+                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: #FEE2E2; border-radius: 8px;">
+                    <div style="font-size: 2rem;">✗</div>
+                    <div>
+                        <div style="font-weight: 600; color: #991B1B; margin-bottom: 0.25rem;">Absent</div>
+                        <div style="font-size: 0.875rem; color: #B91C1C;">Marked for today</div>
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <div style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: #F3F4F6; border-radius: 8px;">
+                <div style="font-size: 2rem;">—</div>
+                <div>
+                    <div style="font-weight: 600; color: #6B7280; margin-bottom: 0.25rem;">Not Marked</div>
+                    <div style="font-size: 0.875rem; color: #9CA3AF;">No attendance record for today</div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if upcoming_classes %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Upcoming Classes</h2>
+    </div>
+    <div style="padding: 1rem;">
+        {% for class_info in upcoming_classes %}
+        <div style="padding: 0.75rem; background: #F9FAFB; border-radius: 8px; margin-bottom: 0.75rem; border-left: 4px solid #4F46E5;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                <div>
+                    <div style="font-weight: 600; color: #111827; margin-bottom: 0.25rem;">{{ class_info.batch_name }}</div>
+                    <div style="font-size: 0.875rem; color: #6B7280;">{{ class_info.date_display }}</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-weight: 600; color: #4F46E5; font-size: 0.875rem;">{{ class_info.time_display }}</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if recent_homework %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Recent Homework</h2>
+        <a href="{{ url_for('student.homework') }}" style="font-size: 0.875rem; color: #4F46E5; text-decoration: none;">View All</a>
+    </div>
+    {% for hw in recent_homework[:5] %}
+    <a href="{{ url_for('student.homework') }}" style="text-decoration: none; color: inherit;">
+        <div style="padding: 0.75rem 1rem; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='transparent'">
+            <div style="font-weight: 600; margin-bottom: 0.25rem;">{{ hw.title }}</div>
+            <div style="font-size: 0.875rem; color: #666;">
+                {% if hw.batch_name %}
+                📚 {{ hw.batch_name }}
+                {% endif %}
+                {% if hw.submission_date %}
+                <span style="margin-left: 0.75rem;">📅 Due: {{ hw.submission_date }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Homework reminder tracking
+const homeworkShown = new Set();
+let homeworkCheckInterval;
+
+// Storage keys for homework reminders
+function getHomeworkNewKey(homeworkId) {
+    return `homework_new_${homeworkId}`;
+}
+
+function getHomeworkDueSoonKey(homeworkId) {
+    const today = new Date().toISOString().split('T')[0];
+    return `homework_due_soon_${homeworkId}_${today}`;
+}
+
+function getHomeworkDueVerySoonKey(homeworkId) {
+    const today = new Date().toISOString().split('T')[0];
+    return `homework_due_very_soon_${homeworkId}_${today}`;
+}
+
+function isHomeworkNewShown(homeworkId) {
+    return localStorage.getItem(getHomeworkNewKey(homeworkId)) === 'true';
+}
+
+function isHomeworkDueSoonDismissed(homeworkId) {
+    return localStorage.getItem(getHomeworkDueSoonKey(homeworkId)) === 'true';
+}
+
+function isHomeworkDueVerySoonDismissed(homeworkId) {
+    return localStorage.getItem(getHomeworkDueVerySoonKey(homeworkId)) === 'true';
+}
+
+function dismissNewHomework(homeworkId) {
+    localStorage.setItem(getHomeworkNewKey(homeworkId), 'true');
+    homeworkShown.add(`new_${homeworkId}`);
+}
+
+function dismissDueSoonHomework(homeworkId) {
+    localStorage.setItem(getHomeworkDueSoonKey(homeworkId), 'true');
+    homeworkShown.add(`due_soon_${homeworkId}`);
+}
+
+function dismissDueVerySoonHomework(homeworkId) {
+    localStorage.setItem(getHomeworkDueVerySoonKey(homeworkId), 'true');
+    homeworkShown.add(`due_very_soon_${homeworkId}`);
+}
+
+function checkHomeworkReminders() {
+    fetch('{{ url_for("student.homework_reminders_api") }}')
+        .then(response => response.json())
+        .then(data => {
+            // Show popup for new homework assignments
+            data.new_homework.forEach(hw => {
+                if (!homeworkShown.has(`new_${hw.id}`) && !isHomeworkNewShown(hw.id)) {
+                    showNewHomeworkPopup(hw);
+                    homeworkShown.add(`new_${hw.id}`);
+                }
+            });
+            
+            // Show popup for homework due in 1 day
+            data.due_soon.forEach(hw => {
+                if (!homeworkShown.has(`due_soon_${hw.id}`) && !isHomeworkDueSoonDismissed(hw.id)) {
+                    showDueSoonHomeworkPopup(hw);
+                    homeworkShown.add(`due_soon_${hw.id}`);
+                }
+            });
+            
+            // Show popup for homework due in 30 minutes
+            data.due_very_soon.forEach(hw => {
+                if (!homeworkShown.has(`due_very_soon_${hw.id}`) && !isHomeworkDueVerySoonDismissed(hw.id)) {
+                    showDueVerySoonHomeworkPopup(hw);
+                    homeworkShown.add(`due_very_soon_${hw.id}`);
+                }
+            });
+        })
+        .catch(err => console.error('Error checking homework reminders:', err));
+}
+
+function showNewHomeworkPopup(homework) {
+    // Browser notification
+    if (Notification.permission === 'granted') {
+        new Notification('New Homework Assigned!', {
+            body: `${homework.title} - Due: ${homework.submission_date}`,
+            tag: `homework_new_${homework.id}`,
+            requireInteraction: true
+        });
+    }
+    
+    // In-app popup
+    const overlay = document.createElement('div');
+    overlay.id = `homework-new-modal-${homework.id}`;
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; animation: fadeIn 0.2s ease;';
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = 'background: white; border-radius: 12px; padding: 2rem; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease;';
+    modal.innerHTML = `
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+            <div style="font-size: 3rem; margin-bottom: 0.5rem;">📚</div>
+            <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #333;">New Homework Assigned!</h2>
+            <p style="color: #666; font-weight: 600; margin-bottom: 0.25rem;">${homework.title}</p>
+            ${homework.batch_name ? `<p style="font-size: 0.875rem; color: #999; margin-bottom: 0.25rem;">📚 ${homework.batch_name}</p>` : ''}
+            ${homework.submission_date ? `<p style="font-size: 0.875rem; color: #4F46E5; margin-top: 0.5rem; font-weight: 600;">📅 Due: ${homework.submission_date}</p>` : ''}
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <a href="{{ url_for('student.homework') }}" onclick="dismissNewHomework(${homework.id}); document.getElementById('homework-new-modal-${homework.id}').remove();" class="btn btn-primary" style="width: 100%; text-decoration: none; text-align: center;">
+                View Homework
+            </a>
+            <button onclick="dismissNewHomework(${homework.id}); document.getElementById('homework-new-modal-${homework.id}').remove();" class="btn btn-secondary" style="width: 100%;">
+                Done
+            </button>
+        </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            dismissNewHomework(homework.id);
+            overlay.remove();
+        }
+    });
+}
+
+function showDueSoonHomeworkPopup(homework) {
+    // Browser notification
+    if (Notification.permission === 'granted') {
+        new Notification('Homework Due Tomorrow!', {
+            body: `${homework.title} is due tomorrow (${homework.submission_date})`,
+            tag: `homework_due_soon_${homework.id}`,
+            requireInteraction: true
+        });
+    }
+    
+    // In-app popup
+    const overlay = document.createElement('div');
+    overlay.id = `homework-due-soon-modal-${homework.id}`;
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; animation: fadeIn 0.2s ease;';
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = 'background: white; border-radius: 12px; padding: 2rem; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease;';
+    modal.innerHTML = `
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+            <div style="font-size: 3rem; margin-bottom: 0.5rem;">⏰</div>
+            <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #333;">Homework Due Tomorrow!</h2>
+            <p style="color: #666; font-weight: 600; margin-bottom: 0.25rem;">${homework.title}</p>
+            ${homework.batch_name ? `<p style="font-size: 0.875rem; color: #999; margin-bottom: 0.25rem;">📚 ${homework.batch_name}</p>` : ''}
+            <p style="font-size: 0.875rem; color: #F59E0B; margin-top: 0.5rem; font-weight: 600;">📅 Due: ${homework.submission_date}</p>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <a href="{{ url_for('student.homework') }}" onclick="dismissDueSoonHomework(${homework.id}); document.getElementById('homework-due-soon-modal-${homework.id}').remove();" class="btn btn-primary" style="width: 100%; text-decoration: none; text-align: center;">
+                View Homework
+            </a>
+            <button onclick="dismissDueSoonHomework(${homework.id}); document.getElementById('homework-due-soon-modal-${homework.id}').remove();" class="btn btn-secondary" style="width: 100%;">
+                Done
+            </button>
+        </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            dismissDueSoonHomework(homework.id);
+            overlay.remove();
+        }
+    });
+}
+
+function showDueVerySoonHomeworkPopup(homework) {
+    // Browser notification
+    if (Notification.permission === 'granted') {
+        new Notification('Homework Due in 30 Minutes!', {
+            body: `${homework.title} is due very soon!`,
+            tag: `homework_due_very_soon_${homework.id}`,
+            requireInteraction: true
+        });
+    }
+    
+    // In-app popup
+    const overlay = document.createElement('div');
+    overlay.id = `homework-due-very-soon-modal-${homework.id}`;
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; animation: fadeIn 0.2s ease;';
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = 'background: white; border-radius: 12px; padding: 2rem; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease;';
+    modal.innerHTML = `
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+            <div style="font-size: 3rem; margin-bottom: 0.5rem;">🚨</div>
+            <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #EF4444;">Homework Due Soon!</h2>
+            <p style="color: #666; font-weight: 600; margin-bottom: 0.25rem;">${homework.title}</p>
+            ${homework.batch_name ? `<p style="font-size: 0.875rem; color: #999; margin-bottom: 0.25rem;">📚 ${homework.batch_name}</p>` : ''}
+            <p style="font-size: 0.875rem; color: #EF4444; margin-top: 0.5rem; font-weight: 600;">📅 Due: ${homework.submission_date}</p>
+            ${homework.batch_time ? `<p style="font-size: 0.875rem; color: #991B1B; margin-top: 0.5rem;">Batch at ${homework.batch_time} - Due in approximately 30 minutes!</p>` : '<p style="font-size: 0.875rem; color: #991B1B; margin-top: 0.5rem;">Due in approximately 30 minutes!</p>'}
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <a href="{{ url_for('student.homework') }}" onclick="dismissDueVerySoonHomework(${homework.id}); document.getElementById('homework-due-very-soon-modal-${homework.id}').remove();" class="btn btn-primary" style="width: 100%; text-decoration: none; text-align: center; background: #EF4444;">
+                View Homework Now
+            </a>
+            <button onclick="dismissDueVerySoonHomework(${homework.id}); document.getElementById('homework-due-very-soon-modal-${homework.id}').remove();" class="btn btn-secondary" style="width: 100%;">
+                Done
+            </button>
+        </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            dismissDueVerySoonHomework(homework.id);
+            overlay.remove();
+        }
+    });
+}
+
+// Clean up old localStorage entries
+function cleanupHomeworkStorage() {
+    const today = new Date().toISOString().split('T')[0];
+    const keysToRemove = [];
+    
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('homework_new_') || key.startsWith('homework_due_soon_') || key.startsWith('homework_due_very_soon_'))) {
+            if (key.startsWith('homework_new_')) {
+                // Keep new homework keys (they persist)
+                continue;
+            }
+            // Check if it's from a different day
+            if (!key.includes(today)) {
+                keysToRemove.push(key);
+            }
+        }
+    }
+    
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+}
+
+// Start checking when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Clean up old storage entries
+    cleanupHomeworkStorage();
+    
+    // Request notification permission
+    if (Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+    
+    // Check immediately
+    checkHomeworkReminders();
+    
+    // Then check every minute
+    homeworkCheckInterval = setInterval(checkHomeworkReminders, 60000);
+});
+
+// Clean up on page unload
+window.addEventListener('beforeunload', function() {
+    if (homeworkCheckInterval) {
+        clearInterval(homeworkCheckInterval);
+    }
+    if (attendanceCheckInterval) {
+        clearInterval(attendanceCheckInterval);
+    }
+});
+
+// Attendance notification tracking
+const attendanceShown = new Set();
+let attendanceCheckInterval;
+let attendanceFound = false; // Track if attendance has been found
+
+function checkAttendanceNotifications() {
+    // Don't poll if attendance already found
+    if (attendanceFound) {
+        if (attendanceCheckInterval) {
+            clearInterval(attendanceCheckInterval);
+            attendanceCheckInterval = null;
+        }
+        return;
+    }
+    
+    fetch('{{ url_for("student.attendance_notifications_api") }}')
+        .then(response => response.json())
+        .then(data => {
+            // Stop polling if server says we shouldn't poll
+            if (!data.should_poll) {
+                if (attendanceCheckInterval) {
+                    clearInterval(attendanceCheckInterval);
+                    attendanceCheckInterval = null;
+                }
+                attendanceFound = true; // Mark as found to prevent future polling
+            }
+            
+            // Show notifications if any
+            if (data.notifications && data.notifications.length > 0) {
+                data.notifications.forEach(notification => {
+                    const key = `${notification.type}_${notification.date}`;
+                    if (!attendanceShown.has(key)) {
+                        showAttendanceNotification(notification);
+                        attendanceShown.add(key);
+                        attendanceFound = true; // Stop polling once notification is shown
+                    }
+                });
+                
+                // Stop polling after showing notifications
+                if (attendanceCheckInterval) {
+                    clearInterval(attendanceCheckInterval);
+                    attendanceCheckInterval = null;
+                }
+            }
+        })
+        .catch(err => {
+            console.error('Error checking attendance notifications:', err);
+            // On error, stop polling to avoid continuous failed requests
+            if (attendanceCheckInterval) {
+                clearInterval(attendanceCheckInterval);
+                attendanceCheckInterval = null;
+            }
+        });
+}
+
+function showAttendanceNotification(notification) {
+    // Browser notification
+    if (Notification.permission === 'granted') {
+        new Notification('Attendance Marked!', {
+            body: notification.message,
+            tag: `attendance_${notification.date}`,
+            requireInteraction: true
+        });
+    }
+    
+    // In-app popup
+    const overlay = document.createElement('div');
+    overlay.id = `attendance-notification-${notification.date}`;
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; animation: fadeIn 0.2s ease;';
+    
+    const statusEmoji = notification.status === 1 ? '✓' : (notification.status === 2 ? '⏰' : '✗');
+    const statusColor = notification.status === 1 ? '#10B981' : (notification.status === 2 ? '#F59E0B' : '#EF4444');
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = 'background: white; border-radius: 12px; padding: 2rem; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease;';
+    modal.innerHTML = `
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+            <div style="font-size: 3rem; margin-bottom: 0.5rem;">${statusEmoji}</div>
+            <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #333;">Attendance Marked!</h2>
+            <p style="color: #666; font-weight: 600; margin-bottom: 0.25rem;">${notification.message}</p>
+            <p style="font-size: 0.875rem; color: ${statusColor}; margin-top: 0.5rem; font-weight: 600;">Date: ${notification.date}</p>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <a href="{{ url_for('student.attendance') }}" class="btn btn-primary" style="width: 100%; text-decoration: none; text-align: center;">
+                View Attendance
+            </a>
+            <button onclick="document.getElementById('attendance-notification-${notification.date}').remove();" class="btn btn-secondary" style="width: 100%;">
+                Got it
+            </button>
+        </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            dismissNewHomework(homework.id);
+            overlay.remove();
+        }
+    });
+}
+
+// Start checking attendance notifications
+document.addEventListener('DOMContentLoaded', function() {
+    // Check immediately
+    checkAttendanceNotifications();
+    
+    // Then check every 30 seconds (only if should_poll is true)
+    // The API will tell us when to stop polling
+    attendanceCheckInterval = setInterval(checkAttendanceNotifications, 30000);
+});
+</script>
+{% endblock %}
+

@@ -12,18 +12,38 @@ def require_login(f):
     """Decorator to require login and load user data"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        from flask import request
         if 'user_id' not in session:
-            return redirect(url_for('auth.login'))
+            # Redirect based on intended route
+            if request.endpoint and 'student' in request.endpoint:
+                return redirect(url_for('auth.student_login'))
+            return redirect(url_for('auth.welcome'))
         
         # Load tuition_name into session if not already there
         if 'tuition_name' not in session:
             from database import get_db_connection
             conn = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute('SELECT tuition_name FROM users WHERE id = ?', (session['user_id'],))
-            user = cursor.fetchone()
-            if user and user['tuition_name']:
-                session['tuition_name'] = user['tuition_name']
+            
+            if session.get('role') == 'tutor':
+                cursor.execute('SELECT tuition_name FROM users WHERE id = ?', (session['user_id'],))
+                user = cursor.fetchone()
+                if user and user['tuition_name']:
+                    session['tuition_name'] = user['tuition_name']
+            elif session.get('role') == 'student':
+                # Get tuition name from the tutor who owns this student
+                student_id = session.get('student_id')
+                if student_id:
+                    cursor.execute('''
+                        SELECT u.tuition_name 
+                        FROM users u
+                        INNER JOIN students s ON u.id = s.user_id
+                        WHERE s.id = ?
+                    ''', (student_id,))
+                    result = cursor.fetchone()
+                    if result and result['tuition_name']:
+                        session['tuition_name'] = result['tuition_name']
+            
             conn.close()
         
         return f(*args, **kwargs)

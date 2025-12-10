@@ -6,24 +6,49 @@
 <div style="max-width: 500px; margin: 4rem auto; padding: 2rem;">
     <div class="card">
         <div class="text-center mb-3">
-            <div style="font-size: 4rem; margin-bottom: 1rem;">🚧</div>
-            <h1 style="font-size: 1.75rem; margin-bottom: 0.5rem; color: #4F46E5;">Coming Soon</h1>
+            <div style="font-size: 3rem; margin-bottom: 1rem;">👨‍🎓</div>
+            <h1 style="font-size: 1.75rem; margin-bottom: 0.5rem; color: #4F46E5;">Student Login</h1>
             <p style="color: #666; margin-bottom: 2rem; font-size: 1rem;">
-                Student portal is under development
+                Enter your phone number to access your dashboard
             </p>
         </div>
         
-        <div style="background: #F3F4F6; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
-            <p style="color: #666; text-align: center; margin: 0; line-height: 1.6;">
-                We're working hard to bring you an amazing student experience. 
-                Stay tuned for updates!
-            </p>
+        {% if error %}
+        <div class="alert alert-error" style="margin-bottom: 1.5rem;">
+            {{ error }}
         </div>
+        {% endif %}
         
-        <a href="{{ url_for('auth.welcome') }}" class="btn btn-primary btn-block">
-            ← Back to Welcome
-        </a>
+        <form method="POST" action="{{ url_for('auth.student_login') }}">
+            <div class="form-group">
+                <label class="form-label" for="phone">Phone Number</label>
+                <input 
+                    type="tel" 
+                    id="phone" 
+                    name="phone" 
+                    class="form-input" 
+                    placeholder="Enter 10-digit phone number"
+                    maxlength="10"
+                    pattern="[0-9]{10}"
+                    required
+                    autofocus
+                    style="font-size: 1rem; padding: 0.875rem;"
+                >
+                <p style="font-size: 0.75rem; color: #666; margin-top: 0.5rem;">
+                    Use the phone number registered with your tutor
+                </p>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem; padding: 1rem; font-size: 1rem;">
+                Login
+            </button>
+        </form>
+        
+        <div style="margin-top: 1.5rem; text-align: center;">
+            <a href="{{ url_for('auth.welcome') }}" style="color: #4F46E5; text-decoration: none; font-size: 0.875rem;">
+                ← Back to Welcome
+            </a>
+        </div>
     </div>
 </div>
 {% endblock %}
-

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error - Tutor Help{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 4rem auto; padding: 2rem;">
+    <div class="card" style="text-align: center;">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">⚠️</div>
+        <h1 style="font-size: 2rem; margin-bottom: 0.5rem; color: #EF4444;">Server Error</h1>
+        <p style="color: #666; margin-bottom: 2rem;">
+            Something went wrong on our end. We're working to fix it.
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <a href="{{ url_for('dashboard.dashboard') if session.user_id else url_for('auth.welcome') }}" class="btn btn-primary">
+                Go to Dashboard
+            </a>
+            <button onclick="window.location.reload()" class="btn btn-secondary">
+                Try Again
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

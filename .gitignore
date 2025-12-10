@@ -19,8 +19,18 @@ instance/
 *.sqlite3
 tutor_app.db
 
+# Environment
+.env
+.env.local
+.env.*.local
+
 # Uploads
 uploads/
+!uploads/.gitkeep
+
+# Logs
+logs/
+*.log
 
 # IDE
 .vscode/
@@ -32,7 +42,4 @@ uploads/
 # OS
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log
 

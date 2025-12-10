@@ -1,5 +1,5 @@
 """Homework management blueprint"""
-from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, send_from_directory
+from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, send_from_directory, flash
 from datetime import datetime, date
 import os
 from database import get_db_connection
@@ -11,9 +11,26 @@ homework_bp = Blueprint('homework', __name__, url_prefix='')
 @homework_bp.route('/homework')
 @require_login
 def homework():
-    """List all homework"""
+    """List all homework with pagination"""
     conn = get_db_connection()
     cursor = conn.cursor()
+    
+    # Get pagination parameters
+    page = max(1, request.args.get('page', 1, type=int))
+    per_page = 20
+    offset = (page - 1) * per_page
+    
+    # Get total count
+    cursor.execute('SELECT COUNT(*) as total FROM homework WHERE user_id = ?', (session['user_id'],))
+    total_count = cursor.fetchone()['total']
+    total_pages = (total_count + per_page - 1) // per_page if total_count > 0 else 1
+    
+    # Validate page number
+    if page > total_pages and total_pages > 0:
+        page = total_pages
+        offset = (page - 1) * per_page
+    
+    # Get paginated homework
     cursor.execute('''
         SELECT h.*, b.name as batch_name, s.name as student_name
         FROM homework h
@@ -21,10 +38,16 @@ def homework():
         LEFT JOIN students s ON h.student_id = s.id
         WHERE h.user_id = ?
         ORDER BY h.created_at DESC
-    ''', (session['user_id'],))
+        LIMIT ? OFFSET ?
+    ''', (session['user_id'], per_page, offset))
     homework_list = cursor.fetchall()
     conn.close()
-    return render_template('homework/homework.html', homework_list=homework_list)
+    return render_template('homework/homework.html', 
+                         homework_list=homework_list,
+                         page=page,
+                         total_pages=total_pages,
+                         total_count=total_count,
+                         per_page=per_page)
 
 @homework_bp.route('/homework/share', methods=['GET', 'POST'])
 @require_login
@@ -55,6 +78,44 @@ def share_homework():
                 file.save(full_path)
                 file_path = file_path.replace('\\', '/')  # Normalize path
         
+        # Validation
+        if not title or not title.strip():
+            flash('Homework title is required', 'error')
+            conn.close()
+            cursor.execute('SELECT * FROM batches WHERE user_id = ? ORDER BY name', (session['user_id'],))
+            batches = cursor.fetchall()
+            cursor.execute('SELECT * FROM students WHERE user_id = ? ORDER BY name', (session['user_id'],))
+            students = cursor.fetchall()
+            conn.close()
+            today = date.today().isoformat()
+            return render_template('homework/share_homework.html', batches=batches, students=students, today=today)
+        
+        if not submission_date:
+            flash('Submission date is required', 'error')
+            conn.close()
+            cursor.execute('SELECT * FROM batches WHERE user_id = ? ORDER BY name', (session['user_id'],))
+            batches = cursor.fetchall()
+            cursor.execute('SELECT * FROM students WHERE user_id = ? ORDER BY name', (session['user_id'],))
+            students = cursor.fetchall()
+            conn.close()
+            today = date.today().isoformat()
+            return render_template('homework/share_homework.html', batches=batches, students=students, today=today)
+        
+        # Validate file size
+        if 'file' in request.files:
+            file = request.files['file']
+            if file and file.filename:
+                if file.content_length and file.content_length > Config.MAX_FILE_SIZE:
+                    flash(f'File size exceeds {Config.MAX_FILE_SIZE // (1024*1024)}MB limit', 'error')
+                    conn.close()
+                    cursor.execute('SELECT * FROM batches WHERE user_id = ? ORDER BY name', (session['user_id'],))
+                    batches = cursor.fetchall()
+                    cursor.execute('SELECT * FROM students WHERE user_id = ? ORDER BY name', (session['user_id'],))
+                    students = cursor.fetchall()
+                    conn.close()
+                    today = date.today().isoformat()
+                    return render_template('homework/share_homework.html', batches=batches, students=students, today=today)
+        
         if title:
             if batch_id:
                 batch_id = int(batch_id)
@@ -75,6 +136,7 @@ def share_homework():
             ''', (title, content, file_path, youtube_url, batch_id, student_id, submission_date, session['user_id']))
             conn.commit()
             conn.close()
+            flash('Homework shared successfully!', 'success')
             return redirect(url_for('homework.homework'))
     
     # Get batches and students for dropdowns
@@ -127,6 +189,31 @@ def edit_homework(homework_id):
                 file.save(full_path)
                 file_path = file_path.replace('\\', '/')
         
+        # Validation
+        if not title or not title.strip():
+            flash('Homework title is required', 'error')
+            conn.close()
+            cursor.execute('SELECT * FROM batches WHERE user_id = ? ORDER BY name', (session['user_id'],))
+            batches = cursor.fetchall()
+            cursor.execute('SELECT * FROM students WHERE user_id = ? ORDER BY name', (session['user_id'],))
+            students = cursor.fetchall()
+            cursor.execute('SELECT * FROM homework WHERE id = ? AND user_id = ?', (homework_id, session['user_id']))
+            homework = cursor.fetchone()
+            conn.close()
+            return render_template('homework/edit_homework.html', homework=homework, batches=batches, students=students, today=date.today().isoformat())
+        
+        if not submission_date:
+            flash('Submission date is required', 'error')
+            conn.close()
+            cursor.execute('SELECT * FROM batches WHERE user_id = ? ORDER BY name', (session['user_id'],))
+            batches = cursor.fetchall()
+            cursor.execute('SELECT * FROM students WHERE user_id = ? ORDER BY name', (session['user_id'],))
+            students = cursor.fetchall()
+            cursor.execute('SELECT * FROM homework WHERE id = ? AND user_id = ?', (homework_id, session['user_id']))
+            homework = cursor.fetchone()
+            conn.close()
+            return render_template('homework/edit_homework.html', homework=homework, batches=batches, students=students, today=date.today().isoformat())
+        
         if title:
             if batch_id:
                 batch_id = int(batch_id)
@@ -158,6 +245,7 @@ def edit_homework(homework_id):
             ''', (title, content, file_path, youtube_url, batch_id, student_id, submission_date, homework_id, session['user_id']))
             conn.commit()
             conn.close()
+            flash('Homework updated successfully!', 'success')
             return redirect(url_for('homework.homework'))
     
     # Get homework

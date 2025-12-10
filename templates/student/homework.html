@@ -1,0 +1,95 @@
+{% extends "student/base.html" %}
+
+{% block title %}My Homework - Tutor Help{% endblock %}
+
+{% block header_title %}My Homework{% endblock %}
+
+{% block content %}
+{% if homework_list %}
+    {% for hw in homework_list %}
+    <div class="card" style="margin-bottom: 1rem; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-radius: 8px; overflow: hidden;">
+        <div class="card-header" style="border-bottom: 1px solid #E5E7EB; padding: 1rem; background: #FFFFFF; display: flex; flex-direction: column;">
+            {# Row 1: Title #}
+            <h3 class="card-title" style="font-size: 1rem; font-weight: 600; color: #111827; margin: 0 0 0.75rem 0; line-height: 1.4; word-wrap: break-word; width: 100%;">{{ hw.title }}</h3>
+            
+            {# Row 2: Due Date - Always on second row #}
+            <div style="margin-bottom: 0.5rem; width: 100%;">
+                {% if hw.submission_date %}
+                <div style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.5rem; background: #FEF3C7; border-radius: 6px;">
+                    <span style="font-size: 0.875rem;">📅</span>
+                    <span style="font-weight: 500; color: #92400E; font-size: 0.8125rem;">Due: {{ hw.submission_date }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            {# Row 3: Batch - Always on third row #}
+            <div style="width: 100%;">
+                {% if hw.batch_name %}
+                <div style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.5rem; background: #F9FAFB; border-radius: 6px;">
+                    <span style="font-size: 0.875rem;">📚</span>
+                    <span style="font-weight: 500; color: #374151; font-size: 0.8125rem;">{{ hw.batch_name }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div style="padding: 0.75rem;">
+            {% if hw.content %}
+            <div style="margin-bottom: 0.625rem; color: #374151; white-space: pre-wrap; font-size: 0.8125rem; line-height: 1.5; background: #F9FAFB; padding: 0.5rem; border-radius: 4px; border-left: 2px solid #4F46E5;">
+                {{ hw.content }}
+            </div>
+            {% endif %}
+            
+            {% if hw.file_path %}
+            <div style="margin-bottom: 0.625rem;">
+                <a href="{{ url_for('homework.uploaded_file', filename=hw.file_path) }}" target="_blank" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.375rem 0.5rem; font-size: 0.75rem; border-radius: 4px;">
+                    📎 Document
+                </a>
+                {% if hw.file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')) %}
+                <div style="margin-top: 0.375rem;">
+                    <img src="{{ url_for('homework.uploaded_file', filename=hw.file_path) }}" alt="Homework document" style="max-width: 100%; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            {% if hw.youtube_url %}
+            <div style="margin-bottom: 0.625rem;">
+                {% set video_id = '' %}
+                {% if 'v=' in hw.youtube_url %}
+                    {% set video_id = hw.youtube_url.split('v=')[-1].split('&')[0] %}
+                {% elif 'youtu.be/' in hw.youtube_url %}
+                    {% set video_id = hw.youtube_url.split('youtu.be/')[-1].split('?')[0] %}
+                {% elif 'embed/' in hw.youtube_url %}
+                    {% set video_id = hw.youtube_url.split('embed/')[-1].split('?')[0] %}
+                {% else %}
+                    {% set video_id = hw.youtube_url.split('/')[-1] %}
+                {% endif %}
+                {% if video_id %}
+                <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                    <iframe 
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
+                        src="https://www.youtube.com/embed/{{ video_id }}" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                {% else %}
+                <a href="{{ hw.youtube_url }}" target="_blank" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.375rem 0.5rem; font-size: 0.75rem; border-radius: 4px;">
+                    🎥 Video
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">📚</div>
+        <h3>No homework assigned</h3>
+        <p>Your tutor hasn't assigned any homework yet</p>
+    </div>
+{% endif %}
+{% endblock %}
+
