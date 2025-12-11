@@ -9,6 +9,16 @@ function validatePhone(phone) {
     return phoneRegex.test(phone);
 }
 
+// Validate name (only letters and spaces, no numbers or special characters)
+function validateName(name) {
+    if (!name || !name.trim()) {
+        return false;
+    }
+    // Allow only letters (including accented characters) and spaces
+    const nameRegex = /^[a-zA-Z\s\u00C0-\u017F\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]+$/;
+    return nameRegex.test(name.trim());
+}
+
 // Validate required fields
 function validateRequired(value) {
     return value && value.trim().length > 0;
@@ -70,6 +80,9 @@ function validateStudentForm() {
     // Validate name
     if (!validateRequired(name)) {
         showFieldError('name', 'Student name is required');
+        isValid = false;
+    } else if (!validateName(name)) {
+        showFieldError('name', 'Name can only contain letters and spaces. No numbers or special characters allowed.');
         isValid = false;
     } else {
         clearFieldError('name');
@@ -185,6 +198,17 @@ function formatPhoneInput(inputId) {
     }
 }
 
+// Auto-format name input (only letters and spaces)
+function formatNameInput(inputId) {
+    const input = document.getElementById(inputId);
+    if (input) {
+        input.addEventListener('input', function(e) {
+            // Remove numbers and special characters, keep only letters and spaces
+            this.value = this.value.replace(/[^a-zA-Z\s\u00C0-\u017F\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]/g, '');
+        });
+    }
+}
+
 // Validate batch form
 function validateBatchForm() {
     let isValid = true;
@@ -267,6 +291,10 @@ document.addEventListener('DOMContentLoaded', function() {
     formatPhoneInput('mobile');
     formatPhoneInput('mobile-login');
     formatPhoneInput('mobile-signup');
+    
+    // Auto-format name inputs (student and tutor names)
+    formatNameInput('name'); // Student name
+    formatNameInput('tutor_name'); // Tutor name
     
     // Prevent duplicate submissions for all forms
     const forms = document.querySelectorAll('form');

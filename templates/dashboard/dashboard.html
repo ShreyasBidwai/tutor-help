@@ -5,25 +5,46 @@
 {% block header_title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="stats-grid" data-intro-step="1">
-    <a href="{{ url_for('students.students') }}" style="text-decoration: none; color: inherit;">
-        <div class="stat-card">
-            <div class="stat-number">{{ student_count }}</div>
-            <div class="stat-label">Students</div>
+<!-- Skeleton for Stats -->
+<div id="stats-skeleton" class="skeleton-container active">
+    <div class="stats-grid">
+        <div class="skeleton-stat">
+            <div class="skeleton skeleton-stat-number"></div>
+            <div class="skeleton skeleton-stat-label"></div>
         </div>
-    </a>
-    <a href="{{ url_for('batches.batches') }}" style="text-decoration: none; color: inherit;">
-        <div class="stat-card">
-            <div class="stat-number">{{ batch_count }}</div>
-            <div class="stat-label">Batches</div>
+        <div class="skeleton-stat">
+            <div class="skeleton skeleton-stat-number"></div>
+            <div class="skeleton skeleton-stat-label"></div>
         </div>
-    </a>
-    <a href="{{ url_for('attendance.attendance') }}" style="text-decoration: none; color: inherit;">
-        <div class="stat-card">
-            <div class="stat-number">{{ attendance_count }}/{{ student_count }}</div>
-            <div class="stat-label">Attendance</div>
+        <div class="skeleton-stat">
+            <div class="skeleton skeleton-stat-number"></div>
+            <div class="skeleton skeleton-stat-label"></div>
         </div>
-    </a>
+    </div>
+</div>
+
+<!-- Actual Stats Content -->
+<div id="stats-content" class="content-loading">
+    <div class="stats-grid" data-intro-step="1">
+        <a href="{{ url_for('students.students') }}" style="text-decoration: none; color: inherit;">
+            <div class="stat-card">
+                <div class="stat-number">{{ student_count }}</div>
+                <div class="stat-label">Students</div>
+            </div>
+        </a>
+        <a href="{{ url_for('batches.batches') }}" style="text-decoration: none; color: inherit;">
+            <div class="stat-card">
+                <div class="stat-number">{{ batch_count }}</div>
+                <div class="stat-label">Batches</div>
+            </div>
+        </a>
+        <a href="{{ url_for('attendance.attendance') }}" style="text-decoration: none; color: inherit;">
+            <div class="stat-card">
+                <div class="stat-number">{{ attendance_count }}/{{ student_count }}</div>
+                <div class="stat-label">Attendance</div>
+            </div>
+        </a>
+    </div>
 </div>
 
 <div class="card" data-intro-step="2">

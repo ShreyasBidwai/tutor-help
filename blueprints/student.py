@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from datetime import date, timedelta, datetime
 from calendar import monthrange
 from database import get_db_connection
-from utils import require_login
+from utils import require_login, get_ist_now, get_ist_today, cleanup_expired_homework
 
 student_bp = Blueprint('student', __name__, url_prefix='')
 
@@ -36,8 +36,8 @@ def dashboard():
         session.clear()
         return redirect(url_for('auth.student_login'))
     
-    # Get today's attendance
-    today = date.today().isoformat()
+    # Get today's attendance (IST)
+    today = get_ist_today().isoformat()
     cursor.execute('''
         SELECT status, present
         FROM attendance
@@ -46,7 +46,7 @@ def dashboard():
     today_attendance = cursor.fetchone()
     
     # Get attendance stats (last 30 days)
-    thirty_days_ago = (date.today() - timedelta(days=29)).isoformat()
+    thirty_days_ago = (get_ist_today() - timedelta(days=29)).isoformat()
     cursor.execute('''
         SELECT 
             COUNT(*) as total_days,
@@ -65,16 +65,24 @@ def dashboard():
     else:
         attendance_percentage = 0
     
-    # Get recent homework (last 10)
+    # Clean up expired homework before showing list
+    cleanup_expired_homework()
+    
+    # Calculate cutoff date to exclude expired homework
+    today = get_ist_today()
+    cutoff_date = (today - timedelta(days=1)).isoformat()
+    
+    # Get recent homework (last 10, excluding expired)
     cursor.execute('''
         SELECT h.*, b.name as batch_name
         FROM homework h
         LEFT JOIN batches b ON h.batch_id = b.id
         WHERE (h.batch_id = ? OR h.student_id = ?)
         AND h.user_id = (SELECT user_id FROM students WHERE id = ?)
+        AND h.submission_date >= ?
         ORDER BY h.created_at DESC
         LIMIT 10
-    ''', (student['batch_id'], student_id, student_id))
+    ''', (student['batch_id'], student_id, student_id, cutoff_date))
     recent_homework = cursor.fetchall()
     
     # Get upcoming classes
@@ -95,7 +103,7 @@ def dashboard():
             }
             
             # Get next 5 upcoming classes
-            now = datetime.now()
+            now = get_ist_now()
             for i in range(14):  # Check next 14 days
                 check_date = now.date() + timedelta(days=i)
                 weekday_name = check_date.strftime('%A')
@@ -175,7 +183,7 @@ def attendance():
         return redirect(url_for('auth.student_login'))
     
     # Get attendance stats (last 30 days)
-    thirty_days_ago = (date.today() - timedelta(days=29)).isoformat()
+    thirty_days_ago = (get_ist_today() - timedelta(days=29)).isoformat()
     cursor.execute('''
         SELECT 
             COUNT(*) as total_days,
@@ -188,8 +196,8 @@ def attendance():
     ''', (student_id, thirty_days_ago))
     attendance_stats = cursor.fetchone()
     
-    # Get current month dates (e.g., December 1-31)
-    today = date.today()
+    # Get current month dates (e.g., December 1-31) - IST
+    today = get_ist_today()
     current_month = today.month
     current_year = today.year
     
@@ -259,15 +267,23 @@ def homework():
         session.clear()
         return redirect(url_for('auth.student_login'))
     
-    # Get all homework assigned to this student
+    # Clean up expired homework before showing list
+    cleanup_expired_homework()
+    
+    # Calculate cutoff date to exclude expired homework
+    today = get_ist_today()
+    cutoff_date = (today - timedelta(days=1)).isoformat()
+    
+    # Get all homework assigned to this student (excluding expired)
     cursor.execute('''
         SELECT h.*, b.name as batch_name
         FROM homework h
         LEFT JOIN batches b ON h.batch_id = b.id
         WHERE (h.batch_id = ? OR h.student_id = ?)
         AND h.user_id = (SELECT user_id FROM students WHERE id = ?)
+        AND h.submission_date >= ?
         ORDER BY h.created_at DESC
-    ''', (student['batch_id'], student_id, student_id))
+    ''', (student['batch_id'], student_id, student_id, cutoff_date))
     homework_list = cursor.fetchall()
     
     conn.close()
@@ -304,7 +320,11 @@ def homework_reminders_api():
     # 30 minutes before midnight of due date (11:30 PM the day before)
     thirty_minutes_before_midnight = datetime.combine(today, datetime.max.time()) - timedelta(minutes=30)
     
-    # Get all homework assigned to this student with batch timing
+    # Calculate cutoff date to exclude expired homework
+    today_ist = get_ist_today()
+    cutoff_date = (today_ist - timedelta(days=1)).isoformat()
+    
+    # Get all homework assigned to this student with batch timing (excluding expired)
     cursor.execute('''
         SELECT h.*, b.name as batch_name, b.start_time as batch_start_time
         FROM homework h
@@ -312,8 +332,9 @@ def homework_reminders_api():
         WHERE (h.batch_id = ? OR h.student_id = ?)
         AND h.user_id = ?
         AND h.submission_date IS NOT NULL
+        AND h.submission_date >= ?
         ORDER BY h.created_at DESC
-    ''', (student['batch_id'], student_id, student['user_id']))
+    ''', (student['batch_id'], student_id, student['user_id'], cutoff_date))
     all_homework = cursor.fetchall()
     
     new_homework = []

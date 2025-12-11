@@ -2,10 +2,19 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, flash
 from datetime import date
 from database import get_db_connection
-from utils import require_login
+from utils import require_login, get_ist_today
 import sqlite3
+import re
 
 students_bp = Blueprint('students', __name__, url_prefix='')
+
+def validate_name(name):
+    """Validate name: only letters and spaces, no numbers or special characters"""
+    if not name or not name.strip():
+        return False
+    # Allow only letters (including accented characters) and spaces
+    name_pattern = re.compile(r'^[a-zA-Z\s\u00C0-\u017F\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]+$')
+    return bool(name_pattern.match(name.strip()))
 
 @students_bp.route('/students')
 @require_login
@@ -112,6 +121,11 @@ def add_student():
             conn.close()
             return render_template('students/add_student.html', batches=batches)
         
+        if not validate_name(name):
+            flash('Student name can only contain letters and spaces. No numbers or special characters allowed.', 'error')
+            conn.close()
+            return render_template('students/add_student.html', batches=batches)
+        
         if not phone or len(phone) != 10 or not phone.isdigit():
             flash('Please enter a valid 10-digit phone number', 'error')
             conn.close()
@@ -167,6 +181,16 @@ def edit_student(student_id):
         # Validation
         if not name or not name.strip():
             flash('Student name is required', 'error')
+            conn.close()
+            cursor.execute('SELECT * FROM batches WHERE user_id = ? ORDER BY name', (session['user_id'],))
+            batches = cursor.fetchall()
+            cursor.execute('SELECT * FROM students WHERE id = ? AND user_id = ?', (student_id, session['user_id']))
+            student = cursor.fetchone()
+            conn.close()
+            return render_template('students/edit_student.html', student=student, batches=batches)
+        
+        if not validate_name(name):
+            flash('Student name can only contain letters and spaces. No numbers or special characters allowed.', 'error')
             conn.close()
             cursor.execute('SELECT * FROM batches WHERE user_id = ? ORDER BY name', (session['user_id'],))
             batches = cursor.fetchall()
@@ -292,7 +316,7 @@ def view_student(student_id):
                          student=student, 
                          attendance_stats=attendance_stats,
                          recent_attendance=recent_attendance,
-                         today=date.today().isoformat())
+                         today=get_ist_today().isoformat())
 
 @students_bp.route('/api/students/<int:student_id>', methods=['DELETE'])
 @require_login

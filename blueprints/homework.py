@@ -1,17 +1,21 @@
 """Homework management blueprint"""
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, send_from_directory, flash
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import os
 from database import get_db_connection
-from utils import require_login, allowed_file, get_secure_filename
+from utils import require_login, allowed_file, get_secure_filename, get_ist_now, get_ist_today, cleanup_expired_homework
 from config import Config
 
 homework_bp = Blueprint('homework', __name__, url_prefix='')
+
 
 @homework_bp.route('/homework')
 @require_login
 def homework():
     """List all homework with pagination"""
+    # Clean up expired homework before showing list
+    cleanup_expired_homework()
+    
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -20,8 +24,16 @@ def homework():
     per_page = 20
     offset = (page - 1) * per_page
     
-    # Get total count
-    cursor.execute('SELECT COUNT(*) as total FROM homework WHERE user_id = ?', (session['user_id'],))
+    # Calculate cutoff date to exclude expired homework from count
+    today = get_ist_today()
+    cutoff_date = (today - timedelta(days=1)).isoformat()
+    
+    # Get total count (excluding expired homework)
+    cursor.execute('''
+        SELECT COUNT(*) as total 
+        FROM homework 
+        WHERE user_id = ? AND submission_date >= ?
+    ''', (session['user_id'], cutoff_date))
     total_count = cursor.fetchone()['total']
     total_pages = (total_count + per_page - 1) // per_page if total_count > 0 else 1
     
@@ -30,16 +42,16 @@ def homework():
         page = total_pages
         offset = (page - 1) * per_page
     
-    # Get paginated homework
+    # Get paginated homework (excluding expired)
     cursor.execute('''
         SELECT h.*, b.name as batch_name, s.name as student_name
         FROM homework h
         LEFT JOIN batches b ON h.batch_id = b.id
         LEFT JOIN students s ON h.student_id = s.id
-        WHERE h.user_id = ?
+        WHERE h.user_id = ? AND h.submission_date >= ?
         ORDER BY h.created_at DESC
         LIMIT ? OFFSET ?
-    ''', (session['user_id'], per_page, offset))
+    ''', (session['user_id'], cutoff_date, per_page, offset))
     homework_list = cursor.fetchall()
     conn.close()
     return render_template('homework/homework.html', 
@@ -71,7 +83,7 @@ def share_homework():
             if file and file.filename and allowed_file(file.filename):
                 filename = get_secure_filename(file.filename)
                 # Add timestamp to avoid conflicts
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
+                timestamp = get_ist_now().strftime('%Y%m%d_%H%M%S_')
                 filename = timestamp + filename
                 file_path = os.path.join('homework', filename)
                 full_path = os.path.join(Config.UPLOAD_FOLDER, file_path)
@@ -87,7 +99,7 @@ def share_homework():
             cursor.execute('SELECT * FROM students WHERE user_id = ? ORDER BY name', (session['user_id'],))
             students = cursor.fetchall()
             conn.close()
-            today = date.today().isoformat()
+            today = get_ist_today().isoformat()
             return render_template('homework/share_homework.html', batches=batches, students=students, today=today)
         
         if not submission_date:
@@ -98,7 +110,7 @@ def share_homework():
             cursor.execute('SELECT * FROM students WHERE user_id = ? ORDER BY name', (session['user_id'],))
             students = cursor.fetchall()
             conn.close()
-            today = date.today().isoformat()
+            today = get_ist_today().isoformat()
             return render_template('homework/share_homework.html', batches=batches, students=students, today=today)
         
         # Validate file size
@@ -113,7 +125,7 @@ def share_homework():
                     cursor.execute('SELECT * FROM students WHERE user_id = ? ORDER BY name', (session['user_id'],))
                     students = cursor.fetchall()
                     conn.close()
-                    today = date.today().isoformat()
+                    today = get_ist_today().isoformat()
                     return render_template('homework/share_homework.html', batches=batches, students=students, today=today)
         
         if title:
@@ -128,7 +140,7 @@ def share_homework():
             
             # Default to today if no submission date provided
             if not submission_date:
-                submission_date = date.today().isoformat()
+                submission_date = get_ist_today().isoformat()
             
             cursor.execute('''
                 INSERT INTO homework (title, content, file_path, youtube_url, batch_id, student_id, submission_date, user_id)
@@ -182,7 +194,7 @@ def edit_homework(homework_id):
             file = request.files['file']
             if file and file.filename and allowed_file(file.filename):
                 filename = get_secure_filename(file.filename)
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
+                timestamp = get_ist_now().strftime('%Y%m%d_%H%M%S_')
                 filename = timestamp + filename
                 file_path = os.path.join('homework', filename)
                 full_path = os.path.join(Config.UPLOAD_FOLDER, file_path)
@@ -200,7 +212,7 @@ def edit_homework(homework_id):
             cursor.execute('SELECT * FROM homework WHERE id = ? AND user_id = ?', (homework_id, session['user_id']))
             homework = cursor.fetchone()
             conn.close()
-            return render_template('homework/edit_homework.html', homework=homework, batches=batches, students=students, today=date.today().isoformat())
+            return render_template('homework/edit_homework.html', homework=homework, batches=batches, students=students, today=get_ist_today().isoformat())
         
         if not submission_date:
             flash('Submission date is required', 'error')
@@ -212,7 +224,7 @@ def edit_homework(homework_id):
             cursor.execute('SELECT * FROM homework WHERE id = ? AND user_id = ?', (homework_id, session['user_id']))
             homework = cursor.fetchone()
             conn.close()
-            return render_template('homework/edit_homework.html', homework=homework, batches=batches, students=students, today=date.today().isoformat())
+            return render_template('homework/edit_homework.html', homework=homework, batches=batches, students=students, today=get_ist_today().isoformat())
         
         if title:
             if batch_id:
@@ -226,7 +238,7 @@ def edit_homework(homework_id):
             
             # Default to today if no submission date provided
             if not submission_date:
-                submission_date = date.today().isoformat()
+                submission_date = get_ist_today().isoformat()
             
             # Get existing homework to preserve file_path if not updating
             cursor.execute('SELECT file_path FROM homework WHERE id = ? AND user_id = ?', 

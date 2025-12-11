@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, request, session, jsonify, flash
 from datetime import date, datetime, timedelta
 from database import get_db_connection
-from utils import require_login
+from utils import require_login, get_ist_now, get_ist_today
 
 attendance_bp = Blueprint('attendance', __name__, url_prefix='')
 
@@ -15,17 +15,17 @@ def attendance():
     
     # Get selected date and batch filter from query parameters
     date_param = request.args.get('date', '').strip()
-    # Handle empty date - default to today
+    # Handle empty date - default to today (IST)
     if not date_param:
-        selected_date = date.today().isoformat()
+        selected_date = get_ist_today().isoformat()
     else:
         try:
             # Validate date format
             selected_date_obj_test = date.fromisoformat(date_param)
             selected_date = date_param
         except (ValueError, AttributeError):
-            # Invalid date format, default to today
-            selected_date = date.today().isoformat()
+            # Invalid date format, default to today (IST)
+            selected_date = get_ist_today().isoformat()
     
     batch_filter = request.args.get('batch', type=int)
     
@@ -49,18 +49,18 @@ def attendance():
     cursor.execute(query, params)
     students = cursor.fetchall()
     
-    # Logic: Allow marking attendance for today and yesterday only
+    # Logic: Allow marking attendance for today and yesterday only (IST)
     attendance_already_saved = False
-    now = datetime.now()
-    today = date.today()
+    now = get_ist_now()
+    today = get_ist_today()
     yesterday = today - timedelta(days=1)
     
     # Parse selected date with error handling
     try:
         selected_date_obj = date.fromisoformat(selected_date)
     except (ValueError, AttributeError):
-        # If date parsing fails, default to today
-        selected_date = date.today().isoformat()
+        # If date parsing fails, default to today (IST)
+        selected_date = get_ist_today().isoformat()
         selected_date_obj = today
     
     is_today = selected_date == today.isoformat()
@@ -147,7 +147,7 @@ def save_attendance():
     """Save attendance for multiple students at once"""
     data = request.get_json()
     attendance_data = data.get('attendance', [])  # List of {student_id, status, date}
-    date_str = data.get('date', date.today().isoformat())
+    date_str = data.get('date', get_ist_today().isoformat())
     
     if not attendance_data:
         return jsonify({'success': False, 'error': 'No attendance data provided'}), 400
@@ -155,8 +155,8 @@ def save_attendance():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    now = datetime.now()
-    today = date.today()
+    now = get_ist_now()
+    today = get_ist_today()
     
     # Only allow saving attendance for today or yesterday
     yesterday = today - timedelta(days=1)

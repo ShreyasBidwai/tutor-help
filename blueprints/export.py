@@ -1,7 +1,7 @@
 """Export functionality blueprint - CSV exports for mobile-friendly downloads"""
 from flask import Blueprint, Response, session, request
 from database import get_db_connection
-from utils import require_login
+from utils import require_login, get_ist_today
 from datetime import date, datetime, timedelta
 import csv
 import io
@@ -49,7 +49,7 @@ def export_students():
     response = Response(
         output.getvalue(),
         mimetype='text/csv',
-        headers={'Content-Disposition': f'attachment; filename=students_{date.today().isoformat()}.csv'}
+        headers={'Content-Disposition': f'attachment; filename=students_{get_ist_today().isoformat()}.csv'}
     )
     
     return response
@@ -58,8 +58,8 @@ def export_students():
 @require_login
 def export_attendance():
     """Export attendance as CSV"""
-    date_from = request.args.get('from', (date.today() - datetime.timedelta(days=30)).isoformat())
-    date_to = request.args.get('to', date.today().isoformat())
+    date_from = request.args.get('from', (get_ist_today() - timedelta(days=30)).isoformat())
+    date_to = request.args.get('to', get_ist_today().isoformat())
     batch_id = request.args.get('batch', type=int)
     
     conn = get_db_connection()
@@ -131,8 +131,8 @@ def export_batch_report(batch_id):
         return {'error': 'Batch not found'}, 404
     
     # Get 30-day attendance for students in batch
-    today = date.today()
-    thirty_days_ago = today - datetime.timedelta(days=30)
+    today = get_ist_today()
+    thirty_days_ago = today - timedelta(days=30)
     
     cursor.execute('''
         SELECT s.name, s.phone,
@@ -175,7 +175,7 @@ def export_batch_report(batch_id):
     response = Response(
         output.getvalue(),
         mimetype='text/csv',
-        headers={'Content-Disposition': f'attachment; filename=batch_report_{batch_name_safe}_{date.today().isoformat()}.csv'}
+        headers={'Content-Disposition': f'attachment; filename=batch_report_{batch_name_safe}_{get_ist_today().isoformat()}.csv'}
     )
     
     return response

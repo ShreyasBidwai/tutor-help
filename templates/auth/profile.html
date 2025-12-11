@@ -46,10 +46,12 @@
                 class="form-input" 
                 value="{{ user.tutor_name or '' }}"
                 placeholder="Priya Patel"
+                pattern="[a-zA-Z\s\u00C0-\u017F\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]+"
+                title="Name can only contain letters and spaces. No numbers or special characters allowed."
                 maxlength="100"
             >
             <p style="font-size: 0.75rem; color: #666; margin-top: 0.5rem;">
-                Your name as the tutor/owner (optional)
+                Your name as the tutor/owner (optional). Only letters and spaces allowed.
             </p>
         </div>
         

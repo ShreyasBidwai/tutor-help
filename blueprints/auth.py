@@ -3,8 +3,17 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from database import get_db_connection
 from config import Config
 from utils import require_login
+import re
 
 auth_bp = Blueprint('auth', __name__, url_prefix='')
+
+def validate_name(name):
+    """Validate name: only letters and spaces, no numbers or special characters"""
+    if not name or not name.strip():
+        return False
+    # Allow only letters (including accented characters) and spaces
+    name_pattern = re.compile(r'^[a-zA-Z\s\u00C0-\u017F\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]+$')
+    return bool(name_pattern.match(name.strip()))
 
 @auth_bp.route('/')
 def index():
@@ -195,6 +204,14 @@ def profile():
         tutor_name = request.form.get('tutor_name', '').strip()
         tuition_name = request.form.get('tuition_name', '').strip()
         address = request.form.get('address', '').strip()
+        
+        # Validate tutor_name if provided
+        if tutor_name and not validate_name(tutor_name):
+            flash('Tutor name can only contain letters and spaces. No numbers or special characters allowed.', 'error')
+            cursor.execute('SELECT mobile, tutor_name, tuition_name, address FROM users WHERE id = ?', (session['user_id'],))
+            user = cursor.fetchone()
+            conn.close()
+            return render_template('auth/profile.html', user=user)
         
         if tuition_name:
             cursor.execute('''

@@ -45,6 +45,22 @@
     {% endif %}
 </div>
 
+<!-- Skeleton for Students List -->
+<div id="students-skeleton" class="skeleton-container active">
+    {% for i in range(5) %}
+    <div class="skeleton-list-item">
+        <div class="skeleton skeleton-list-avatar"></div>
+        <div class="skeleton-list-content">
+            <div class="skeleton skeleton-line skeleton-title"></div>
+            <div class="skeleton skeleton-line skeleton-text"></div>
+            <div class="skeleton skeleton-line skeleton-text short"></div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Actual Students Content -->
+<div id="students-content" class="content-loading">
 {% if students %}
     {% for student in students %}
     <div class="list-item" style="cursor: pointer;" onclick="window.location.href='{{ url_for('students.view_student', student_id=student.id) }}'">
@@ -79,6 +95,7 @@
         <p>Use the "Add Student" button above to get started</p>
     </div>
 {% endif %}
+</div>
 
 {% if students and total_pages > 1 %}
 <div style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 1.5rem; padding: 1rem; flex-wrap: wrap;">

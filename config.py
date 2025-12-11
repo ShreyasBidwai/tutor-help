@@ -28,4 +28,7 @@ class Config:
     DEBUG = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
     HOST = os.environ.get('HOST', '0.0.0.0')
     PORT = int(os.environ.get('PORT', 5000))
+    
+    # Timezone settings - Use IST (Indian Standard Time)
+    TIMEZONE = 'Asia/Kolkata'  # IST timezone
 

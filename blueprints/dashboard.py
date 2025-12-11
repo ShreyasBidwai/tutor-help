@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, session, jsonify
 from datetime import date, datetime, timedelta
 from database import get_db_connection
-from utils import require_login
+from utils import require_login, get_ist_now, get_ist_today, cleanup_expired_homework
 
 dashboard_bp = Blueprint('dashboard', __name__, url_prefix='')
 
@@ -10,11 +10,18 @@ dashboard_bp = Blueprint('dashboard', __name__, url_prefix='')
 @require_login
 def dashboard():
     """Main dashboard"""
+    # Clean up expired homework before showing dashboard
+    cleanup_expired_homework()
+    
     conn = get_db_connection()
     cursor = conn.cursor()
     
     user_id = session['user_id']
-    today = date.today().isoformat()
+    today = get_ist_today().isoformat()
+    
+    # Calculate cutoff date to exclude expired homework
+    today_obj = get_ist_today()
+    cutoff_date = (today_obj - timedelta(days=1)).isoformat()
     
     # Get stats
     cursor.execute('SELECT COUNT(*) as count FROM students WHERE user_id = ?', (user_id,))
@@ -43,8 +50,8 @@ def dashboard():
     else:
         attendance_percentage = 0
     
-    # Get upcoming batches for today
-    now = datetime.now()
+    # Get upcoming batches for today (IST)
+    now = get_ist_now()
     # Map weekday to day abbreviation used in database
     weekday_map = {
         'Monday': 'mo', 'Tuesday': 'tu', 'Wednesday': 'we', 'Thursday': 'th',
@@ -109,16 +116,16 @@ def dashboard():
     upcoming_batches.sort(key=lambda x: x['minutes_until'])
     current_batches.sort(key=lambda x: x['minutes_until'])
     
-    # Get recent homework (last 3)
+    # Get recent homework (last 3, excluding expired)
     cursor.execute('''
         SELECT h.*, b.name as batch_name, s.name as student_name
         FROM homework h
         LEFT JOIN batches b ON h.batch_id = b.id
         LEFT JOIN students s ON h.student_id = s.id
-        WHERE h.user_id = ?
+        WHERE h.user_id = ? AND h.submission_date >= ?
         ORDER BY h.created_at DESC
         LIMIT 3
-    ''', (user_id,))
+    ''', (user_id, cutoff_date))
     recent_homework = cursor.fetchall()
     
     # Get students per batch
@@ -183,7 +190,7 @@ def upcoming_batches_api():
     cursor = conn.cursor()
     
     user_id = session['user_id']
-    now = datetime.now()
+    now = get_ist_now()
     # Map weekday to day abbreviation used in database
     weekday_map = {
         'Monday': 'mo', 'Tuesday': 'tu', 'Wednesday': 'we', 'Thursday': 'th',

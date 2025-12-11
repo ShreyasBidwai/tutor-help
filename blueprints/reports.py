@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, redirect, url_for, session, request
 from datetime import date, timedelta
 from database import get_db_connection
-from utils import require_login
+from utils import require_login, get_ist_today
 
 reports_bp = Blueprint('reports', __name__, url_prefix='')
 
@@ -14,7 +14,7 @@ def reports():
     cursor = conn.cursor()
     
     user_id = session['user_id']
-    today = date.today()
+    today = get_ist_today()
     active_tab = request.args.get('tab', 'batches')  # Default to batches tab
     
     # Calculate date range (last 7 days including today)
@@ -200,7 +200,7 @@ def batch_report_detail(batch_id):
     cursor = conn.cursor()
     
     user_id = session['user_id']
-    today = date.today()
+    today = get_ist_today()
     
     # Verify batch belongs to user
     cursor.execute('SELECT * FROM batches WHERE id = ? AND user_id = ?', (batch_id, user_id))
@@ -309,7 +309,7 @@ def student_report_detail(student_id):
     cursor = conn.cursor()
     
     user_id = session['user_id']
-    today = date.today()
+    today = get_ist_today()
     
     # Verify student belongs to user
     cursor.execute('''

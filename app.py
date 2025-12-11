@@ -5,6 +5,15 @@ from database import init_db, migrate_db, add_indexes
 import os
 import logging
 
+# Set timezone to IST (Indian Standard Time)
+os.environ['TZ'] = 'Asia/Kolkata'
+try:
+    import time
+    time.tzset()  # Unix/Linux only
+except AttributeError:
+    # Windows doesn't have tzset, but we'll use timezone-aware datetime instead
+    pass
+
 # Initialize Flask app
 app = Flask(__name__)
 app.config.from_object(Config)

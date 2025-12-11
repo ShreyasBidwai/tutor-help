@@ -11,6 +11,25 @@
     </a>
 </div>
 
+<!-- Skeleton for Homework List -->
+<div id="homework-skeleton" class="skeleton-container active">
+    {% for i in range(3) %}
+    <div class="skeleton-card" style="margin-bottom: 1rem;">
+        <div class="skeleton-header">
+            <div style="flex: 1;">
+                <div class="skeleton skeleton-line skeleton-title"></div>
+                <div class="skeleton skeleton-line skeleton-text"></div>
+            </div>
+        </div>
+        <div class="skeleton skeleton-line skeleton-text"></div>
+        <div class="skeleton skeleton-line skeleton-text"></div>
+        <div class="skeleton skeleton-button"></div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Actual Homework Content -->
+<div id="homework-content" class="content-loading">
 {% if homework_list %}
     {% for hw in homework_list %}
     <div class="card" style="margin-bottom: 1rem; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-radius: 8px; overflow: hidden;">
@@ -143,6 +162,7 @@
         </a>
     </div>
 {% endif %}
+</div>
 
 {% if homework_list and total_pages > 1 %}
 <div style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 1.5rem; padding: 1rem; flex-wrap: wrap;">

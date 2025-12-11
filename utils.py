@@ -3,6 +3,22 @@ from functools import wraps
 from flask import session, redirect, url_for
 from werkzeug.utils import secure_filename
 from config import Config
+from datetime import datetime, date, timezone, timedelta
+
+# IST timezone (UTC+5:30)
+IST = timezone(timedelta(hours=5, minutes=30))
+
+def get_ist_now():
+    """Get current datetime in IST timezone"""
+    return datetime.now(IST)
+
+def get_ist_today():
+    """Get current date in IST timezone"""
+    return get_ist_now().date()
+
+def get_ist_datetime():
+    """Get current datetime in IST (alias for get_ist_now)"""
+    return get_ist_now()
 
 def allowed_file(filename):
     """Check if file extension is allowed"""
@@ -68,4 +84,52 @@ def require_role(*allowed_roles):
 def get_secure_filename(filename):
     """Get secure filename for uploads"""
     return secure_filename(filename)
+
+def cleanup_expired_homework():
+    """Delete homework that is past due date + 1 day and remove associated files"""
+    from database import get_db_connection
+    from config import Config
+    import os
+    from datetime import timedelta
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Calculate cutoff date: today - 1 day (so homework with due date < today gets deleted)
+    # This means homework is deleted 1 day after the due date
+    today = get_ist_today()
+    cutoff_date = (today - timedelta(days=1)).isoformat()
+    
+    # Find all expired homework
+    cursor.execute('''
+        SELECT id, file_path, user_id 
+        FROM homework 
+        WHERE submission_date < ?
+    ''', (cutoff_date,))
+    expired_homework = cursor.fetchall()
+    
+    deleted_count = 0
+    deleted_files = 0
+    
+    for hw in expired_homework:
+        # Delete associated file if it exists
+        if hw['file_path']:
+            file_path = os.path.join(Config.UPLOAD_FOLDER, hw['file_path'])
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    deleted_files += 1
+            except Exception as e:
+                # Log error but continue with deletion
+                print(f"Error deleting file {file_path}: {e}")
+        
+        # Delete homework record
+        cursor.execute('DELETE FROM homework WHERE id = ?', (hw['id'],))
+        deleted_count += 1
+    
+    if deleted_count > 0:
+        conn.commit()
+    
+    conn.close()
+    return deleted_count, deleted_files
 
