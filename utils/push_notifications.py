@@ -27,8 +27,8 @@ def send_push_notification(subscription_info, title, body, url=None, notificatio
         payload = {
             'title': title,
             'body': body,
-            'icon': icon or '/static/TutionTrack_appIcon.png',
-            'badge': badge or '/static/TutionTrack_appIcon.png',
+            'icon': icon or '/static/TutionTrack_appIcon_192x192.png',
+            'badge': badge or '/static/TutionTrack_appIcon_96x96.png',
             'tag': notification_type or 'default',
             'requireInteraction': False,
             'data': {

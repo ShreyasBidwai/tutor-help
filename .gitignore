@@ -17,12 +17,18 @@ instance/
 *.db
 *.sqlite
 *.sqlite3
+*.db-wal
+*.db-shm
 tutor_app.db
+tutor_app.db-wal
+tutor_app.db-shm
 
 # Environment
 .env
 .env.local
 .env.*.local
+.env.production
+.env.development
 
 # Uploads
 uploads/
@@ -42,4 +48,24 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Key files (never commit keys!)
+*.key
+*.pem
+vapid_keys.txt
+secret_key.txt
+
+# APK/Build files
+*.apk
+*.aab
+build/
+dist/
+*.keystore
+*.jks
 

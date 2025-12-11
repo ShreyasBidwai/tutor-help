@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#4F46E5">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='TutionTrack_appIcon.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='TutionTrack_appIcon_192x192.png') }}">
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <title>{% block title %}TuitionTrack{% endblock %}</title>
     <!-- SweetAlert2 -->
@@ -1489,6 +1489,22 @@
         
         // Push notifications will be handled by push-notifications.js
     </script>
+    
+    <!-- Niya Help Bot - Only show if logged in -->
+    {% if session.user_id %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/help-bot.css') }}">
+    <script>
+        // Pass user role to help bot
+        window.userLoggedIn = true;
+        window.userRole = '{{ session.role or "tutor" }}';
+        console.log('Niya: Template loaded, userLoggedIn=', window.userLoggedIn, 'userRole=', window.userRole);
+    </script>
+    <script src="{{ url_for('static', filename='js/help-bot.js') }}"></script>
+    {% else %}
+    <script>
+        console.log('Niya: User not logged in (no session.user_id)');
+    </script>
+    {% endif %}
 </body>
 </html>
 

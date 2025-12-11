@@ -7,7 +7,7 @@ const DYNAMIC_CACHE = 'dynamic-v1';
 const STATIC_ASSETS = [
   '/',
   '/static/manifest.json',
-  '/static/TutionTrack_appIcon.png',
+  '/static/TutionTrack_appIcon_192x192.png',
   '/static/TutionTrack_headerLogo.png',
   '/static/TutionTrack_logoNoBG.png',
   '/static/js/swipe-gestures.js',
@@ -103,8 +103,8 @@ self.addEventListener('push', (event) => {
     let notificationData = {
         title: 'TuitionTrack',
         body: 'You have a new notification',
-        icon: '/static/TutionTrack_appIcon.png',
-        badge: '/static/TutionTrack_appIcon.png',
+        icon: '/static/TutionTrack_appIcon_192x192.png',
+        badge: '/static/TutionTrack_appIcon_96x96.png',
         tag: 'default',
         requireInteraction: false,
         data: {}
