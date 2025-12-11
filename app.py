@@ -2,6 +2,7 @@
 from flask import Flask, jsonify
 from config import Config
 from database import init_db, migrate_db, add_indexes
+from datetime import datetime, date
 import os
 import logging
 
@@ -51,6 +52,33 @@ app.register_blueprint(reports_bp)
 app.register_blueprint(payments_bp)
 app.register_blueprint(student_bp)
 app.register_blueprint(export_bp)
+
+# Custom Jinja2 filter for DD/MM/YYYY date format
+@app.template_filter('ddmmyyyy')
+def ddmmyyyy_filter(value):
+    """Format date as DD/MM/YYYY"""
+    if not value:
+        return ''
+    
+    try:
+        # Handle string dates (YYYY-MM-DD format)
+        if isinstance(value, str):
+            if len(value) == 10 and '-' in value:
+                # Parse YYYY-MM-DD format
+                date_obj = datetime.strptime(value, '%Y-%m-%d').date()
+            else:
+                return value
+        elif isinstance(value, date):
+            date_obj = value
+        elif isinstance(value, datetime):
+            date_obj = value.date()
+        else:
+            return str(value)
+        
+        # Format as DD/MM/YYYY
+        return date_obj.strftime('%d/%m/%Y')
+    except (ValueError, AttributeError, TypeError):
+        return str(value)
 
 # Initialize database on startup
 if not os.path.exists(Config.DATABASE):

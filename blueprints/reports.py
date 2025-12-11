@@ -1,8 +1,9 @@
 """Attendance reports blueprint"""
 from flask import Blueprint, render_template, redirect, url_for, session, request
 from datetime import date, timedelta
+from calendar import monthrange
 from database import get_db_connection
-from utils import require_login, get_ist_today
+from utils import require_login, get_ist_today, cleanup_old_attendance
 
 reports_bp = Blueprint('reports', __name__, url_prefix='')
 
@@ -304,7 +305,10 @@ def batch_report_detail(batch_id):
 @reports_bp.route('/reports/student/<int:student_id>')
 @require_login
 def student_report_detail(student_id):
-    """30-day attendance grid for a specific student"""
+    """Monthly attendance grid for a specific student (current month only)"""
+    # Clean up old attendance records before showing report
+    cleanup_old_attendance()
+    
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -324,11 +328,26 @@ def student_report_detail(student_id):
         conn.close()
         return redirect(url_for('reports.reports'))
     
-    # Calculate date range (last 30 days including today)
+    # Only allow viewing current month - ignore month/year params
+    month = today.month
+    year = today.year
+    
+    # Generate all dates for the selected month
+    month_days = monthrange(year, month)[1]  # Number of days in month
+    
     date_range = []
-    for i in range(29, -1, -1):  # 29 days ago to today
-        d = today - timedelta(days=i)
+    for day in range(1, month_days + 1):
+        d = date(year, month, day)
         date_range.append(d.isoformat())
+    
+    # Get first day of month to calculate which day of week it starts on
+    first_day = date(year, month, 1)
+    first_day_weekday = first_day.weekday()  # 0 = Monday, 6 = Sunday
+    
+    # Get last day of month to calculate which day of week it ends on
+    last_day = date(year, month, month_days)
+    last_day_weekday = last_day.weekday()  # 0 = Monday, 6 = Sunday
+    remaining_cells = 6 - last_day_weekday  # Empty cells needed after month ends
     
     # Get attendance for each day in the date range
     # Check which columns exist
@@ -366,7 +385,7 @@ def student_report_detail(student_id):
         else:
             attendance_by_date[date_str] = -1  # -1 means no record
     
-    # Calculate statistics
+    # Calculate statistics for the month
     present_count = sum(1 for status in attendance_by_date.values() if status == 1)
     late_count = sum(1 for status in attendance_by_date.values() if status == 2)
     absent_count = sum(1 for status in attendance_by_date.values() if status == 0)
@@ -374,11 +393,16 @@ def student_report_detail(student_id):
     attended_count = present_count + late_count
     
     # Calculate attendance percentage (only for days with records)
-    days_with_records = 30 - na_count
+    days_with_records = month_days - na_count
     if days_with_records > 0:
         attendance_percentage = round((attended_count / days_with_records) * 100)
     else:
         attendance_percentage = 0
+    
+    # Month names
+    month_names = ['January', 'February', 'March', 'April', 'May', 'June',
+                   'July', 'August', 'September', 'October', 'November', 'December']
+    month_name = month_names[month - 1]
     
     conn.close()
     
@@ -392,5 +416,12 @@ def student_report_detail(student_id):
                          na_count=na_count,
                          attended_count=attended_count,
                          attendance_percentage=attendance_percentage,
-                         today=today)
+                         today=today,
+                         month=month,
+                         year=year,
+                         month_name=month_name,
+                         month_days=month_days,
+                         first_day_weekday=first_day_weekday,
+                         last_day_weekday=last_day_weekday,
+                         remaining_cells=remaining_cells)
 

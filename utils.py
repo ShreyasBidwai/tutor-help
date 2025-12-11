@@ -133,3 +133,31 @@ def cleanup_expired_homework():
     conn.close()
     return deleted_count, deleted_files
 
+def cleanup_old_attendance():
+    """Delete attendance records from previous months (keep only current month)"""
+    from database import get_db_connection
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    today = get_ist_today()
+    current_month = today.month
+    current_year = today.year
+    
+    # Calculate first day of current month
+    first_day_current_month = date(current_year, current_month, 1)
+    
+    # Delete all attendance records before the current month
+    cursor.execute('''
+        DELETE FROM attendance 
+        WHERE date < ?
+    ''', (first_day_current_month.isoformat(),))
+    
+    deleted_count = cursor.rowcount
+    
+    if deleted_count > 0:
+        conn.commit()
+    
+    conn.close()
+    return deleted_count
+

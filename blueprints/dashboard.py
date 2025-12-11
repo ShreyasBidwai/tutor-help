@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, session, jsonify
 from datetime import date, datetime, timedelta
 from database import get_db_connection
-from utils import require_login, get_ist_now, get_ist_today, cleanup_expired_homework
+from utils import require_login, get_ist_now, get_ist_today, cleanup_expired_homework, cleanup_old_attendance
 
 dashboard_bp = Blueprint('dashboard', __name__, url_prefix='')
 
@@ -10,8 +10,9 @@ dashboard_bp = Blueprint('dashboard', __name__, url_prefix='')
 @require_login
 def dashboard():
     """Main dashboard"""
-    # Clean up expired homework before showing dashboard
+    # Clean up expired homework and old attendance before showing dashboard
     cleanup_expired_homework()
+    cleanup_old_attendance()
     
     conn = get_db_connection()
     cursor = conn.cursor()

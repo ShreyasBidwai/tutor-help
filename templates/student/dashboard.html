@@ -106,7 +106,7 @@
                 📚 {{ hw.batch_name }}
                 {% endif %}
                 {% if hw.submission_date %}
-                <span style="margin-left: 0.75rem;">📅 Due: {{ hw.submission_date }}</span>
+                <span style="margin-left: 0.75rem;">📅 Due: {{ hw.submission_date | ddmmyyyy }}</span>
                 {% endif %}
             </div>
         </div>
@@ -132,6 +132,16 @@
 // Homework reminder tracking
 const homeworkShown = new Set();
 let homeworkCheckInterval;
+
+// Format date as DD/MM/YYYY (global function)
+function formatDateDDMMYYYY(dateStr) {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return dateStr;
+}
 
 // Storage keys for homework reminders
 function getHomeworkNewKey(homeworkId) {
@@ -210,7 +220,7 @@ function showNewHomeworkPopup(homework) {
     // Browser notification
     if (Notification.permission === 'granted') {
         new Notification('New Homework Assigned!', {
-            body: `${homework.title} - Due: ${homework.submission_date}`,
+            body: `${homework.title} - Due: ${formatDateDDMMYYYY(homework.submission_date)}`,
             tag: `homework_new_${homework.id}`,
             requireInteraction: true
         });
@@ -229,7 +239,7 @@ function showNewHomeworkPopup(homework) {
             <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #333;">New Homework Assigned!</h2>
             <p style="color: #666; font-weight: 600; margin-bottom: 0.25rem;">${homework.title}</p>
             ${homework.batch_name ? `<p style="font-size: 0.875rem; color: #999; margin-bottom: 0.25rem;">📚 ${homework.batch_name}</p>` : ''}
-            ${homework.submission_date ? `<p style="font-size: 0.875rem; color: #4F46E5; margin-top: 0.5rem; font-weight: 600;">📅 Due: ${homework.submission_date}</p>` : ''}
+            ${homework.submission_date ? `<p style="font-size: 0.875rem; color: #4F46E5; margin-top: 0.5rem; font-weight: 600;">📅 Due: ${formatDateDDMMYYYY(homework.submission_date)}</p>` : ''}
         </div>
         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
             <a href="{{ url_for('student.homework') }}" onclick="dismissNewHomework(${homework.id}); document.getElementById('homework-new-modal-${homework.id}').remove();" class="btn btn-primary" style="width: 100%; text-decoration: none; text-align: center;">
@@ -256,7 +266,7 @@ function showDueSoonHomeworkPopup(homework) {
     // Browser notification
     if (Notification.permission === 'granted') {
         new Notification('Homework Due Tomorrow!', {
-            body: `${homework.title} is due tomorrow (${homework.submission_date})`,
+            body: `${homework.title} is due tomorrow (${formatDateDDMMYYYY(homework.submission_date)})`,
             tag: `homework_due_soon_${homework.id}`,
             requireInteraction: true
         });
@@ -275,7 +285,7 @@ function showDueSoonHomeworkPopup(homework) {
             <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #333;">Homework Due Tomorrow!</h2>
             <p style="color: #666; font-weight: 600; margin-bottom: 0.25rem;">${homework.title}</p>
             ${homework.batch_name ? `<p style="font-size: 0.875rem; color: #999; margin-bottom: 0.25rem;">📚 ${homework.batch_name}</p>` : ''}
-            <p style="font-size: 0.875rem; color: #F59E0B; margin-top: 0.5rem; font-weight: 600;">📅 Due: ${homework.submission_date}</p>
+            <p style="font-size: 0.875rem; color: #F59E0B; margin-top: 0.5rem; font-weight: 600;">📅 Due: ${formatDateDDMMYYYY(homework.submission_date)}</p>
         </div>
         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
             <a href="{{ url_for('student.homework') }}" onclick="dismissDueSoonHomework(${homework.id}); document.getElementById('homework-due-soon-modal-${homework.id}').remove();" class="btn btn-primary" style="width: 100%; text-decoration: none; text-align: center;">
@@ -321,7 +331,7 @@ function showDueVerySoonHomeworkPopup(homework) {
             <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #EF4444;">Homework Due Soon!</h2>
             <p style="color: #666; font-weight: 600; margin-bottom: 0.25rem;">${homework.title}</p>
             ${homework.batch_name ? `<p style="font-size: 0.875rem; color: #999; margin-bottom: 0.25rem;">📚 ${homework.batch_name}</p>` : ''}
-            <p style="font-size: 0.875rem; color: #EF4444; margin-top: 0.5rem; font-weight: 600;">📅 Due: ${homework.submission_date}</p>
+            <p style="font-size: 0.875rem; color: #EF4444; margin-top: 0.5rem; font-weight: 600;">📅 Due: ${formatDateDDMMYYYY(homework.submission_date)}</p>
             ${homework.batch_time ? `<p style="font-size: 0.875rem; color: #991B1B; margin-top: 0.5rem;">Batch at ${homework.batch_time} - Due in approximately 30 minutes!</p>` : '<p style="font-size: 0.875rem; color: #991B1B; margin-top: 0.5rem;">Due in approximately 30 minutes!</p>'}
         </div>
         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
@@ -474,7 +484,7 @@ function showAttendanceNotification(notification) {
             <div style="font-size: 3rem; margin-bottom: 0.5rem;">${statusEmoji}</div>
             <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #333;">Attendance Marked!</h2>
             <p style="color: #666; font-weight: 600; margin-bottom: 0.25rem;">${notification.message}</p>
-            <p style="font-size: 0.875rem; color: ${statusColor}; margin-top: 0.5rem; font-weight: 600;">Date: ${notification.date}</p>
+            <p style="font-size: 0.875rem; color: ${statusColor}; margin-top: 0.5rem; font-weight: 600;">Date: ${formatDateDDMMYYYY(notification.date)}</p>
         </div>
         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
             <a href="{{ url_for('student.attendance') }}" class="btn btn-primary" style="width: 100%; text-decoration: none; text-align: center;">

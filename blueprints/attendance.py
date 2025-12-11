@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, request, session, jsonify, flash
 from datetime import date, datetime, timedelta
 from database import get_db_connection
-from utils import require_login, get_ist_now, get_ist_today
+from utils import require_login, get_ist_now, get_ist_today, cleanup_old_attendance
 
 attendance_bp = Blueprint('attendance', __name__, url_prefix='')
 
@@ -10,6 +10,9 @@ attendance_bp = Blueprint('attendance', __name__, url_prefix='')
 @require_login
 def attendance():
     """Attendance tracker page"""
+    # Clean up old attendance records (keep only current month)
+    cleanup_old_attendance()
+    
     conn = get_db_connection()
     cursor = conn.cursor()
     

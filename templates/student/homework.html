@@ -17,7 +17,7 @@
                 {% if hw.submission_date %}
                 <div style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.5rem; background: #FEF3C7; border-radius: 6px;">
                     <span style="font-size: 0.875rem;">📅</span>
-                    <span style="font-weight: 500; color: #92400E; font-size: 0.8125rem;">Due: {{ hw.submission_date }}</span>
+                    <span style="font-weight: 500; color: #92400E; font-size: 0.8125rem;">Due: {{ hw.submission_date | ddmmyyyy }}</span>
                 </div>
                 {% endif %}
             </div>

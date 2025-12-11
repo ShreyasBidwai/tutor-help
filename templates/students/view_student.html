@@ -98,7 +98,7 @@
     </div>
     {% for record in recent_attendance %}
     <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f0f0f0;">
-        <span style="color: #666;">{{ record.date }}</span>
+        <span style="color: #666;">{{ record.date | ddmmyyyy }}</span>
         {% if record.status == 1 %}
         <span class="badge badge-success">Present</span>
         {% elif record.status == 2 %}

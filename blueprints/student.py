@@ -120,13 +120,13 @@ def dashboard():
                         
                         # Only show future classes
                         if class_datetime > now:
-                            date_display = check_date.strftime('%B %d, %Y')
                             if i == 0:
                                 date_display = 'Today'
                             elif i == 1:
                                 date_display = 'Tomorrow'
                             else:
-                                date_display = check_date.strftime('%A, %B %d')
+                                # Format as DD/MM/YYYY
+                                date_display = check_date.strftime('%d/%m/%Y')
                             
                             time_display = batch['start_time']
                             if batch['end_time']:
@@ -572,11 +572,13 @@ def profile():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Get student info with batch details
+    # Get student info with batch details and tutor information
     cursor.execute('''
-        SELECT s.*, b.name as batch_name, b.description as batch_description
+        SELECT s.*, b.name as batch_name, b.description as batch_description,
+               u.tuition_name, u.tutor_name, u.address as tuition_address, u.mobile as tutor_mobile
         FROM students s
         LEFT JOIN batches b ON s.batch_id = b.id
+        LEFT JOIN users u ON s.user_id = u.id
         WHERE s.id = ?
     ''', (student_id,))
     student = cursor.fetchone()
