@@ -5,9 +5,9 @@
   "description": "Better Tracking. Better Learning. - A comprehensive tutoring management system for home tutors.",
   "start_url": "/",
   "scope": "/",
-  "display": "standalone",
+  "display": "fullscreen",
   "display_override": [
-    "window-controls-overlay",
+    "fullscreen",
     "standalone",
     "minimal-ui"
   ],

@@ -7,7 +7,7 @@ const DYNAMIC_CACHE = 'dynamic-v1';
 const STATIC_ASSETS = [
   '/',
   '/static/manifest.json',
-  '/static/TutionTrack_appIcon.png',
+  '/static/TutionTrack_appIcon_192x192.png',
   '/static/TutionTrack_headerLogo.png',
   '/static/TutionTrack_logoNoBG.png',
   '/static/js/swipe-gestures.js',
@@ -103,8 +103,8 @@ self.addEventListener('push', (event) => {
     let notificationData = {
         title: 'TuitionTrack',
         body: 'You have a new notification',
-        icon: '/static/TutionTrack_appIcon.png',
-        badge: '/static/TutionTrack_appIcon.png',
+        icon: '/static/TutionTrack_appIcon_192x192.png',
+        badge: '/static/TutionTrack_appIcon_96x96.png',
         tag: 'default',
         requireInteraction: false,
         data: {}
@@ -129,17 +129,37 @@ self.addEventListener('push', (event) => {
         }
     }
 
+    // Check if app is open (has active clients)
     event.waitUntil(
-        self.registration.showNotification(notificationData.title, {
-            body: notificationData.body,
-            icon: notificationData.icon,
-            badge: notificationData.badge,
-            tag: notificationData.tag,
-            requireInteraction: notificationData.requireInteraction,
-            data: notificationData.data,
-            actions: notificationData.actions,
-            vibrate: [200, 100, 200],
-            timestamp: Date.now()
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+            if (clientList.length > 0) {
+                // App is open - send message to show SweetAlert instead of browser notification
+                console.log('App is open, sending message to show SweetAlert');
+                clientList.forEach(client => {
+                    client.postMessage({
+                        type: 'push-notification',
+                        title: notificationData.title,
+                        body: notificationData.body,
+                        icon: notificationData.icon,
+                        data: notificationData.data,
+                        url: notificationData.data.url || '/'
+                    });
+                });
+            } else {
+                // App is closed - show browser notification
+                console.log('App is closed, showing browser notification');
+                return self.registration.showNotification(notificationData.title, {
+                    body: notificationData.body,
+                    icon: notificationData.icon,
+                    badge: notificationData.badge,
+                    tag: notificationData.tag,
+                    requireInteraction: notificationData.requireInteraction,
+                    data: notificationData.data,
+                    actions: notificationData.actions,
+                    vibrate: [200, 100, 200],
+                    timestamp: Date.now()
+                });
+            }
         })
     );
 });

@@ -19,6 +19,13 @@ except AttributeError:
 app = Flask(__name__)
 app.config.from_object(Config)
 
+# Production session security (for HTTPS)
+# These settings ensure secure cookies when deployed with HTTPS
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access to cookies
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
+
 # Configure logging
 if not app.debug:
     logging.basicConfig(
@@ -52,6 +59,11 @@ app.register_blueprint(reports_bp)
 app.register_blueprint(payments_bp)
 app.register_blueprint(student_bp)
 app.register_blueprint(export_bp)
+
+# Make VAPID_PUBLIC_KEY available to all templates
+@app.context_processor
+def inject_config():
+    return dict(config=Config)
 
 # Custom Jinja2 filter for DD/MM/YYYY date format
 @app.template_filter('ddmmyyyy')
@@ -87,6 +99,16 @@ if not os.path.exists(Config.DATABASE):
 else:
     migrate_db()
     add_indexes()
+
+# Health check endpoint for monitoring
+@app.route('/health')
+def health():
+    """Health check endpoint for production monitoring"""
+    return jsonify({
+        'status': 'healthy',
+        'service': 'TuitionTrack',
+        'version': '1.0.0'
+    }), 200
 
 # Error handlers
 @app.errorhandler(404)

@@ -503,9 +503,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Clean up old storage entries
     cleanupOldStorage();
     
-    // Request notification permission
-    if (Notification.permission === 'default') {
-        Notification.requestPermission();
+    // Request push notification subscription (includes permission request)
+    if (typeof subscribeToPushNotifications === 'function') {
+        // Check permission first
+        if (Notification.permission === 'default') {
+            // Request permission and subscribe
+            setTimeout(async () => {
+                await subscribeToPushNotifications();
+            }, 2000);
+        } else if (Notification.permission === 'granted') {
+            // Already granted, just subscribe
+            setTimeout(async () => {
+                await subscribeToPushNotifications();
+            }, 1000);
+        }
     }
     
     // Check immediately

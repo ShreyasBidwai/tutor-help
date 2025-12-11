@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#4F46E5">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='TutionTrack_appIcon.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='TutionTrack_appIcon_192x192.png') }}">
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <title>{% block title %}TuitionTrack{% endblock %}</title>
     <!-- SweetAlert2 -->
@@ -1112,6 +1112,12 @@
     <script src="{{ url_for('static', filename='js/form-validation.js') }}"></script>
     <script src="{{ url_for('static', filename='js/swipe-gestures.js') }}"></script>
     <script src="{{ url_for('static', filename='js/skeleton-loader.js') }}"></script>
+    
+    <!-- Push Notification Configuration -->
+    <script>
+        window.VAPID_PUBLIC_KEY = '{{ config.VAPID_PUBLIC_KEY }}';
+    </script>
+    <script src="{{ url_for('static', filename='js/push-notifications.js') }}"></script>
     <style>
         /* SweetAlert2 Mobile Optimization */
         .swal2-popup.swal2-toast {
@@ -1431,10 +1437,103 @@
                 // Listen for service worker messages
                 navigator.serviceWorker.addEventListener('message', (event) => {
                     console.log('Message from Service Worker:', event.data);
+                    
+                    // Handle push notification when app is open - show SweetAlert
+                    if (event.data && event.data.type === 'push-notification') {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                title: event.data.title || 'TuitionTrack',
+                                text: event.data.body || 'You have a new notification',
+                                icon: 'info',
+                                confirmButtonText: 'View',
+                                showCancelButton: true,
+                                cancelButtonText: 'Close',
+                                confirmButtonColor: '#4F46E5',
+                                allowOutsideClick: false,
+                                allowEscapeKey: true
+                            }).then((result) => {
+                                if (result.isConfirmed && event.data.url) {
+                                    window.location.href = event.data.url;
+                                }
+                            });
+                        } else {
+                            // Fallback to browser notification if SweetAlert not available
+                            if ('Notification' in window && Notification.permission === 'granted') {
+                                new Notification(event.data.title || 'TuitionTrack', {
+                                    body: event.data.body || 'You have a new notification',
+                                    icon: event.data.icon || '/static/TutionTrack_appIcon.png'
+                                });
+                            }
+                        }
+                    }
                 });
             });
         }
+        
+        // Auto-request notification permission when user is logged in
+        {% if session.user_id %}
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Wait a bit for page to load
+            setTimeout(async () => {
+                if ('Notification' in window && typeof subscribeToPushNotifications === 'function') {
+                    const currentPermission = Notification.permission;
+                    console.log('Current notification permission:', currentPermission);
+                    
+                    // Only request if permission is default (not yet asked)
+                    if (currentPermission === 'default') {
+                        console.log('Requesting notification permission...');
+                        try {
+                            const permission = await Notification.requestPermission();
+                            console.log('Permission result:', permission);
+                            
+                            if (permission === 'granted') {
+                                // Auto-subscribe to push notifications
+                                const result = await subscribeToPushNotifications();
+                                if (result && result.success) {
+                                    console.log('Auto-subscribed to push notifications');
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Error requesting notification permission:', error);
+                        }
+                    } else if (currentPermission === 'granted') {
+                        // Permission already granted, check if subscribed
+                        try {
+                            const checkFn = window.checkPushSubscriptionStatus || checkPushSubscriptionStatus;
+                            if (typeof checkFn === 'function') {
+                                const status = await checkFn();
+                                if (!status.subscribed) {
+                                    // Permission granted but not subscribed, subscribe now
+                                    await subscribeToPushNotifications();
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Error checking subscription status:', error);
+                        }
+                    }
+                }
+            }, 2000); // Wait 2 seconds after page load
+        });
+        {% endif %}
+        
+        // Push notifications will be handled by push-notifications.js
     </script>
+    
+    <!-- Niya Help Bot - Only show if logged in -->
+    {% if session.user_id %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/help-bot.css') }}">
+    <script>
+        // Pass user role to help bot
+        window.userLoggedIn = true;
+        window.userRole = '{{ session.role or "tutor" }}';
+        console.log('Niya: Template loaded, userLoggedIn=', window.userLoggedIn, 'userRole=', window.userRole);
+    </script>
+    <script src="{{ url_for('static', filename='js/help-bot.js') }}"></script>
+    {% else %}
+    <script>
+        console.log('Niya: User not logged in (no session.user_id)');
+    </script>
+    {% endif %}
 </body>
 </html>
 

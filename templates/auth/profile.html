@@ -99,17 +99,20 @@
     </form>
 </div>
 
-<div class="card-header">
+<div class="card">
+    <div class="card-header">
         <h2 class="card-title">Account Information</h2>
     </div>
-    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-        <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f0f0f0;">
-            <span style="color: #666; font-weight: 500;">Mobile Number:</span>
-            <span style="color: #333;">{{ user.mobile }}</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; padding: 0.75rem 0;">
-            <span style="color: #666; font-weight: 500;">User Role:</span>
-            <span style="color: #333; text-transform: capitalize;">Tutor</span>
+    <div style="padding: 1rem;">
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f0f0f0;">
+                <span style="color: #666; font-weight: 500;">Mobile Number:</span>
+                <span style="color: #333;">{{ user.mobile }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 0.75rem 0;">
+                <span style="color: #666; font-weight: 500;">User Role:</span>
+                <span style="color: #333; text-transform: capitalize;">Tutor</span>
+            </div>
         </div>
     </div>
 </div>

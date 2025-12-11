@@ -31,4 +31,11 @@ class Config:
     
     # Timezone settings - Use IST (Indian Standard Time)
     TIMEZONE = 'Asia/Kolkata'  # IST timezone
+    
+    # Push Notification Configuration (VAPID)
+    # IMPORTANT: Set these via environment variables in production
+    # Generate keys with: python3 generate_vapid_keys.py
+    VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY', '')
+    VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', '')
+    VAPID_CLAIM_EMAIL = os.environ.get('VAPID_CLAIM_EMAIL', 'tuitiontrack@example.com')
 
