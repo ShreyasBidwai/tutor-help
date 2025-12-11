@@ -1,5 +1,5 @@
 """Authentication blueprint for tutor, student, and enterprise logins"""
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
 from database import get_db_connection
 from config import Config
 from utils import require_login
@@ -239,4 +239,85 @@ def logout():
     """Logout user"""
     session.clear()
     return redirect(url_for('auth.welcome'))
+
+@auth_bp.route('/api/push/subscribe', methods=['POST'])
+@require_login
+def push_subscribe():
+    """Subscribe user to push notifications"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'endpoint' not in data or 'keys' not in data:
+            return jsonify({'error': 'Invalid subscription data'}), 400
+        
+        endpoint = data['endpoint']
+        keys = data['keys']
+        p256dh = keys.get('p256dh')
+        auth = keys.get('auth')
+        user_agent = request.headers.get('User-Agent', '')
+        
+        if not p256dh or not auth:
+            return jsonify({'error': 'Missing subscription keys'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if subscription already exists
+        cursor.execute('SELECT id FROM push_subscriptions WHERE endpoint = ?', (endpoint,))
+        existing = cursor.fetchone()
+        
+        if existing:
+            # Update existing subscription
+            cursor.execute('''
+                UPDATE push_subscriptions
+                SET user_id = ?, p256dh = ?, auth = ?, user_agent = ?, created_at = CURRENT_TIMESTAMP
+                WHERE endpoint = ?
+            ''', (session['user_id'], p256dh, auth, user_agent, endpoint))
+        else:
+            # Insert new subscription
+            cursor.execute('''
+                INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth, user_agent)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (session['user_id'], endpoint, p256dh, auth, user_agent))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Subscribed to push notifications'}), 200
+        
+    except Exception as e:
+        import logging
+        logging.error(f"Error subscribing to push: {e}")
+        return jsonify({'error': 'Failed to subscribe'}), 500
+
+@auth_bp.route('/api/push/unsubscribe', methods=['POST'])
+@require_login
+def push_unsubscribe():
+    """Unsubscribe user from push notifications"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'endpoint' not in data:
+            return jsonify({'error': 'Invalid request'}), 400
+        
+        endpoint = data['endpoint']
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Delete subscription
+        cursor.execute('''
+            DELETE FROM push_subscriptions
+            WHERE endpoint = ? AND user_id = ?
+        ''', (endpoint, session['user_id']))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Unsubscribed from push notifications'}), 200
+        
+    except Exception as e:
+        import logging
+        logging.error(f"Error unsubscribing from push: {e}")
+        return jsonify({'error': 'Failed to unsubscribe'}), 500
 

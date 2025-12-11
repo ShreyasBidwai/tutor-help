@@ -53,6 +53,11 @@ app.register_blueprint(payments_bp)
 app.register_blueprint(student_bp)
 app.register_blueprint(export_bp)
 
+# Make VAPID_PUBLIC_KEY available to all templates
+@app.context_processor
+def inject_config():
+    return dict(config=Config)
+
 # Custom Jinja2 filter for DD/MM/YYYY date format
 @app.template_filter('ddmmyyyy')
 def ddmmyyyy_filter(value):

@@ -31,4 +31,9 @@ class Config:
     
     # Timezone settings - Use IST (Indian Standard Time)
     TIMEZONE = 'Asia/Kolkata'  # IST timezone
+    
+    # Push Notification Configuration (VAPID)
+    VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY', 'BCrDZAbfKeme-jufCd1hg2TJYMnyIHDn-0HmY0e5oiQhHFeNLvLhcYUAPC38YZethfRoHiex1CN20HEOOGs4tZ8')
+    VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', 'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgweP4mxrIzmwF3_GW-gkWYxr4_psgmn9_wjh6yITAGoyhRANCAAQqw2QG3ynpnvo7nwndYYNkyWDJ8iBw5_tB5mNHuaIkIRxXjS7y4XGFADwt_GGXrYX0aB4nsdQjdtBxDjhrOLWf')
+    VAPID_CLAIM_EMAIL = os.environ.get('VAPID_CLAIM_EMAIL', 'tuitiontrack@example.com')
 

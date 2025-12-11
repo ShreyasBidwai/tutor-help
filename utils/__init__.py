@@ -160,4 +160,3 @@ def cleanup_old_attendance():
     
     conn.close()
     return deleted_count
-

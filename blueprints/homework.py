@@ -4,6 +4,7 @@ from datetime import datetime, date, timedelta
 import os
 from database import get_db_connection
 from utils import require_login, allowed_file, get_secure_filename, get_ist_now, get_ist_today, cleanup_expired_homework
+from utils.push_notifications import send_notification_to_students
 from config import Config
 
 homework_bp = Blueprint('homework', __name__, url_prefix='')
@@ -146,8 +147,43 @@ def share_homework():
                 INSERT INTO homework (title, content, file_path, youtube_url, batch_id, student_id, submission_date, user_id)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', (title, content, file_path, youtube_url, batch_id, student_id, submission_date, session['user_id']))
+            homework_id = cursor.lastrowid
             conn.commit()
+            
+            # Get student IDs to notify
+            student_ids_to_notify = []
+            if batch_id:
+                # Get all students in the batch
+                cursor.execute('SELECT id FROM students WHERE batch_id = ? AND user_id = ?', (batch_id, session['user_id']))
+                batch_students = cursor.fetchall()
+                student_ids_to_notify = [s['id'] for s in batch_students]
+            elif student_id:
+                # Single student
+                student_ids_to_notify = [student_id]
+            
             conn.close()
+            
+            # Send push notifications to students
+            if student_ids_to_notify:
+                # Format submission date for display
+                try:
+                    sub_date_obj = datetime.strptime(submission_date, '%Y-%m-%d').date()
+                    sub_date_display = sub_date_obj.strftime('%d/%m/%Y')
+                except:
+                    sub_date_display = submission_date
+                
+                title = 'New Homework Assigned!'
+                body = f'{title} - Due: {sub_date_display}'
+                url = '/student/homework'
+                
+                send_notification_to_students(
+                    student_ids_to_notify,
+                    title,
+                    body,
+                    url=url,
+                    notification_type='homework'
+                )
+            
             flash('Homework shared successfully!', 'success')
             return redirect(url_for('homework.homework'))
     

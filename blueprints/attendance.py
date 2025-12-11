@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, request, session, jsonify, flash
 from datetime import date, datetime, timedelta
 from database import get_db_connection
 from utils import require_login, get_ist_now, get_ist_today, cleanup_old_attendance
+from utils.push_notifications import send_notification_to_user
 
 attendance_bp = Blueprint('attendance', __name__, url_prefix='')
 
@@ -223,6 +224,27 @@ def save_attendance():
             WHERE id IN ({placeholders})
         ''', saved_students)
         conn.commit()
+        
+        # Send push notifications to students
+        status_text_map = {0: 'Absent', 1: 'Present', 2: 'Late'}
+        for item in attendance_data:
+            student_id = item.get('student_id')
+            status = item.get('status', 0)
+            
+            if student_id in saved_students:
+                status_text = status_text_map.get(status, 'Unknown')
+                title = 'Attendance Marked!'
+                body = f'Your attendance has been marked as {status_text} for {date_str}'
+                url = '/student/attendance'
+                
+                # Send push notification
+                send_notification_to_user(
+                    student_id,
+                    title,
+                    body,
+                    url=url,
+                    notification_type='attendance'
+                )
     
     conn.close()
     
