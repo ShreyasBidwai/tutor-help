@@ -22,12 +22,15 @@ def dashboard():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Get student info
+    # Get student info - if student is in multiple batches, get the first one
     cursor.execute('''
-        SELECT s.*, b.name as batch_name, b.description as batch_description
+        SELECT s.*, b.name as batch_name, b.description as batch_description, b.id as batch_id,
+               b.start_time, b.end_time, b.days
         FROM students s
         LEFT JOIN batches b ON s.batch_id = b.id
         WHERE s.id = ?
+        ORDER BY b.created_at ASC
+        LIMIT 1
     ''', (student_id,))
     student = cursor.fetchone()
     
@@ -35,6 +38,22 @@ def dashboard():
         conn.close()
         session.clear()
         return redirect(url_for('auth.student_login'))
+    
+    # Get student batch_id safely
+    student_batch_id = None
+    try:
+        student_batch_id = student['batch_id']
+    except (KeyError, TypeError):
+        pass
+    
+    # If student has a batch_id, get full batch details for popup
+    batch_details = None
+    if student_batch_id:
+        cursor.execute('SELECT * FROM batches WHERE id = ?', (student_batch_id,))
+        batch_row = cursor.fetchone()
+        if batch_row:
+            # Convert Row to dict for JSON serialization
+            batch_details = dict(batch_row)
     
     # Get today's attendance (IST)
     today = get_ist_today().isoformat()
@@ -82,13 +101,13 @@ def dashboard():
         AND h.submission_date >= ?
         ORDER BY h.created_at DESC
         LIMIT 10
-    ''', (student['batch_id'], student_id, student_id, cutoff_date))
+    ''', (student_batch_id, student_id, student_id, cutoff_date))
     recent_homework = cursor.fetchall()
     
     # Get upcoming classes
     upcoming_classes = []
-    if student['batch_id']:
-        cursor.execute('SELECT * FROM batches WHERE id = ?', (student['batch_id'],))
+    if student_batch_id:
+        cursor.execute('SELECT * FROM batches WHERE id = ?', (student_batch_id,))
         batch = cursor.fetchone()
         
         if batch and batch['start_time'] and batch['days']:
@@ -157,7 +176,8 @@ def dashboard():
                          attendance_percentage=attendance_percentage,
                          recent_homework=recent_homework,
                          upcoming_classes=upcoming_classes,
-                         today=today)
+                         today=today,
+                         batch_details=batch_details)
 
 @student_bp.route('/student/attendance')
 @require_login

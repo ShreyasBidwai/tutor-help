@@ -5,6 +5,27 @@
 {% block header_title %}My Attendance{% endblock %}
 
 {% block content %}
+<!-- Skeleton for Attendance Stats -->
+<div id="attendance-stats-skeleton" class="skeleton-container active">
+    <div class="card">
+        <div class="card-header">
+            <div class="skeleton skeleton-line" style="height: 24px; width: 180px;"></div>
+        </div>
+        <div style="padding: 0.75rem 1rem;">
+            <div style="display: flex; justify-content: space-between; gap: 0.5rem;">
+                {% for i in range(4) %}
+                <div style="flex: 1; padding: 0.5rem;">
+                    <div class="skeleton skeleton-line" style="height: 28px; margin-bottom: 0.5rem;"></div>
+                    <div class="skeleton skeleton-line" style="height: 16px; width: 60px;"></div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actual Attendance Stats Content -->
+<div id="attendance-stats-content" class="content-loading">
 {% if attendance_stats %}
 <div class="card">
     <div class="card-header">
@@ -32,7 +53,26 @@
     </div>
 </div>
 {% endif %}
+</div>
 
+<!-- Skeleton for Calendar -->
+<div id="calendar-skeleton" class="skeleton-container active">
+    <div class="card">
+        <div class="card-header">
+            <div class="skeleton skeleton-line" style="height: 24px; width: 200px;"></div>
+        </div>
+        <div style="padding: 1rem;">
+            <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.3rem;">
+                {% for i in range(35) %}
+                <div class="skeleton" style="width: 100%; padding-bottom: 100%; border-radius: 6px;"></div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actual Calendar Content -->
+<div id="calendar-content" class="content-loading">
 <div class="card">
     <div class="card-header">
         <h2 class="card-title">{{ month_name }} {{ current_year }} Attendance</h2>
@@ -130,5 +170,16 @@
         </div>
     </div>
 </div>
+</div>
+
+<script>
+// Hide skeletons and show content after page load
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        hideSkeleton('attendance-stats-skeleton', 'attendance-stats-content');
+        hideSkeleton('calendar-skeleton', 'calendar-content');
+    }, 500);
+});
+</script>
 {% endblock %}
 

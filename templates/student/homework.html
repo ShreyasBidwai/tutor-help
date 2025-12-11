@@ -5,6 +5,27 @@
 {% block header_title %}My Homework{% endblock %}
 
 {% block content %}
+<!-- Skeleton for Homework List -->
+<div id="homework-list-skeleton" class="skeleton-container active">
+    {% for i in range(3) %}
+    <div class="skeleton-card" style="margin-bottom: 1rem;">
+        <div class="skeleton-header">
+            <div style="flex: 1;">
+                <div class="skeleton skeleton-line skeleton-title" style="margin-bottom: 0.75rem;"></div>
+                <div class="skeleton skeleton-line skeleton-text" style="width: 120px; margin-bottom: 0.5rem;"></div>
+                <div class="skeleton skeleton-line skeleton-text" style="width: 100px;"></div>
+            </div>
+        </div>
+        <div style="margin-top: 0.75rem;">
+            <div class="skeleton skeleton-line skeleton-text"></div>
+            <div class="skeleton skeleton-line skeleton-text" style="margin-top: 0.5rem;"></div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Actual Homework List Content -->
+<div id="homework-list-content" class="content-loading">
 {% if homework_list %}
     {% for hw in homework_list %}
     <div class="card" style="margin-bottom: 1rem; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-radius: 8px; overflow: hidden;">
@@ -91,5 +112,15 @@
         <p>Your tutor hasn't assigned any homework yet</p>
     </div>
 {% endif %}
+</div>
+
+<script>
+// Hide skeleton and show content after page load
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        hideSkeleton('homework-list-skeleton', 'homework-list-content');
+    }, 500);
+});
+</script>
 {% endblock %}
 
