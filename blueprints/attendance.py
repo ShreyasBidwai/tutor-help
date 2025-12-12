@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, request, session, jsonify, flash
 from datetime import date, datetime, timedelta
 from database import get_db_connection
-from utils import require_login, get_ist_now, get_ist_today, cleanup_old_attendance
+from utils import require_login, get_ist_now, get_ist_today, cleanup_old_attendance, IST
 from utils.push_notifications import send_notification_to_user
 
 attendance_bp = Blueprint('attendance', __name__, url_prefix='')
@@ -106,7 +106,8 @@ def attendance():
                     if batch_start_time:
                         try:
                             batch_start = datetime.strptime(batch_start_time, '%H:%M').time()
-                            batch_datetime = datetime.combine(today, batch_start)
+                            # Create timezone-aware datetime for comparison (IST)
+                            batch_datetime = datetime.combine(today, batch_start).replace(tzinfo=IST)
                             # Only allow marking if batch has started
                             if now < batch_datetime:
                                 can_mark_this_batch = False
@@ -170,6 +171,7 @@ def save_attendance():
     
     # Validate and save attendance
     saved_students = []
+    skipped_batch_not_started = []  # Track students skipped due to batch timing
     for item in attendance_data:
         student_id = item.get('student_id')
         status = item.get('status', 0)
@@ -193,15 +195,23 @@ def save_attendance():
         
         # For today's attendance, check if batch time has started
         if date_str == today.isoformat() and student['batch_id']:
-            cursor.execute('SELECT start_time FROM batches WHERE id = ?', (student['batch_id'],))
+            cursor.execute('SELECT start_time, name FROM batches WHERE id = ?', (student['batch_id'],))
             batch = cursor.fetchone()
             if batch and batch['start_time']:
                 try:
                     batch_start = datetime.strptime(batch['start_time'], '%H:%M').time()
-                    batch_datetime = datetime.combine(today, batch_start)
+                    # Create timezone-aware datetime for comparison (IST)
+                    batch_datetime = datetime.combine(today, batch_start).replace(tzinfo=IST)
                     if now < batch_datetime:
-                        continue  # Skip if batch hasn't started yet
-                except:
+                        # Batch hasn't started yet - skip this student
+                        skipped_batch_not_started.append({
+                            'student_id': student_id,
+                            'batch_name': batch['name'] if batch else 'Unknown',
+                            'batch_time': batch['start_time']
+                        })
+                        continue
+                except Exception as e:
+                    # Log error but continue (in case of time parsing issues)
                     pass
         
         # Insert attendance (only if not already saved)
@@ -255,8 +265,16 @@ def save_attendance():
             'message': f'Attendance saved for {len(saved_students)} student(s)'
         })
     else:
+        # Provide specific error message based on why attendance wasn't saved
+        if skipped_batch_not_started:
+            batch_names = set([s['batch_name'] for s in skipped_batch_not_started])
+            batch_times = set([s['batch_time'] for s in skipped_batch_not_started])
+            error_msg = f"Attendance cannot be marked yet. Batch time has not started. Please wait until the batch time ({', '.join(batch_times)}) to mark attendance."
+        else:
+            error_msg = 'No attendance was saved. Attendance may already be marked or batch time has not started.'
+        
         return jsonify({
             'success': False,
-            'error': 'No attendance was saved. Attendance may already be marked or batch time has not started.'
+            'error': error_msg
         }), 400
 
