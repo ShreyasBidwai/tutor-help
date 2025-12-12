@@ -38,4 +38,8 @@ class Config:
     VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY', '')
     VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', '')
     VAPID_CLAIM_EMAIL = os.environ.get('VAPID_CLAIM_EMAIL', 'tuitiontrack@example.com')
+    
+    # Gemini AI API Configuration
+    # Set GEMINI_API_KEY in environment variables
+    GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
 

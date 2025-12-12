@@ -7,10 +7,10 @@
 {% block content %}
 <div class="card">
     <div class="card-header">
-        <h2 class="card-title">Last 7 Days Summary</h2>
+        <h2 class="card-title">Current Month Summary</h2>
     </div>
     <p style="color: #666; font-size: 0.875rem; margin-bottom: 1rem;">
-        Attendance performance for the last 7 calendar days (including today)
+        Attendance performance for the current month (up to today)
     </p>
 </div>
 
@@ -67,7 +67,10 @@
             </div>
             <div style="display: flex; justify-content: space-between; font-size: 0.875rem; color: #666; margin-top: 0.5rem;">
                 <span>{{ report.student_count }} students</span>
-                <span>{{ report.attended_sessions }}/{{ report.total_expected }} sessions</span>
+                <div style="display: flex; gap: 1rem;">
+                    <span style="color: #10B981;">✓ Present: {{ report.present_today }}</span>
+                    <span style="color: #EF4444;">✗ Absent: {{ report.absent_today }}</span>
+                </div>
             </div>
         </div>
     </a>
@@ -91,7 +94,12 @@
         <a href="{{ url_for('reports.student_report_detail', student_id=report.student_id) }}" class="report-item" data-name="{{ report.student_name }}" style="text-decoration: none; color: inherit; display: block; margin-bottom: 0.75rem;">
             <div class="card" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'">
                 <div class="card-header">
-                    <h3 class="card-title" style="font-size: 1rem;">👤 {{ report.student_name }}</h3>
+                    <h3 class="card-title" style="font-size: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 1rem; flex-shrink: 0;">
+                            {{ report.student_name[0].upper() }}
+                        </div>
+                        <span>{{ report.student_name }}</span>
+                    </h3>
                     <div style="text-align: right;">
                         <div style="font-size: 1.5rem; font-weight: 700; color: {% if report.attendance_percentage >= 80 %}#10B981{% elif report.attendance_percentage >= 60 %}#F59E0B{% else %}#EF4444{% endif %};">
                             {{ report.attendance_percentage }}%
@@ -100,7 +108,7 @@
                 </div>
                 <div style="display: flex; justify-content: space-between; font-size: 0.875rem; color: #666; margin-top: 0.5rem;">
                     <span>📚 {{ report.batch_name }}</span>
-                    <span>{{ report.attended_sessions }}/{{ report.total_expected }} days</span>
+                    <span>{{ report.attended_sessions }} / {{ report.total_expected }} days</span>
                 </div>
             </div>
         </a>

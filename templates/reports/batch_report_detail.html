@@ -5,83 +5,360 @@
 {% block header_title %}{{ batch.name }} Report{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-        <h2 class="card-title" style="margin: 0;">Last 30 Days</h2>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            {% if student_reports %}
-            <a href="{{ url_for('export.export_batch_report', batch_id=batch.id) }}" class="btn btn-secondary btn-sm" style="display: flex; align-items: center; gap: 0.25rem; padding: 0.5rem 0.75rem; font-size: 0.875rem;">
-                <span>📥</span> <span>Export CSV</span>
-            </a>
-            {% endif %}
-            <a href="{{ url_for('reports.reports') }}" style="font-size: 0.875rem; color: #4F46E5; text-decoration: none; padding: 0.5rem 0.75rem; display: flex; align-items: center;">← Back</a>
-        </div>
-    </div>
-    <p style="color: #666; font-size: 0.875rem; padding: 0 1rem 1rem 1rem;">
-        Attendance performance for students in this batch
-    </p>
-</div>
-
-<div class="card" style="margin-bottom: 1rem;">
-    <div class="card-header">
-        <h3 class="card-title" style="font-size: 1rem;">Filter Students</h3>
-    </div>
-    <div style="padding: 1rem;">
-        <select id="filterDropdown" class="form-select" onchange="applyFilter()" style="font-size: 0.95rem;">
-            <option value="all" selected>All Students</option>
-            <option value="today_absent">Today's Absent Students</option>
-            <option value="high_attendance">High Attendance (≥80%)</option>
-            <option value="low_attendance">Low Attendance (&lt;60%)</option>
-        </select>
-    </div>
-</div>
-
-{% if student_reports %}
-    {% for student in student_reports %}
-    <a href="{{ url_for('reports.student_report_detail', student_id=student.student_id) }}" 
-       class="student-card" 
-       data-absent-today="{% if student.is_absent_today %}true{% else %}false{% endif %}"
-       data-high-attendance="{% if student.is_high_attendance %}true{% else %}false{% endif %}"
-       data-low-attendance="{% if student.is_low_attendance %}true{% else %}false{% endif %}"
-       style="text-decoration: none; color: inherit; display: block; margin-bottom: 0.75rem;">
-        <div class="card" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'">
-        <div class="card-header">
-                <h3 class="card-title" style="font-size: 1rem;">👤 {{ student.student_name }}</h3>
-            <div style="text-align: right;">
-                    <div style="font-size: 1.5rem; font-weight: 700; color: {% if student.attendance_percentage >= 80 %}#10B981{% elif student.attendance_percentage >= 60 %}#F59E0B{% else %}#EF4444{% endif %};">
-                    {{ student.attendance_percentage }}%
-                    </div>
-                </div>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.875rem; color: #666; margin-top: 0.5rem; padding: 0 1rem 1rem 1rem;">
-                <span>📚 {{ batch.name }}</span>
-                <span>{{ student.attendance_percentage }}% attendance</span>
-            </div>
-        </div>
-    </a>
-    {% endfor %}
-{% else %}
-    <div class="empty-state">
-        <div class="empty-state-icon">👥</div>
-        <h3>No students in this batch</h3>
-        <p>Add students to this batch to see attendance reports</p>
-        <a href="{{ url_for('students.add_student') }}" class="btn btn-primary mt-2">
-            Add Student
-        </a>
-    </div>
-{% endif %}
-
 <style>
+.batch-report-container {
+    max-width: 100%;
+}
+
+.date-label {
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.95rem;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.date-select {
+    padding: 0.75rem;
+    border: 2px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background: white;
+    color: #1F2937;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.date-select:focus {
+    outline: none;
+    border-color: #4F46E5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+
+.filter-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.filter-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1F2937;
+    margin: 0;
+}
+
+.filter-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background: white;
+    color: #1F2937;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #4F46E5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.students-section {
+    display: grid;
+    gap: 0.75rem;
+}
+
 .student-card {
-    transition: opacity 0.3s, transform 0.3s;
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: all 0.2s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    border: 2px solid transparent;
+}
+
+.student-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    border-color: #E5E7EB;
 }
 
 .student-card.hidden {
     display: none;
 }
+
+.student-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.student-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1F2937;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.student-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.attendance-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.attendance-badge.high {
+    background: #D1FAE5;
+    color: #065F46;
+}
+
+.attendance-badge.medium {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.attendance-badge.low {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+.student-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+    color: #6B7280;
+    padding-top: 0.75rem;
+    border-top: 1px solid #F3F4F6;
+}
+
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+.status-indicator.present {
+    background: #D1FAE5;
+    color: #065F46;
+}
+
+.status-indicator.absent {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+.status-indicator.late {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.status-indicator.no-record {
+    background: #F3F4F6;
+    color: #6B7280;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.status-dot.present {
+    background: #10B981;
+}
+
+.status-dot.absent {
+    background: #EF4444;
+}
+
+.status-dot.late {
+    background: #F59E0B;
+}
+
+.status-dot.no-record {
+    background: #9CA3AF;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+    font-size: 1.25rem;
+    color: #1F2937;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: #6B7280;
+    margin-bottom: 1.5rem;
+}
+
 </style>
 
+<div class="batch-report-container">
+    <!-- Page Header -->
+    <div class="card" style="margin-bottom: 1rem;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+            <h2 class="card-title" style="margin: 0; font-size: 1.1rem;">{{ batch.name }}</h2>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                {% if student_reports %}
+                <a href="{{ url_for('export.export_batch_report', batch_id=batch.id) }}" class="btn btn-secondary btn-sm" style="display: flex; align-items: center; gap: 0.25rem; padding: 0.5rem 0.75rem; font-size: 0.875rem;">
+                    <span>📥</span>
+                    <span>Export</span>
+                </a>
+                {% endif %}
+                <a href="{{ url_for('reports.reports') }}" class="btn btn-secondary btn-sm" style="display: flex; align-items: center; gap: 0.25rem; padding: 0.5rem 0.75rem; font-size: 0.875rem;">
+                    <span>←</span>
+                    <span>Back</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="card">
+        <div style="padding: 0.75rem 1rem;">
+            <div style="display: flex; justify-content: space-between; gap: 0.5rem; flex-wrap: nowrap;">
+                <div style="flex: 1; text-align: center; padding: 0.5rem 0.375rem; background: rgba(209, 250, 229, 0.5); border-radius: 6px; border: 1px solid #A7F3D0;">
+                    <div style="font-size: 1.25rem; font-weight: 700; color: #065F46;">{{ total_present }}</div>
+                    <div style="font-size: 0.75rem; color: #047857; margin-top: 0.125rem; font-weight: 500;">Present</div>
+                </div>
+                <div style="flex: 1; text-align: center; padding: 0.5rem 0.375rem; background: rgba(254, 226, 226, 0.5); border-radius: 6px; border: 1px solid #FECACA;">
+                    <div style="font-size: 1.25rem; font-weight: 700; color: #991B1B;">{{ total_absent }}</div>
+                    <div style="font-size: 0.75rem; color: #B91C1C; margin-top: 0.125rem; font-weight: 500;">Absent</div>
+                </div>
+                <div style="flex: 1; text-align: center; padding: 0.5rem 0.375rem; background: rgba(254, 243, 199, 0.5); border-radius: 6px; border: 1px solid #FDE68A;">
+                    <div style="font-size: 1.25rem; font-weight: 700; color: #92400E;">{{ total_late }}</div>
+                    <div style="font-size: 0.75rem; color: #B45309; margin-top: 0.125rem; font-weight: 500;">Late</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Selector and Filter Section -->
+    <div class="card">
+        <div style="padding: 1rem;">
+            <div style="margin-bottom: 1rem;">
+                <label for="date-select" class="date-label">📅 Select Date:</label>
+                <select id="date-select" class="date-select" onchange="changeDate()" style="width: 100%; margin-top: 0.5rem;">
+                    {% for d in month_date_range %}
+                    <option value="{{ d.date.isoformat() }}" {% if d.date == selected_date %}selected{% endif %}>
+                        {{ d.formatted }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <div class="filter-header" style="margin-bottom: 0.5rem;">
+                    <h3 class="filter-title">🔍 Filter Students</h3>
+                </div>
+                <select id="filterDropdown" class="filter-select" onchange="applyFilter()">
+                    <option value="all" selected>All Students</option>
+                    <option value="present">Present Students</option>
+                    <option value="absent">Absent Students</option>
+                    <option value="late">Late Students</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Students List -->
+    {% if student_reports %}
+    <div class="students-section">
+        {% for student in student_reports %}
+        <a href="{{ url_for('reports.student_report_detail', student_id=student.student_id) }}" 
+           class="student-card" 
+           data-present="{% if student.is_present_selected_date %}true{% else %}false{% endif %}"
+           data-absent="{% if student.is_absent_selected_date %}true{% else %}false{% endif %}"
+           data-late="{% if student.is_late_selected_date %}true{% else %}false{% endif %}"
+           data-status="{{ student.selected_date_status }}">
+            <div class="student-header">
+                <div class="student-name">
+                    <div class="student-avatar">{{ student.student_name[0].upper() }}</div>
+                    <span>{{ student.student_name }}</span>
+                </div>
+                <div class="attendance-badge {% if student.attendance_percentage >= 80 %}high{% elif student.attendance_percentage >= 60 %}medium{% else %}low{% endif %}">
+                    {{ student.attendance_percentage }}%
+                </div>
+            </div>
+            <div class="student-footer">
+                <span>📚 {{ batch.name }}</span>
+                <span class="status-indicator {% if student.selected_date_status == 1 %}present{% elif student.selected_date_status == 0 %}absent{% elif student.selected_date_status == 2 %}late{% else %}no-record{% endif %}">
+                    <span class="status-dot {% if student.selected_date_status == 1 %}present{% elif student.selected_date_status == 0 %}absent{% elif student.selected_date_status == 2 %}late{% else %}no-record{% endif %}"></span>
+                    {% if student.selected_date_status == 1 %}Present
+                    {% elif student.selected_date_status == 0 %}Absent
+                    {% elif student.selected_date_status == 2 %}Late
+                    {% else %}No Record{% endif %}
+                </span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">👥</div>
+        <h3>No students in this batch</h3>
+        <p>Add students to this batch to see attendance reports</p>
+        <a href="{{ url_for('students.add_student') }}" class="btn btn-primary">
+            Add Student
+        </a>
+    </div>
+    {% endif %}
+</div>
+
 <script>
+function changeDate() {
+    const dateSelect = document.getElementById('date-select');
+    if (!dateSelect) return;
+    
+    const selectedDate = dateSelect.value;
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('date', selectedDate);
+    window.location.href = currentUrl.toString();
+}
+
 function applyFilter() {
     const filterDropdown = document.getElementById('filterDropdown');
     if (!filterDropdown) return;
@@ -100,17 +377,17 @@ function applyFilter() {
             case 'all':
                 shouldShow = true;
                 break;
-            case 'today_absent':
-                const absentToday = card.getAttribute('data-absent-today');
-                shouldShow = absentToday === 'true';
+            case 'present':
+                const isPresent = card.getAttribute('data-present');
+                shouldShow = isPresent === 'true';
                 break;
-            case 'high_attendance':
-                const highAttendance = card.getAttribute('data-high-attendance');
-                shouldShow = highAttendance === 'true';
+            case 'absent':
+                const isAbsent = card.getAttribute('data-absent');
+                shouldShow = isAbsent === 'true';
                 break;
-            case 'low_attendance':
-                const lowAttendance = card.getAttribute('data-low-attendance');
-                shouldShow = lowAttendance === 'true';
+            case 'late':
+                const isLate = card.getAttribute('data-late');
+                shouldShow = isLate === 'true';
                 break;
             default:
                 shouldShow = true;
@@ -130,9 +407,8 @@ function applyFilter() {
 document.addEventListener('DOMContentLoaded', function() {
     const filterDropdown = document.getElementById('filterDropdown');
     if (filterDropdown) {
-        // Ensure filter is applied on load
         applyFilter();
-        }
-    });
+    }
+});
 </script>
 {% endblock %}

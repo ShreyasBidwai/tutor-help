@@ -1,0 +1,412 @@
+[
+  {
+    "question": "How to mark attendance",
+    "answer": "Marking attendance is super easy! ✨\n\n📋 Steps:\n1. Go to the 'Attendance' tab\n2. Select the date (or use today's date)\n3. For each student, click:\n   • ✅ Present - Student is present\n   • ❌ Absent - Student is absent\n   • ⏰ Late - Student came late\n4. Click 'Save Attendance' button\n\n💡 Tip: You can mark attendance for multiple students at once!",
+    "category": "attendance"
+  },
+  {
+    "question": "How do I mark attendance",
+    "answer": "Marking attendance is super easy! ✨\n\n📋 Steps:\n1. Go to the 'Attendance' tab\n2. Select the date (or use today's date)\n3. For each student, click:\n   • ✅ Present - Student is present\n   • ❌ Absent - Student is absent\n   • ⏰ Late - Student came late\n4. Click 'Save Attendance' button\n\n💡 Tip: You can mark attendance for multiple students at once!",
+    "category": "attendance"
+  },
+  {
+    "question": "Mark attendance for students",
+    "answer": "Marking attendance is super easy! ✨\n\n📋 Steps:\n1. Go to the 'Attendance' tab\n2. Select the date (or use today's date)\n3. For each student, click:\n   • ✅ Present - Student is present\n   • ❌ Absent - Student is absent\n   • ⏰ Late - Student came late\n4. Click 'Save Attendance' button\n\n💡 Tip: You can mark attendance for multiple students at once!",
+    "category": "attendance"
+  },
+  {
+    "question": "View attendance history",
+    "answer": "Viewing attendance history 📅\n\nFor Tutors:\n• Go to 'Reports' tab\n• Click on any batch to see attendance\n• Click on a student to see their 30-day attendance grid\n\nFor Students:\n• Go to 'Attendance' tab\n• See your monthly attendance grid\n• Green = Present, Red = Absent, Yellow = Late",
+    "category": "attendance"
+  },
+  {
+    "question": "How to view attendance",
+    "answer": "Viewing attendance history 📅\n\nFor Tutors:\n• Go to 'Reports' tab\n• Click on any batch to see attendance\n• Click on a student to see their 30-day attendance grid\n\nFor Students:\n• Go to 'Attendance' tab\n• See your monthly attendance grid\n• Green = Present, Red = Absent, Yellow = Late",
+    "category": "attendance"
+  },
+  {
+    "question": "Check attendance records",
+    "answer": "Viewing attendance history 📅\n\nFor Tutors:\n• Go to 'Reports' tab\n• Click on any batch to see attendance\n• Click on a student to see their 30-day attendance grid\n\nFor Students:\n• Go to 'Attendance' tab\n• See your monthly attendance grid\n• Green = Present, Red = Absent, Yellow = Late",
+    "category": "attendance"
+  },
+  {
+    "question": "Fix attendance mistake",
+    "answer": "Need to fix attendance? No worries! 😊\n\nTo correct attendance:\n1. Go to 'Attendance' tab\n2. Select the date you want to fix\n3. Change the status (Present/Absent/Late)\n4. Click 'Save Attendance'\n\n✅ Your changes will be saved immediately!",
+    "category": "attendance"
+  },
+  {
+    "question": "Correct attendance error",
+    "answer": "Need to fix attendance? No worries! 😊\n\nTo correct attendance:\n1. Go to 'Attendance' tab\n2. Select the date you want to fix\n3. Change the status (Present/Absent/Late)\n4. Click 'Save Attendance'\n\n✅ Your changes will be saved immediately!",
+    "category": "attendance"
+  },
+  {
+    "question": "Change attendance status",
+    "answer": "Need to fix attendance? No worries! 😊\n\nTo correct attendance:\n1. Go to 'Attendance' tab\n2. Select the date you want to fix\n3. Change the status (Present/Absent/Late)\n4. Click 'Save Attendance'\n\n✅ Your changes will be saved immediately!",
+    "category": "attendance"
+  },
+  {
+    "question": "When can I mark attendance",
+    "answer": "Attendance marking rules ⏰\n\n• Today's attendance: Can only mark AFTER the batch start time\n• Yesterday's attendance: Can mark anytime (for corrections)\n• Future dates: Cannot mark\n• Past dates (before yesterday): Cannot mark\n\n💡 The system prevents marking attendance before batch time to ensure accuracy!",
+    "category": "attendance"
+  },
+  {
+    "question": "Attendance time restrictions",
+    "answer": "Attendance marking rules ⏰\n\n• Today's attendance: Can only mark AFTER the batch start time\n• Yesterday's attendance: Can mark anytime (for corrections)\n• Future dates: Cannot mark\n• Past dates (before yesterday): Cannot mark\n\n💡 The system prevents marking attendance before batch time to ensure accuracy!",
+    "category": "attendance"
+  },
+  {
+    "question": "Batch timing for attendance",
+    "answer": "Attendance marking rules ⏰\n\n• Today's attendance: Can only mark AFTER the batch start time\n• Yesterday's attendance: Can mark anytime (for corrections)\n• Future dates: Cannot mark\n• Past dates (before yesterday): Cannot mark\n\n💡 The system prevents marking attendance before batch time to ensure accuracy!",
+    "category": "attendance"
+  },
+  {
+    "question": "Attendance reports",
+    "answer": "Attendance Reports 📈\n\nTutors can:\n• View batch-wise attendance summary\n• See individual student attendance (30-day grid)\n• Track attendance patterns\n\nStudents can:\n• View their own attendance grid\n• See monthly attendance summary\n\n💡 All reports show current month only for clean data!",
+    "category": "attendance"
+  },
+  {
+    "question": "View attendance statistics",
+    "answer": "Attendance Reports 📈\n\nTutors can:\n• View batch-wise attendance summary\n• See individual student attendance (30-day grid)\n• Track attendance patterns\n\nStudents can:\n• View their own attendance grid\n• See monthly attendance summary\n\n💡 All reports show current month only for clean data!",
+    "category": "attendance"
+  },
+  {
+    "question": "Add a student",
+    "answer": "Adding a new student is easy! 🎓\n\n📋 Steps:\n1. Go to 'Students' tab\n2. Click 'Add New Student' button\n3. Fill in the details:\n   • Name (required)\n   • Phone number (required)\n   • Batch (required - select or create new)\n   • Address (optional)\n   • School name (optional)\n   • Class/Standard (optional)\n4. Click 'Add Student'\n\n💡 The student will receive a password automatically!",
+    "category": "students"
+  },
+  {
+    "question": "How to add student",
+    "answer": "Adding a new student is easy! 🎓\n\n📋 Steps:\n1. Go to 'Students' tab\n2. Click 'Add New Student' button\n3. Fill in the details:\n   • Name (required)\n   • Phone number (required)\n   • Batch (required - select or create new)\n   • Address (optional)\n   • School name (optional)\n   • Class/Standard (optional)\n4. Click 'Add Student'\n\n💡 The student will receive a password automatically!",
+    "category": "students"
+  },
+  {
+    "question": "Create new student",
+    "answer": "Adding a new student is easy! 🎓\n\n📋 Steps:\n1. Go to 'Students' tab\n2. Click 'Add New Student' button\n3. Fill in the details:\n   • Name (required)\n   • Phone number (required)\n   • Batch (required - select or create new)\n   • Address (optional)\n   • School name (optional)\n   • Class/Standard (optional)\n4. Click 'Add Student'\n\n💡 The student will receive a password automatically!",
+    "category": "students"
+  },
+  {
+    "question": "Register student",
+    "answer": "Adding a new student is easy! 🎓\n\n📋 Steps:\n1. Go to 'Students' tab\n2. Click 'Add New Student' button\n3. Fill in the details:\n   • Name (required)\n   • Phone number (required)\n   • Batch (required - select or create new)\n   • Address (optional)\n   • School name (optional)\n   • Class/Standard (optional)\n4. Click 'Add Student'\n\n💡 The student will receive a password automatically!",
+    "category": "students"
+  },
+  {
+    "question": "Edit student info",
+    "answer": "Editing student information ✏️\n\n📋 Steps:\n1. Go to 'Students' tab\n2. Find the student you want to edit\n3. Click the 'Edit' button\n4. Update any information\n5. Click 'Save Changes'\n\n💡 You can change everything except the phone number!",
+    "category": "students"
+  },
+  {
+    "question": "Update student details",
+    "answer": "Editing student information ✏️\n\n📋 Steps:\n1. Go to 'Students' tab\n2. Find the student you want to edit\n3. Click the 'Edit' button\n4. Update any information\n5. Click 'Save Changes'\n\n💡 You can change everything except the phone number!",
+    "category": "students"
+  },
+  {
+    "question": "Modify student information",
+    "answer": "Editing student information ✏️\n\n📋 Steps:\n1. Go to 'Students' tab\n2. Find the student you want to edit\n3. Click the 'Edit' button\n4. Update any information\n5. Click 'Save Changes'\n\n💡 You can change everything except the phone number!",
+    "category": "students"
+  },
+  {
+    "question": "Delete a student",
+    "answer": "Deleting a student 🗑️\n\n⚠️ Important:\n• This will remove the student permanently\n• All their attendance and homework data will be deleted\n• This action cannot be undone\n\n📋 Steps:\n1. Go to 'Students' tab\n2. Find the student\n3. Click 'Delete' button\n4. Confirm the deletion\n\n💡 Make sure you really want to delete before confirming!",
+    "category": "students"
+  },
+  {
+    "question": "Remove student",
+    "answer": "Deleting a student 🗑️\n\n⚠️ Important:\n• This will remove the student permanently\n• All their attendance and homework data will be deleted\n• This action cannot be undone\n\n📋 Steps:\n1. Go to 'Students' tab\n2. Find the student\n3. Click 'Delete' button\n4. Confirm the deletion\n\n💡 Make sure you really want to delete before confirming!",
+    "category": "students"
+  },
+  {
+    "question": "View student details",
+    "answer": "Viewing student details 👤\n\n📋 Steps:\n1. Go to 'Students' tab\n2. Click on any student card\n3. You'll see:\n   • Complete student information\n   • Recent attendance records\n   • Assigned batch details\n\n💡 Students can view their own profile in the student portal!",
+    "category": "students"
+  },
+  {
+    "question": "Search students",
+    "answer": "Searching for students 🔍\n\n📋 How to search:\n1. Go to 'Students' tab\n2. Use the search box at the top\n3. Type student name or phone number\n4. Results will filter automatically\n\n💡 You can also filter by batch using the batch dropdown!",
+    "category": "students"
+  },
+  {
+    "question": "Find student",
+    "answer": "Searching for students 🔍\n\n📋 How to search:\n1. Go to 'Students' tab\n2. Use the search box at the top\n3. Type student name or phone number\n4. Results will filter automatically\n\n💡 You can also filter by batch using the batch dropdown!",
+    "category": "students"
+  },
+  {
+    "question": "Student password",
+    "answer": "Student Password 🔐\n\n• Passwords are auto-generated when a student is added\n• Format: Usually based on phone number (last 4 digits)\n• Students use their mobile number + password to login\n• If student forgets password, tutor can reset it\n\n💡 Contact your tutor if you forget your password!",
+    "category": "students"
+  },
+  {
+    "question": "Reset student password",
+    "answer": "Student Password 🔐\n\n• Passwords are auto-generated when a student is added\n• Format: Usually based on phone number (last 4 digits)\n• Students use their mobile number + password to login\n• If student forgets password, tutor can reset it\n\n💡 Contact your tutor if you forget your password!",
+    "category": "students"
+  },
+  {
+    "question": "Share homework",
+    "answer": "Sharing homework is simple! 📝\n\n📋 Steps:\n1. Go to 'Homework' tab\n2. Click 'Share New Homework' button\n3. Fill in:\n   • Title (required)\n   • Content/Description (required)\n   • Due Date (optional)\n   • Select batch or specific students\n   • Upload file if needed (optional)\n4. Click 'Share Homework'\n\n💡 Students will get notified automatically!",
+    "category": "homework"
+  },
+  {
+    "question": "How to share homework",
+    "answer": "Sharing homework is simple! 📝\n\n📋 Steps:\n1. Go to 'Homework' tab\n2. Click 'Share New Homework' button\n3. Fill in:\n   • Title (required)\n   • Content/Description (required)\n   • Due Date (optional)\n   • Select batch or specific students\n   • Upload file if needed (optional)\n4. Click 'Share Homework'\n\n💡 Students will get notified automatically!",
+    "category": "homework"
+  },
+  {
+    "question": "Assign homework",
+    "answer": "Sharing homework is simple! 📝\n\n📋 Steps:\n1. Go to 'Homework' tab\n2. Click 'Share New Homework' button\n3. Fill in:\n   • Title (required)\n   • Content/Description (required)\n   • Due Date (optional)\n   • Select batch or specific students\n   • Upload file if needed (optional)\n4. Click 'Share Homework'\n\n💡 Students will get notified automatically!",
+    "category": "homework"
+  },
+  {
+    "question": "View homework",
+    "answer": "Viewing homework 📖\n\nFor Tutors:\n• See all homework you've shared\n• Filter by batch or student\n• View submission dates\n\nFor Students:\n• See all homework assigned to you\n• Check due dates\n• View homework details and files\n\n💡 Homework automatically deletes 1 day after due date!",
+    "category": "homework"
+  },
+  {
+    "question": "Check homework",
+    "answer": "Viewing homework 📖\n\nFor Tutors:\n• See all homework you've shared\n• Filter by batch or student\n• View submission dates\n\nFor Students:\n• See all homework assigned to you\n• Check due dates\n• View homework details and files\n\n💡 Homework automatically deletes 1 day after due date!",
+    "category": "homework"
+  },
+  {
+    "question": "Edit homework",
+    "answer": "Editing homework ✏️\n\n📋 Steps:\n1. Go to 'Homework' tab\n2. Find the homework you want to edit\n3. Click 'Edit' button\n4. Update title, description, or due date\n5. Click 'Save Changes'\n\n💡 You can't change the assigned batch/student after creating!",
+    "category": "homework"
+  },
+  {
+    "question": "Update homework",
+    "answer": "Editing homework ✏️\n\n📋 Steps:\n1. Go to 'Homework' tab\n2. Find the homework you want to edit\n3. Click 'Edit' button\n4. Update title, description, or due date\n5. Click 'Save Changes'\n\n💡 You can't change the assigned batch/student after creating!",
+    "category": "homework"
+  },
+  {
+    "question": "Delete homework",
+    "answer": "Deleting homework 🗑️\n\n📋 Steps:\n1. Go to 'Homework' tab\n2. Find the homework\n3. Click 'Delete' button\n4. Confirm deletion\n\n💡 Homework also auto-deletes 1 day after due date!",
+    "category": "homework"
+  },
+  {
+    "question": "Upload homework file",
+    "answer": "Homework File Uploads 📎\n\nSupported formats:\n• PDF files\n• Images (PNG, JPG, JPEG)\n• Documents (DOC, DOCX)\n• Maximum file size: 10MB\n\n📋 Steps:\n1. When sharing homework, click 'Upload File'\n2. Select your file\n3. File will be attached to homework\n4. Students can download it\n\n💡 Files are stored securely and accessible to assigned students!",
+    "category": "homework"
+  },
+  {
+    "question": "Homework file attachments",
+    "answer": "Homework File Uploads 📎\n\nSupported formats:\n• PDF files\n• Images (PNG, JPG, JPEG)\n• Documents (DOC, DOCX)\n• Maximum file size: 10MB\n\n📋 Steps:\n1. When sharing homework, click 'Upload File'\n2. Select your file\n3. File will be attached to homework\n4. Students can download it\n\n💡 Files are stored securely and accessible to assigned students!",
+    "category": "homework"
+  },
+  {
+    "question": "Create a batch",
+    "answer": "Creating a batch is easy! 📚\n\n📋 Steps:\n1. Go to 'Batches' tab\n2. Click 'Add New Batch' button\n3. Fill in:\n   • Batch name (required)\n   • Start time (required, e.g., 09:00)\n   • End time (optional)\n   • Days of week (optional)\n4. Click 'Create Batch'\n\n💡 You can add students to batches later!",
+    "category": "batches"
+  },
+  {
+    "question": "How to create batch",
+    "answer": "Creating a batch is easy! 📚\n\n📋 Steps:\n1. Go to 'Batches' tab\n2. Click 'Add New Batch' button\n3. Fill in:\n   • Batch name (required)\n   • Start time (required, e.g., 09:00)\n   • End time (optional)\n   • Days of week (optional)\n4. Click 'Create Batch'\n\n💡 You can add students to batches later!",
+    "category": "batches"
+  },
+  {
+    "question": "Add new batch",
+    "answer": "Creating a batch is easy! 📚\n\n📋 Steps:\n1. Go to 'Batches' tab\n2. Click 'Add New Batch' button\n3. Fill in:\n   • Batch name (required)\n   • Start time (required, e.g., 09:00)\n   • End time (optional)\n   • Days of week (optional)\n4. Click 'Create Batch'\n\n💡 You can add students to batches later!",
+    "category": "batches"
+  },
+  {
+    "question": "Edit batch",
+    "answer": "Editing a batch ✏️\n\n📋 Steps:\n1. Go to 'Batches' tab\n2. Find the batch you want to edit\n3. Click 'Edit' button\n4. Update batch name, description, or timings\n5. Click 'Save Changes'\n\n💡 Batch timings help with attendance reminders!",
+    "category": "batches"
+  },
+  {
+    "question": "Update batch information",
+    "answer": "Editing a batch ✏️\n\n📋 Steps:\n1. Go to 'Batches' tab\n2. Find the batch you want to edit\n3. Click 'Edit' button\n4. Update batch name, description, or timings\n5. Click 'Save Changes'\n\n💡 Batch timings help with attendance reminders!",
+    "category": "batches"
+  },
+  {
+    "question": "View batch students",
+    "answer": "Viewing batch students 👥\n\n📋 Steps:\n1. Go to 'Batches' tab\n2. Click on any batch card\n3. You'll see:\n   • All students in that batch\n   • Batch details and timings\n   • Quick actions\n\n💡 You can add/remove students from here!",
+    "category": "batches"
+  },
+  {
+    "question": "Delete batch",
+    "answer": "Deleting a batch 🗑️\n\n⚠️ Important:\n• Students in this batch won't be deleted\n• They'll just be unassigned from the batch\n• You can reassign them later\n\n📋 Steps:\n1. Go to 'Batches' tab\n2. Find the batch\n3. Click 'Delete' button\n4. Confirm deletion",
+    "category": "batches"
+  },
+  {
+    "question": "Batch timings",
+    "answer": "Batch Timings ⏰\n\nBatch timings are important for:\n• Attendance validation (can't mark before batch time)\n• Reminder notifications\n• Scheduling\n\n📋 To set timings:\n1. Go to 'Batches' tab\n2. Create or edit a batch\n3. Set start time (required)\n4. Set end time (optional)\n\n💡 Format: HH:MM (e.g., 09:00, 14:30)",
+    "category": "batches"
+  },
+  {
+    "question": "Set batch schedule",
+    "answer": "Batch Timings ⏰\n\nBatch timings are important for:\n• Attendance validation (can't mark before batch time)\n• Reminder notifications\n• Scheduling\n\n📋 To set timings:\n1. Go to 'Batches' tab\n2. Create or edit a batch\n3. Set start time (required)\n4. Set end time (optional)\n\n💡 Format: HH:MM (e.g., 09:00, 14:30)",
+    "category": "batches"
+  },
+  {
+    "question": "View reports",
+    "answer": "Viewing reports 📈\n\nFor Tutors:\n• Go to 'Reports' tab\n• See summary of all batches (last 7 days)\n• Click on any batch for detailed report\n• View individual student attendance (30-day grid)\n• Track attendance patterns and trends\n\n💡 Reports help you understand student performance!",
+    "category": "reports"
+  },
+  {
+    "question": "Attendance reports",
+    "answer": "Attendance Reports 📊\n\nTutors can view:\n• Batch-wise attendance summary\n• Individual student attendance (30-day grid)\n• Monthly attendance patterns\n\nStudents can view:\n• Their own monthly attendance grid\n• Attendance status (Present/Absent/Late)\n\n💡 Reports show current month only for clean data!",
+    "category": "reports"
+  },
+  {
+    "question": "Batch summary report",
+    "answer": "Batch Summary Report 📋\n\n📋 Steps:\n1. Go to 'Reports' tab\n2. See all batches listed\n3. Click on any batch\n4. View:\n   • All students in batch\n   • 7-day attendance summary\n   • Click student to see detailed 30-day grid\n\n💡 Great for parent-teacher meetings!",
+    "category": "reports"
+  },
+  {
+    "question": "Student detail report",
+    "answer": "Student Detail Report 👤\n\n📋 Steps:\n1. Go to 'Reports' tab\n2. Click on a batch\n3. Click on a student\n4. View:\n   • 30-day attendance grid\n   • Monthly attendance summary\n   • Color indicators:\n     🟢 Green = Present\n     🔴 Red = Absent\n     🟡 Yellow = Late",
+    "category": "reports"
+  },
+  {
+    "question": "Attendance analytics",
+    "answer": "Attendance Analytics 📊\n\nReports show:\n• Total present/absent/late counts\n• Attendance percentage\n• Monthly trends\n• Batch comparisons\n\n📋 Access:\n1. Go to 'Reports' tab\n2. Click on any batch\n3. See summary statistics\n4. Click student for detailed view\n\n💡 Use reports to track student progress!",
+    "category": "reports"
+  },
+  {
+    "question": "Login problems",
+    "answer": "Having trouble logging in? Let's fix it! 🔧\n\nCommon issues:\n• Wrong mobile number - Check the number you registered with\n• Forgot password - Contact your tutor for password reset\n• Account not found - Make sure you're using the correct mobile number\n\n💡 If issues persist, contact support!",
+    "category": "troubleshooting"
+  },
+  {
+    "question": "Cannot login",
+    "answer": "Having trouble logging in? Let's fix it! 🔧\n\nCommon issues:\n• Wrong mobile number - Check the number you registered with\n• Forgot password - Contact your tutor for password reset\n• Account not found - Make sure you're using the correct mobile number\n\n💡 If issues persist, contact support!",
+    "category": "troubleshooting"
+  },
+  {
+    "question": "Login error",
+    "answer": "Having trouble logging in? Let's fix it! 🔧\n\nCommon issues:\n• Wrong mobile number - Check the number you registered with\n• Forgot password - Contact your tutor for password reset\n• Account not found - Make sure you're using the correct mobile number\n\n💡 If issues persist, contact support!",
+    "category": "troubleshooting"
+  },
+  {
+    "question": "Forgot password",
+    "answer": "Password Reset 🔐\n\nFor Tutors:\n• Contact support to reset your password\n• Or use account recovery if available\n\nFor Students:\n• Contact your tutor for password reset\n• Tutor can reset student password from Students tab\n\n💡 Keep your password secure and don't share it!",
+    "category": "troubleshooting"
+  },
+  {
+    "question": "Reset password",
+    "answer": "Password Reset 🔐\n\nFor Tutors:\n• Contact support to reset your password\n• Or use account recovery if available\n\nFor Students:\n• Contact your tutor for password reset\n• Tutor can reset student password from Students tab\n\n💡 Keep your password secure and don't share it!",
+    "category": "troubleshooting"
+  },
+  {
+    "question": "App not loading",
+    "answer": "App Loading Issues 🔄\n\nTry these solutions:\n1. Refresh the page (F5 or Ctrl+R)\n2. Clear browser cache\n3. Check internet connection\n4. Try a different browser\n5. Restart your device\n\n💡 If problem persists, contact support!",
+    "category": "troubleshooting"
+  },
+  {
+    "question": "Page not loading",
+    "answer": "App Loading Issues 🔄\n\nTry these solutions:\n1. Refresh the page (F5 or Ctrl+R)\n2. Clear browser cache\n3. Check internet connection\n4. Try a different browser\n5. Restart your device\n\n💡 If problem persists, contact support!",
+    "category": "troubleshooting"
+  },
+  {
+    "question": "Data not saving",
+    "answer": "Data Saving Issues 💾\n\nIf data is not saving:\n1. Check internet connection\n2. Make sure all required fields are filled\n3. Try refreshing the page\n4. Check if you're logged in\n5. Try again after a few seconds\n\n💡 If problem continues, contact support!",
+    "category": "troubleshooting"
+  },
+  {
+    "question": "Slow performance",
+    "answer": "Performance Issues ⚡\n\nTo improve performance:\n1. Close other browser tabs\n2. Clear browser cache\n3. Check internet speed\n4. Close unnecessary apps\n5. Restart browser\n\n💡 The app works best with a stable internet connection!",
+    "category": "troubleshooting"
+  },
+  {
+    "question": "Notifications not working",
+    "answer": "Notifications 🔔\n\nTuitionTrack sends you notifications for:\n• When attendance is marked (students)\n• When new homework is shared (students)\n• Batch start reminders (tutors)\n\n💡 Notifications work even when the app is closed!\n\nTo enable:\n• Allow notifications when prompted\n• They're automatically enabled on login",
+    "category": "notifications"
+  },
+  {
+    "question": "Enable notifications",
+    "answer": "Notifications 🔔\n\nTuitionTrack sends you notifications for:\n• When attendance is marked (students)\n• When new homework is shared (students)\n• Batch start reminders (tutors)\n\n💡 Notifications work even when the app is closed!\n\nTo enable:\n• Allow notifications when prompted\n• They're automatically enabled on login",
+    "category": "notifications"
+  },
+  {
+    "question": "Notification settings",
+    "answer": "Notifications 🔔\n\nTuitionTrack sends you notifications for:\n• When attendance is marked (students)\n• When new homework is shared (students)\n• Batch start reminders (tutors)\n\n💡 Notifications work even when the app is closed!\n\nTo enable:\n• Allow notifications when prompted\n• They're automatically enabled on login",
+    "category": "notifications"
+  },
+  {
+    "question": "Update profile",
+    "answer": "Updating your profile 👤\n\n📋 Steps:\n1. Go to 'Profile' tab\n2. Click 'Edit Profile'\n3. Update your information:\n   • Tuition name\n   • Mobile number\n   • Address\n   • Other details\n4. Click 'Save Changes'\n\n💡 Keep your profile updated for better experience!",
+    "category": "profile"
+  },
+  {
+    "question": "Edit profile",
+    "answer": "Updating your profile 👤\n\n📋 Steps:\n1. Go to 'Profile' tab\n2. Click 'Edit Profile'\n3. Update your information:\n   • Tuition name\n   • Mobile number\n   • Address\n   • Other details\n4. Click 'Save Changes'\n\n💡 Keep your profile updated for better experience!",
+    "category": "profile"
+  },
+  {
+    "question": "Change mobile number",
+    "answer": "Changing Mobile Number 📱\n\n⚠️ Important:\n• Mobile number is used for login\n• Changing it may affect your login\n• Make sure to remember your new number\n\n📋 Steps:\n1. Go to 'Profile' tab\n2. Click 'Edit Profile'\n3. Update mobile number\n4. Save changes\n\n💡 Use your new mobile number for future logins!",
+    "category": "profile"
+  },
+  {
+    "question": "Getting started",
+    "answer": "First Time Setup 🎯\n\n📋 Quick Setup Guide:\n\n1. Create your account (mobile + password)\n2. Add your tuition name and details\n3. Create your first batch\n4. Add students to the batch\n5. Start marking attendance!\n\n💡 Take it one step at a time - I'm here to help!",
+    "category": "getting_started"
+  },
+  {
+    "question": "How to get started",
+    "answer": "First Time Setup 🎯\n\n📋 Quick Setup Guide:\n\n1. Create your account (mobile + password)\n2. Add your tuition name and details\n3. Create your first batch\n4. Add students to the batch\n5. Start marking attendance!\n\n💡 Take it one step at a time - I'm here to help!",
+    "category": "getting_started"
+  },
+  {
+    "question": "First time setup",
+    "answer": "First Time Setup 🎯\n\n📋 Quick Setup Guide:\n\n1. Create your account (mobile + password)\n2. Add your tuition name and details\n3. Create your first batch\n4. Add students to the batch\n5. Start marking attendance!\n\n💡 Take it one step at a time - I'm here to help!",
+    "category": "getting_started"
+  },
+  {
+    "question": "What is TuitionTrack",
+    "answer": "About TuitionTrack 🎓\n\nTuitionTrack is a comprehensive tuition management application that helps tutors:\n• Manage students and batches\n• Mark attendance easily\n• Share homework with students\n• Track performance with reports\n• Send notifications\n\n💡 It's designed to make tuition management simple and efficient!",
+    "category": "general"
+  },
+  {
+    "question": "What does TuitionTrack do",
+    "answer": "About TuitionTrack 🎓\n\nTuitionTrack is a comprehensive tuition management application that helps tutors:\n• Manage students and batches\n• Mark attendance easily\n• Share homework with students\n• Track performance with reports\n• Send notifications\n\n💡 It's designed to make tuition management simple and efficient!",
+    "category": "general"
+  },
+  {
+    "question": "Student login",
+    "answer": "Student Login 🎓\n\n📋 Steps:\n1. Go to student login page\n2. Enter your mobile number\n3. Enter your password\n4. Click 'Login'\n\n💡 Your mobile number and password were provided by your tutor when you were added to the system!",
+    "category": "student_portal"
+  },
+  {
+    "question": "How to login as student",
+    "answer": "Student Login 🎓\n\n📋 Steps:\n1. Go to student login page\n2. Enter your mobile number\n3. Enter your password\n4. Click 'Login'\n\n💡 Your mobile number and password were provided by your tutor when you were added to the system!",
+    "category": "student_portal"
+  },
+  {
+    "question": "Student portal features",
+    "answer": "Student Portal Features 👨‍🎓\n\nStudents can:\n• View their attendance (monthly grid)\n• See all assigned homework\n• Check homework due dates\n• View their profile\n• Receive notifications\n\n💡 Everything you need in one place!",
+    "category": "student_portal"
+  },
+  {
+    "question": "Account security",
+    "answer": "Account Security 🔒\n\nYour account is secure with:\n• Password protection\n• Secure session management\n• Data encryption\n• Role-based access control\n\n💡 Tips:\n• Don't share your password\n• Log out when done\n• Keep your mobile number secure\n• Contact support if you notice any issues",
+    "category": "account"
+  },
+  {
+    "question": "Data privacy",
+    "answer": "Data Privacy 🔐\n\nYour data is safe:\n• All data is stored securely\n• Only you and authorized users can access it\n• Data is encrypted\n• Regular backups are maintained\n\n💡 We take your privacy seriously!",
+    "category": "account"
+  },
+  {
+    "question": "Pro features",
+    "answer": "Pro Features 💎\n\nUpgrade to Pro (₹149/month) for:\n• Payment management (UPI integration)\n• Test marks tracking\n• Reward points system\n• Student leaderboard\n• Advanced analytics\n• Digital receipts\n• Automated reminders\n\n💡 7-day free trial available!",
+    "category": "pro"
+  },
+  {
+    "question": "Payment features",
+    "answer": "Payment Features 💳\n\nPro feature includes:\n• Automated UPI fee collection\n• Digital receipts\n• Payment tracking\n• Automated reminders\n• Payment history\n\n💡 Upgrade to Pro to unlock payment management!",
+    "category": "pro"
+  },
+  {
+    "question": "Test marks",
+    "answer": "Test Marks 📊\n\nPro feature allows you to:\n• Record student test marks\n• Track performance over time\n• Generate performance reports\n• Identify strengths and weaknesses\n\n💡 Upgrade to Pro to track test marks!",
+    "category": "pro"
+  },
+  {
+    "question": "Reward points",
+    "answer": "Reward Points System ⭐\n\nPro feature includes:\n• Points for perfect attendance (+10 per day)\n• Points for on-time submissions (+5 per assignment)\n• Points for excellent test scores (+20 for 90%+)\n• Streak bonuses\n• Leaderboard rankings\n\n💡 Upgrade to Pro to gamify learning!",
+    "category": "pro"
+  },
+  {
+    "question": "Leaderboard",
+    "answer": "Student Leaderboard 🏆\n\nPro feature shows:\n• Top students by points\n• Rankings by attendance\n• Rankings by test scores\n• Monthly winners\n\n💡 Upgrade to Pro to create healthy competition!",
+    "category": "pro"
+  }
+]

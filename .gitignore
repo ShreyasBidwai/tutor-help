@@ -69,3 +69,9 @@ dist/
 *.keystore
 *.jks
 
+# RAG System files (indexes can be regenerated)
+data/niya_faiss.index
+data/niya_embeddings.pkl
+data/niya_vectorizer.pkl
+# Keep data/niya_qa_pairs.json (source data)
+
