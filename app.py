@@ -102,6 +102,28 @@ else:
     migrate_db()
     add_indexes()
 
+# Serve manifest.json at root for TWA compatibility
+@app.route('/manifest.json')
+def manifest():
+    """Serve manifest.json for PWA/TWA"""
+    from flask import send_from_directory
+    return send_from_directory(
+        os.path.join(app.root_path, 'static'), 
+        'manifest.json', 
+        mimetype='application/manifest+json'
+    )
+
+# Serve assetlinks.json for Android TWA verification
+@app.route('/.well-known/assetlinks.json')
+def assetlinks():
+    """Serve assetlinks.json for Android TWA verification"""
+    from flask import send_from_directory
+    return send_from_directory(
+        os.path.join(app.root_path, 'static', '.well-known'), 
+        'assetlinks.json', 
+        mimetype='application/json'
+    )
+
 # Health check endpoint for monitoring
 @app.route('/health')
 def health():
