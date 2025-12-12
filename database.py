@@ -4,7 +4,7 @@ import os
 import time
 from config import Config
 
-def get_db_connection(timeout=20.0):
+def get_db_connection(timeout=30.0):
     """Get database connection with WAL mode and optimizations for better concurrency"""
     conn = sqlite3.connect(Config.DATABASE, timeout=timeout)
     conn.row_factory = sqlite3.Row

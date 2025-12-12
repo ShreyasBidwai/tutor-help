@@ -1,9 +1,10 @@
 """Authentication blueprint for tutor, student, and enterprise logins"""
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
-from database import get_db_connection
+from database import get_db_connection, execute_with_retry
 from config import Config
 from utils import require_login
 import re
+import sqlite3
 
 auth_bp = Blueprint('auth', __name__, url_prefix='')
 
@@ -117,21 +118,33 @@ def signup():
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Check if mobile already exists (race condition check)
-        cursor.execute('SELECT id FROM users WHERE mobile = ?', (mobile,))
-        existing_user = cursor.fetchone()
-        
-        if existing_user:
+        try:
+            # Check if mobile already exists (race condition check)
+            cursor.execute('SELECT id FROM users WHERE mobile = ?', (mobile,))
+            existing_user = cursor.fetchone()
+            
+            if existing_user:
+                conn.close()
+                session.pop('signup_mobile', None)
+                return render_template('auth/login.html', error='Mobile number already registered. Please login instead.', active_tab='login')
+            
+            # Create new user with tutor role - use retry logic for write operations
+            insert_cursor = execute_with_retry(conn, 
+                'INSERT INTO users (mobile, tuition_name, role) VALUES (?, ?, ?)', 
+                (mobile, tuition_name, Config.ROLE_TUTOR))
+            conn.commit()
+            user_id = insert_cursor.lastrowid
             conn.close()
-            session.pop('signup_mobile', None)
-            return render_template('auth/login.html', error='Mobile number already registered. Please login instead.', active_tab='login')
-        
-        # Create new user with tutor role
-        cursor.execute('INSERT INTO users (mobile, tuition_name, role) VALUES (?, ?, ?)', 
-                      (mobile, tuition_name, Config.ROLE_TUTOR))
-        conn.commit()
-        user_id = cursor.lastrowid
-        conn.close()
+        except sqlite3.OperationalError as e:
+            conn.rollback()
+            conn.close()
+            if "database is locked" in str(e).lower():
+                return render_template('auth/signup.html', mobile=mobile, error='Database is temporarily busy. Please try again in a moment.')
+            raise
+        except Exception as e:
+            conn.rollback()
+            conn.close()
+            raise
         
         # Clear signup session and set login session
         session.pop('signup_mobile', None)

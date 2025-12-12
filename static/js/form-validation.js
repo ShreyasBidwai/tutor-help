@@ -292,9 +292,25 @@ document.addEventListener('DOMContentLoaded', function() {
     formatPhoneInput('mobile-login');
     formatPhoneInput('mobile-signup');
     
-    // Auto-format name inputs (student and tutor names)
-    formatNameInput('name'); // Student name
-    formatNameInput('tutor_name'); // Tutor name
+    // Auto-format name inputs (student and tutor names only, NOT batch names)
+    // Only apply to student forms and tutor profile forms, not batch forms
+    const allForms = document.querySelectorAll('form');
+    allForms.forEach(form => {
+        const formAction = form.action || '';
+        // Only apply name formatting to student forms, not batch forms
+        if (formAction.includes('add_student') || formAction.includes('edit_student')) {
+            const nameInput = form.querySelector('#name');
+            if (nameInput) {
+                formatNameInput('name'); // Student name only
+            }
+        }
+    });
+    
+    // Format tutor name if on profile page
+    const tutorNameInput = document.querySelector('form[action*="profile"] #tutor_name');
+    if (tutorNameInput) {
+        formatNameInput('tutor_name'); // Tutor name only
+    }
     
     // Prevent duplicate submissions for all forms
     const forms = document.querySelectorAll('form');
