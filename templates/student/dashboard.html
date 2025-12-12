@@ -3,26 +3,74 @@
 {% block title %}Student Dashboard - TuitionTrack{% endblock %}
 
 {% block content %}
-<div class="stats-grid" data-intro-step="1">
-    <div class="stat-card">
-        <div class="stat-number">{{ attendance_percentage }}%</div>
-        <div class="stat-label">Attendance</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-number">{{ recent_homework|length }}</div>
-        <div class="stat-label">Recent Homework</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-number">{{ student.batch_name or 'N/A' }}</div>
-        <div class="stat-label">Batch</div>
+<!-- Skeleton for Stats -->
+<div id="stats-skeleton" class="skeleton-container active">
+    <div class="stats-grid">
+        <div class="skeleton-stat">
+            <div class="skeleton skeleton-stat-number"></div>
+            <div class="skeleton skeleton-stat-label"></div>
+        </div>
+        <div class="skeleton-stat">
+            <div class="skeleton skeleton-stat-number"></div>
+            <div class="skeleton skeleton-stat-label"></div>
+        </div>
+        <div class="skeleton-stat">
+            <div class="skeleton skeleton-stat-number"></div>
+            <div class="skeleton skeleton-stat-label"></div>
+        </div>
     </div>
 </div>
 
-<div class="card" data-intro-step="2">
-    <div class="card-header">
-        <h2 class="card-title">Today's Attendance</h2>
+<!-- Actual Stats Content -->
+<div id="stats-content" class="content-loading">
+    <div class="stats-grid" data-intro-step="1">
+        <a href="{{ url_for('student.attendance') }}" style="text-decoration: none; color: inherit; display: block;">
+            <div class="stat-card" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                <div class="stat-number">{{ attendance_percentage }}%</div>
+                <div class="stat-label">Attendance</div>
+            </div>
+        </a>
+        <a href="{{ url_for('student.homework') }}" style="text-decoration: none; color: inherit; display: block;">
+            <div class="stat-card" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                <div class="stat-number">{{ recent_homework|length }}</div>
+                <div class="stat-label">Recent Homework</div>
+            </div>
+        </a>
+        <div class="stat-card" id="batch-card" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onclick="showBatchDetails()" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+            <div class="stat-number">{{ student.batch_name or 'N/A' }}</div>
+            <div class="stat-label">Batch</div>
+        </div>
     </div>
-    <div style="padding: 1rem;">
+</div>
+
+<!-- Skeleton for Attendance Card -->
+<div id="attendance-skeleton" class="skeleton-container active">
+    <div class="card">
+        <div class="card-header">
+            <div class="skeleton skeleton-line" style="height: 24px; width: 150px; margin-bottom: 0.5rem;"></div>
+        </div>
+        <div style="padding: 1rem;">
+            <div class="skeleton-card">
+                <div class="skeleton-header">
+                    <div class="skeleton skeleton-avatar"></div>
+                    <div style="flex: 1;">
+                        <div class="skeleton skeleton-line skeleton-title"></div>
+                        <div class="skeleton skeleton-line skeleton-text"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actual Attendance Content -->
+<div id="attendance-content" class="content-loading">
+    <a href="{{ url_for('student.attendance') }}" style="text-decoration: none; color: inherit; display: block;">
+        <div class="card" data-intro-step="2" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+            <div class="card-header">
+                <h2 class="card-title">Today's Attendance</h2>
+            </div>
+        <div style="padding: 1rem;">
         {% if today_attendance %}
             {% if today_attendance['status'] is not none %}
                 {% set status = today_attendance['status'] %}
@@ -66,9 +114,30 @@
             </div>
         {% endif %}
     </div>
+        </div>
+    </a>
 </div>
 
 {% if upcoming_classes %}
+<!-- Skeleton for Upcoming Classes -->
+<div id="upcoming-classes-skeleton" class="skeleton-container active">
+    <div class="card">
+        <div class="card-header">
+            <div class="skeleton skeleton-line" style="height: 24px; width: 150px;"></div>
+        </div>
+        <div style="padding: 1rem;">
+            {% for i in range(3) %}
+            <div class="skeleton-card" style="margin-bottom: 0.75rem;">
+                <div class="skeleton skeleton-line skeleton-title" style="margin-bottom: 0.5rem;"></div>
+                <div class="skeleton skeleton-line skeleton-text"></div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Actual Upcoming Classes Content -->
+<div id="upcoming-classes-content" class="content-loading">
 <div class="card" data-intro-step="3">
     <div class="card-header">
         <h2 class="card-title">Upcoming Classes</h2>
@@ -89,14 +158,33 @@
         {% endfor %}
     </div>
 </div>
+</div>
 {% endif %}
 
 {% if recent_homework %}
-<div class="card" data-intro-step="4">
-    <div class="card-header">
-        <h2 class="card-title">Recent Homework</h2>
-        <a href="{{ url_for('student.homework') }}" style="font-size: 0.875rem; color: #4F46E5; text-decoration: none;">View All</a>
+<!-- Skeleton for Recent Homework -->
+<div id="homework-skeleton" class="skeleton-container active">
+    <div class="card">
+        <div class="card-header">
+            <div class="skeleton skeleton-line" style="height: 24px; width: 150px;"></div>
+        </div>
+        {% for i in range(3) %}
+        <div class="skeleton-card" style="margin-bottom: 0.5rem;">
+            <div class="skeleton skeleton-line skeleton-title" style="margin-bottom: 0.5rem;"></div>
+            <div class="skeleton skeleton-line skeleton-text"></div>
+        </div>
+        {% endfor %}
     </div>
+</div>
+
+<!-- Actual Recent Homework Content -->
+<div id="homework-content" class="content-loading">
+<a href="{{ url_for('student.homework') }}" style="text-decoration: none; color: inherit; display: block;">
+    <div class="card" data-intro-step="4" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+        <div class="card-header">
+            <h2 class="card-title">Recent Homework</h2>
+            <span style="font-size: 0.875rem; color: #4F46E5;">View All</span>
+        </div>
     {% for hw in recent_homework[:5] %}
     <a href="{{ url_for('student.homework') }}" style="text-decoration: none; color: inherit;">
         <div style="padding: 0.75rem 1rem; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='transparent'">
@@ -112,8 +200,31 @@
         </div>
     </a>
     {% endfor %}
+    </div>
+    </div>
+</a>
 </div>
 {% endif %}
+
+<script>
+// Hide skeletons and show content after page load
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        // Stats
+        hideSkeleton('stats-skeleton', 'stats-content');
+        // Attendance
+        hideSkeleton('attendance-skeleton', 'attendance-content');
+        // Upcoming Classes
+        {% if upcoming_classes %}
+        hideSkeleton('upcoming-classes-skeleton', 'upcoming-classes-content');
+        {% endif %}
+        // Homework
+        {% if recent_homework %}
+        hideSkeleton('homework-skeleton', 'homework-content');
+        {% endif %}
+    }, 500);
+});
+</script>
 
 {% endblock %}
 
@@ -527,6 +638,74 @@ document.addEventListener('DOMContentLoaded', function() {
     // The API will tell us when to stop polling
     attendanceCheckInterval = setInterval(checkAttendanceNotifications, 30000);
 });
+
+// Show batch details popup
+function showBatchDetails() {
+    {% if batch_details %}
+    const batch = {{ batch_details | tojson }};
+    
+    const overlay = document.createElement('div');
+    overlay.id = 'batch-details-modal';
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; animation: fadeIn 0.2s ease;';
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = 'background: white; border-radius: 12px; padding: 2rem; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease;';
+    
+    // Format days
+    let daysDisplay = 'Not specified';
+    if (batch.days) {
+        const dayMap = {
+            'mo': 'Monday', 'tu': 'Tuesday', 'we': 'Wednesday', 'th': 'Thursday',
+            'fr': 'Friday', 'sa': 'Saturday', 'su': 'Sunday'
+        };
+        if (batch.days === 'daily') {
+            daysDisplay = 'Daily';
+        } else {
+            const dayList = batch.days.split(',').map(d => dayMap[d.trim()] || d.trim()).filter(Boolean);
+            daysDisplay = dayList.join(', ');
+        }
+    }
+    
+    modal.innerHTML = `
+        <div style="margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: #333; display: flex; align-items: center; gap: 0.5rem;">
+                <span>📚</span>
+                <span>${batch.name || 'Batch Details'}</span>
+            </h2>
+            ${batch.description ? `<p style="color: #666; margin-bottom: 1rem; line-height: 1.5;">${batch.description}</p>` : ''}
+            <div style="display: grid; gap: 0.75rem;">
+                ${batch.start_time ? `
+                <div>
+                    <div style="font-size: 0.875rem; color: #6B7280; margin-bottom: 0.25rem;">⏰ Time</div>
+                    <div style="font-weight: 600; color: #111827;">
+                        ${batch.start_time}${batch.end_time ? ` - ${batch.end_time}` : ''}
+                    </div>
+                </div>
+                ` : ''}
+                <div>
+                    <div style="font-size: 0.875rem; color: #6B7280; margin-bottom: 0.25rem;">📅 Days</div>
+                    <div style="font-weight: 600; color: #111827;">${daysDisplay}</div>
+                </div>
+            </div>
+        </div>
+        <button onclick="document.getElementById('batch-details-modal').remove();" class="btn btn-primary" style="width: 100%;">
+            Close
+        </button>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            overlay.remove();
+        }
+    });
+    {% else %}
+    // No batch details available
+    alert('No batch information available');
+    {% endif %}
+}
 </script>
 {% endblock %}
 

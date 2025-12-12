@@ -1,6 +1,16 @@
 {% extends "base.html" %}
 
-{% block header_title %}
-{% if session.student_name %}{{ session.student_name }}{% else %}Student Portal{% endif %}
+{% block student_header %}
+<a href="{{ url_for('student.dashboard') }}" style="text-decoration: none; color: inherit; display: block; width: 100%;">
+    <div class="header-title-section">
+        <div class="header-icon">
+            <img src="{{ url_for('static', filename='TutionTrack_headerLogo.png') }}" alt="TuitionTrack Logo">
+        </div>
+        <div class="header-title-text">
+            <h1>{% if session.tuition_name %}{{ session.tuition_name }}{% else %}TuitionTrack{% endif %}</h1>
+            <p>{% if session.student_name %}{{ session.student_name }}{% else %}Student{% endif %}</p>
+        </div>
+    </div>
+</a>
 {% endblock %}
 

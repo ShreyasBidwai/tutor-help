@@ -158,3 +158,5 @@ tail -f logs/app.log
 sudo journalctl -u tutor-help -f
 ```
 
+
+
