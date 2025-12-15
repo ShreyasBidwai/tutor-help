@@ -17,32 +17,40 @@
             </a>
         </div>
     </div>
-    
+
     <div style="margin-top: 1rem;">
         <div style="margin-bottom: 1rem;">
             <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📱 Phone</div>
             <div style="font-weight: 600;">{{ student.phone }}</div>
         </div>
-        
+
+        <div style="margin-bottom: 1rem;">
+            <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">🔑 Password</div>
+            <div
+                style="font-weight: 600; font-family: monospace; font-size: 1.1em; background: #eef2ff; padding: 2px 6px; border-radius: 4px; display: inline-block;">
+                {{ student.password or 'Not Set' }}
+            </div>
+        </div>
+
         <div style="margin-bottom: 1rem;">
             <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📚 Batch</div>
             <div style="font-weight: 600;">{{ student.batch_name or 'No Batch' }}</div>
         </div>
-        
+
         {% if student.standard %}
         <div style="margin-bottom: 1rem;">
             <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">🎓 Standard/Class</div>
             <div style="font-weight: 600;">{{ student.standard }}</div>
         </div>
         {% endif %}
-        
+
         {% if student.school_name %}
         <div style="margin-bottom: 1rem;">
             <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">🏫 School</div>
             <div style="font-weight: 600;">{{ student.school_name }}</div>
         </div>
         {% endif %}
-        
+
         {% if student.address %}
         <div style="margin-bottom: 1rem;">
             <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📍 Address</div>
@@ -73,7 +81,8 @@
         </div>
         {% endif %}
         <div style="text-align: center; margin: 0.5rem;">
-            <div style="font-size: 1.5rem; font-weight: 700; color: #EF4444;">{{ attendance_stats.total_days - attendance_stats.present_days - (attendance_stats.late_days or 0) }}</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: #EF4444;">{{ attendance_stats.total_days -
+                attendance_stats.present_days - (attendance_stats.late_days or 0) }}</div>
             <div style="font-size: 0.875rem; color: #666;">Absent</div>
         </div>
     </div>
@@ -94,7 +103,8 @@
 <div class="card">
     <div class="card-header">
         <h2 class="card-title">Recent Attendance</h2>
-        <a href="{{ url_for('attendance.attendance') }}" style="font-size: 0.875rem; color: #4F46E5; text-decoration: none;">View All</a>
+        <a href="{{ url_for('attendance.attendance') }}"
+            style="font-size: 0.875rem; color: #4F46E5; text-decoration: none;">View All</a>
     </div>
     {% for record in recent_attendance %}
     <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f0f0f0;">
@@ -128,7 +138,10 @@
         <a href="https://wa.me/91{{ student.phone }}" target="_blank" class="btn btn-success">
             💬 WhatsApp Parent
         </a>
+        <a href="https://wa.me/91{{ student.phone }}?text=👋 Hello {{ student.name }}, here are your login details for TuitionTrack:%0A%0A📱 Mobile: {{ student.phone }}%0A🔑 Password: {{ student.password }}%0A%0APlease login to check your attendance and homework 📚."
+            target="_blank" class="btn btn-info" style="background-color: #0ea5e9; color: white;">
+            📤 Share Credentials
+        </a>
     </div>
 </div>
 {% endblock %}
-

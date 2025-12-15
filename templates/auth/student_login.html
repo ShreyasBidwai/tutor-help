@@ -7,45 +7,48 @@
     <div class="card">
         <div class="text-center mb-3">
             <div style="margin-bottom: 0.25rem;">
-                <img src="{{ url_for('static', filename='TutionTrack_logoNoBG.png') }}" alt="TuitionTrack Logo" style="max-width: 250px; height: auto;">
+                <img src="{{ url_for('static', filename='TutionTrack_logoNoBG.png') }}" alt="TuitionTrack Logo"
+                    style="max-width: 250px; height: auto;">
             </div>
-            <h1 style="font-size: 1.75rem; margin-bottom: 0.25rem; color: #4F46E5; margin-top: 0.5rem;">Student Login</h1>
+            <h1 style="font-size: 1.75rem; margin-bottom: 0.25rem; color: #4F46E5; margin-top: 0.5rem;">Student Login
+            </h1>
             <p style="color: #666; margin-bottom: 1.5rem; font-size: 1rem;">
                 Better Tracking. Better Learning.
             </p>
         </div>
-        
+
         {% if error %}
         <div class="alert alert-error" style="margin-bottom: 1.5rem;">
             {{ error }}
         </div>
         {% endif %}
-        
+
         <form method="POST" action="{{ url_for('auth.student_login') }}">
             <div class="form-group">
-                <label class="form-label" for="phone">Phone Number</label>
-                <input 
-                    type="tel" 
-                    id="phone" 
-                    name="phone" 
-                    class="form-input" 
-                    placeholder="Enter 10-digit phone number"
-                    maxlength="10"
-                    pattern="[0-9]{10}"
-                    required
-                    autofocus
-                    style="font-size: 1rem; padding: 0.875rem;"
-                >
-                <p style="font-size: 0.75rem; color: #666; margin-top: 0.5rem;">
-                    Use the phone number registered with your tutor
-                </p>
+                <div class="input-group">
+                    <label class="form-label" for="phone">Mobile Number</label>
+                    <input type="tel" name="phone" id="phone" placeholder="Enter 10-digit mobile number"
+                        pattern="[0-9]{10}" maxlength="10" required autofocus
+                        style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 1rem;">
+                </div>
+
+                <div class="input-group" style="margin-top: 1rem;">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" name="password" id="password" placeholder="Enter exact 6-char password"
+                        required
+                        style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 1rem;">
+                    <div style="font-size: 0.75rem; color: #666; margin-top: 0.5rem;">
+                        Ask your tutor for your 6-character password.
+                    </div>
+                </div>
             </div>
-            
-            <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem; padding: 1rem; font-size: 1rem;">
+
+            <button type="submit" class="btn btn-primary btn-block"
+                style="margin-top: 1.5rem; padding: 1rem; font-size: 1rem;">
                 Login
             </button>
         </form>
-        
+
         <div style="margin-top: 1.5rem; text-align: center;">
             <a href="{{ url_for('auth.welcome') }}" style="color: #4F46E5; text-decoration: none; font-size: 0.875rem;">
                 ← Back to Welcome

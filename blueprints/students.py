@@ -145,13 +145,19 @@ def add_student():
         
         if name and phone and batch_id:
             try:
+                # Generate random 6-char password
+                import secrets
+                import string
+                alphabet = string.ascii_letters + string.digits
+                password = ''.join(secrets.choice(alphabet) for i in range(6))
+                
                 cursor.execute('''
-                    INSERT INTO students (name, phone, batch_id, address, school_name, standard, user_id) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                ''', (name, phone, int(batch_id), address, school_name, standard, session['user_id']))
+                    INSERT INTO students (name, phone, password, batch_id, address, school_name, standard, user_id) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (name, phone, password, int(batch_id), address, school_name, standard, session['user_id']))
                 conn.commit()
                 conn.close()
-                flash('Student added successfully!', 'success')
+                flash(f'Student added successfully! Password: {password}', 'success')
                 return redirect(url_for('students.students'))
             except sqlite3.IntegrityError:
                 conn.rollback()
@@ -324,6 +330,17 @@ def delete_student(student_id):
     """Delete a student (API endpoint)"""
     conn = get_db_connection()
     cursor = conn.cursor()
+    
+    # Manually cascade delete dependencies
+    # Delete student's attendance records
+    cursor.execute('DELETE FROM attendance WHERE student_id = ? AND user_id = ?', (student_id, session['user_id']))
+    
+    # Delete student's homework records (or assignments specifically for them)
+    # Note: If homework is shared with batch, we might keep it but nullify student_id? 
+    # But usually homework table with student_id means individual assignment.
+    cursor.execute('DELETE FROM homework WHERE student_id = ? AND user_id = ?', (student_id, session['user_id']))
+    
+    # Finally delete the student
     cursor.execute('DELETE FROM students WHERE id = ? AND user_id = ?', (student_id, session['user_id']))
     conn.commit()
     conn.close()

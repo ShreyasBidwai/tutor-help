@@ -3,152 +3,293 @@
 {% block title %}Tutor Login - TuitionTrack{% endblock %}
 
 {% block content %}
-<div style="max-width: 450px; margin: 3rem auto; padding: 1rem;">
-    <div class="card" style="box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-        <div class="text-center mb-3">
-            <div style="margin-bottom: 0.25rem;">
-                <img src="{{ url_for('static', filename='TutionTrack_logoNoBG.png') }}" alt="TuitionTrack Logo" style="max-width: 250px; height: auto;">
+<div style="max-width: 450px; margin: 1rem auto; padding: 1rem;">
+    <div class="card"
+        style="box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 12px; overflow: hidden; border: none;">
+
+        <!-- Header -->
+        <div class="text-center pt-4 pb-2 px-4">
+            <div style="margin-bottom: 0.5rem;">
+                <img src="{{ url_for('static', filename='TutionTrack_logoNoBG.png') }}" alt="TuitionTrack Logo"
+                    style="max-width: 200px; height: auto;">
             </div>
-            <h1 style="font-size: 1.75rem; margin-bottom: 0.25rem; color: #4F46E5; font-weight: 700; margin-top: 0.5rem;">Tutor Portal</h1>
-            <p style="color: #666; margin-bottom: 0;">Better Tracking. Better Learning.</p>
+            <h1 style="font-size: 1.5rem; color: #1e1b4b; font-weight: 700;">Tutor Portal</h1>
         </div>
-        
+
         <!-- Tabs -->
-        <div style="display: flex; gap: 0.5rem; margin: 1.5rem 0 1.25rem 0; border-bottom: 2px solid #E5E7EB;">
-            <button 
-                onclick="switchTab('login')" 
-                id="tab-login"
-                style="flex: 1; padding: 0.75rem; border: none; background: none; font-size: 1rem; font-weight: 600; color: #4F46E5; border-bottom: 3px solid #4F46E5; cursor: pointer; transition: all 0.2s;"
-            >
-                Login
+        <div style="display: flex; margin-top: 1.5rem; border-bottom: 1px solid #eee;">
+            <button onclick="setMode('login')" id="tab-login"
+                style="flex: 1; padding: 1rem; background: none; border: none; font-weight: 600; color: #4F46E5; border-bottom: 2px solid #4F46E5; cursor: pointer; transition: all 0.2s;">
+                Sign In
             </button>
-            <button 
-                onclick="switchTab('signup')" 
-                id="tab-signup"
-                style="flex: 1; padding: 0.75rem; border: none; background: none; font-size: 1rem; font-weight: 600; color: #999; cursor: pointer; transition: all 0.2s;"
-            >
-                Sign Up
+            <button onclick="setMode('signup')" id="tab-signup"
+                style="flex: 1; padding: 1rem; background: none; border: none; font-weight: 600; color: #9ca3af; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s;">
+                Create Account
             </button>
         </div>
-        
-        {% if error %}
-        <div class="alert alert-error" style="margin-bottom: 1.5rem;">
-            {{ error }}
-        </div>
-        {% endif %}
-        
-        <!-- Login Form -->
-        <div id="form-login">
-            <form method="POST" action="{{ url_for('auth.login') }}">
-                <input type="hidden" name="action" value="login">
-                <div class="form-group">
-                    <label class="form-label" for="mobile-login">Mobile Number</label>
-                    <input 
-                        type="tel" 
-                        id="mobile-login" 
-                        name="mobile" 
-                        class="form-input" 
-                        placeholder="Enter 10-digit mobile number"
-                        pattern="[0-9]{10}"
-                        maxlength="10"
-                        required
-                        autofocus
-                    >
+
+        <div class="p-4" style="padding: 1.5rem;">
+            {% if error %}
+            <div class="alert alert-error" style="margin-bottom: 1.5rem; border-radius: 8px;">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <div id="firebase-error" class="alert alert-error"
+                style="display: none; margin-bottom: 1.5rem; border-radius: 8px;"></div>
+
+            <!-- Google Sign In -->
+            <button onclick="signInWithGoogle()" class="btn btn-outline btn-block"
+                style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 1.5rem; border: 1px solid #e5e7eb; padding: 0.875rem; border-radius: 8px; font-weight: 500; color: #374151; background: white; transition: background 0.2s;">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"
+                    style="width: 20px; height: 20px;">
+                <span id="google-text">Continue with Google</span>
+            </button>
+
+            <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+                <div style="flex: 1; height: 1px; background: #e5e7eb;"></div>
+                <span style="padding: 0 10px; color: #9ca3af; font-size: 0.875rem; font-weight: 500;">OR</span>
+                <div style="flex: 1; height: 1px; background: #e5e7eb;"></div>
+            </div>
+
+            <!-- Email/Password Form -->
+            <div id="auth-form">
+                <div class="form-group mb-3">
+                    <label class="form-label"
+                        style="font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem; display: block;">Email
+                        Address</label>
+                    <input type="email" id="email" class="form-input" placeholder="name@example.com" required
+                        style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; outline: none; transition: border-color 0.2s;">
                 </div>
-                
-                <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem;">
-                    Continue with OTP
+                <div class="form-group mb-4">
+                    <label class="form-label"
+                        style="font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem; display: block;">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="Enter password" required
+                        style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; outline: none; transition: border-color 0.2s;">
+                </div>
+
+                <div id="signup-terms"
+                    style="display: none; font-size: 0.75rem; color: #6b7280; margin-bottom: 1rem; line-height: 1.4;">
+                    By creating an account, you agree to our Terms of Service and Privacy Policy.
+                </div>
+
+                <button onclick="handleEmailAuth()" id="submit-btn" class="btn btn-primary btn-block"
+                    style="width: 100%; padding: 0.875rem; border-radius: 8px; font-weight: 600; font-size: 1rem; background-color: #4F46E5; border: none; color: white; cursor: pointer; transition: background 0.2s;">
+                    Sign In
                 </button>
-            </form>
-            <div style="text-align: center; margin-top: 1rem;">
-                <a href="{{ url_for('auth.welcome') }}" style="color: #4F46E5; text-decoration: none; font-size: 0.9375rem; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 500; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all 0.2s; background: rgba(79, 70, 229, 0.05);">
-                    <span style="font-size: 1.125rem;">←</span> Back to Welcome
-                </a>
+            </div>
+
+            <div id="login-footer" style="text-align: center; margin-top: 1.25rem;">
+                <a href="#" onclick="resetPassword(); return false;"
+                    style="color: #6b7280; font-size: 0.875rem; text-decoration: none; transition: color 0.2s;">Forgot
+                    your password?</a>
             </div>
         </div>
-        
-        <!-- Signup Form -->
-        <div id="form-signup" style="display: none;">
-            <form method="POST" action="{{ url_for('auth.login') }}">
-                <input type="hidden" name="action" value="signup">
-                <div class="form-group">
-                    <label class="form-label" for="mobile-signup">Mobile Number</label>
-                    <input 
-                        type="tel" 
-                        id="mobile-signup" 
-                        name="mobile" 
-                        class="form-input" 
-                        placeholder="Enter 10-digit mobile number"
-                        pattern="[0-9]{10}"
-                        maxlength="10"
-                        required
-                    >
-                </div>
-                
-                <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem;">
-                    Continue to Sign Up
-                </button>
-            </form>
-            <div style="text-align: center; margin-top: 1rem;">
-                <a href="{{ url_for('auth.welcome') }}" style="color: #4F46E5; text-decoration: none; font-size: 0.9375rem; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 500; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all 0.2s; background: rgba(79, 70, 229, 0.05);">
-                    <span style="font-size: 1.125rem;">←</span> Back to Welcome
-                </a>
-            </div>
-        </div>
-        
-        <p style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem; color: #999;">
-            By continuing, you agree to receive an OTP for verification
-        </p>
+    </div>
+
+    <div style="text-align: center; margin-top: 1.5rem; color: #6b7280; font-size: 0.875rem;">
+        Are you a student? <a href="{{ url_for('auth.student_login') }}"
+            style="color: #4F46E5; font-weight: 600; text-decoration: none;">Login here</a>
     </div>
 </div>
 
+{% include 'auth/firebase_config.html' %}
+<!-- Loading Overlay -->
+<div id="loading-overlay"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); z-index: 1000; justify-content: center; align-items: center; flex-direction: column;">
+    <div
+        style="width: 50px; height: 50px; border: 4px solid #f3f3f3; border-top: 4px solid #4F46E5; border-radius: 50%; animation: spin 1s linear infinite;">
+    </div>
+    <p style="margin-top: 1rem; color: #4F46E5; font-weight: 600;">Authenticating...</p>
+</div>
+
 <style>
-    a[href*="welcome"]:hover {
-        background: rgba(79, 70, 229, 0.1) !important;
-        color: #4338CA !important;
-        transform: translateX(-2px);
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .form-input:focus {
+        border-color: #4F46E5 !important;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    .btn-primary:hover {
+        background-color: #4338ca !important;
+    }
+
+    .btn-outline:hover {
+        background-color: #f9fafb !important;
+    }
+
+    a:hover {
+        color: #4F46E5 !important;
     }
 </style>
 
 <script>
-    // Initialize tab state
-    const activeTab = '{{ active_tab|default("login") }}';
-    if (activeTab === 'signup') {
-        switchTab('signup');
-    }
-    
-    function switchTab(tab) {
-        // Hide all forms
-        document.getElementById('form-login').style.display = 'none';
-        document.getElementById('form-signup').style.display = 'none';
-        
-        // Reset tab styles
-        document.getElementById('tab-login').style.color = '#999';
-        document.getElementById('tab-login').style.borderBottom = 'none';
-        document.getElementById('tab-signup').style.color = '#999';
-        document.getElementById('tab-signup').style.borderBottom = 'none';
-        
-        // Show selected form and update tab
-        if (tab === 'login') {
-            document.getElementById('form-login').style.display = 'block';
-            document.getElementById('tab-login').style.color = '#4F46E5';
-            document.getElementById('tab-login').style.borderBottom = '3px solid #4F46E5';
-            document.getElementById('mobile-login').focus();
+    let isLogin = true;
+
+    function setMode(mode) {
+        isLogin = (mode === 'login');
+        const loginTab = document.getElementById('tab-login');
+        const signupTab = document.getElementById('tab-signup');
+        const submitBtn = document.getElementById('submit-btn');
+        const loginFooter = document.getElementById('login-footer');
+        const signupTerms = document.getElementById('signup-terms');
+        const googleText = document.getElementById('google-text');
+
+        if (isLogin) {
+            // Activate Login Tab
+            loginTab.style.color = '#4F46E5';
+            loginTab.style.borderBottomColor = '#4F46E5';
+            signupTab.style.color = '#9ca3af';
+            signupTab.style.borderBottomColor = 'transparent';
+
+            // Update Content
+            submitBtn.textContent = 'Sign In';
+            submitBtn.style.backgroundColor = '#4F46E5';
+            loginFooter.style.display = 'block';
+            signupTerms.style.display = 'none';
+            googleText.textContent = 'Sign in with Google';
         } else {
-            document.getElementById('form-signup').style.display = 'block';
-            document.getElementById('tab-signup').style.color = '#4F46E5';
-            document.getElementById('tab-signup').style.borderBottom = '3px solid #4F46E5';
-            document.getElementById('mobile-signup').focus();
+            // Activate Signup Tab
+            signupTab.style.color = '#4F46E5';
+            signupTab.style.borderBottomColor = '#4F46E5';
+            loginTab.style.color = '#9ca3af';
+            loginTab.style.borderBottomColor = 'transparent';
+
+            // Update Content
+            submitBtn.textContent = 'Create Account';
+            submitBtn.style.backgroundColor = '#059669'; // Green for signup
+            loginFooter.style.display = 'none';
+            signupTerms.style.display = 'block';
+            googleText.textContent = 'Sign up with Google';
         }
     }
-    
-    // Auto-format mobile number inputs
-    document.getElementById('mobile-login').addEventListener('input', function(e) {
-        this.value = this.value.replace(/[^0-9]/g, '');
-    });
-    
-    document.getElementById('mobile-signup').addEventListener('input', function(e) {
-        this.value = this.value.replace(/[^0-9]/g, '');
-    });
+
+    function showLoader() {
+        document.getElementById('loading-overlay').style.display = 'flex';
+        document.getElementById('submit-btn').disabled = true;
+    }
+
+    function hideLoader() {
+        document.getElementById('loading-overlay').style.display = 'none';
+        document.getElementById('submit-btn').disabled = false;
+    }
+
+    async function handleEmailAuth() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const errorDiv = document.getElementById('firebase-error');
+
+        if (!email || !password) {
+            errorDiv.textContent = "Please enter both email and password.";
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        try {
+            showLoader();
+            errorDiv.style.display = 'none';
+            let userCredential;
+
+            if (isLogin) {
+                userCredential = await auth.signInWithEmailAndPassword(email, password);
+            } else {
+                userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            }
+
+            const idToken = await userCredential.user.getIdToken();
+            const user = userCredential.user;
+            sendTokenToBackend(idToken, user.uid, user.email);
+
+        } catch (error) {
+            hideLoader();
+            errorDiv.textContent = error.message;
+            errorDiv.style.display = 'block';
+        }
+    }
+
+    async function signInWithGoogle() {
+        showLoader();
+        const provider = new firebase.auth.GoogleAuthProvider();
+        try {
+            const result = await auth.signInWithPopup(provider);
+            const idToken = await result.user.getIdToken();
+            const user = result.user;
+            sendTokenToBackend(idToken, user.uid, user.email);
+        } catch (error) {
+            hideLoader();
+            const errorDiv = document.getElementById('firebase-error');
+            errorDiv.textContent = error.message;
+            errorDiv.style.display = 'block';
+        }
+    }
+
+    async function resetPassword() {
+        const email = document.getElementById('email').value;
+        const errorDiv = document.getElementById('firebase-error');
+
+        if (!email) {
+            errorDiv.textContent = "Please enter your email address first to reset your password.";
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        try {
+            showLoader();
+            errorDiv.style.display = 'none';
+
+            // Note: We attempt to send the email directly.
+            // If the user doesn't exist, Firebase sends nothing (for security) but may not throw an error.
+            // If 'Email Enumeration Protection' is on, checking existence first is not possible.
+            await auth.sendPasswordResetEmail(email);
+
+            alert("Password reset email sent! Please check your inbox (and spam folder).");
+
+        } catch (error) {
+            console.error(error);
+            errorDiv.textContent = error.message;
+            errorDiv.style.display = 'block';
+        } finally {
+            hideLoader();
+        }
+    }
+
+    function sendTokenToBackend(idToken, uid, email) {
+        fetch("{{ url_for('auth.firebase_login') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                idToken: idToken,
+                uid: uid,
+                email: email
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    window.location.href = data.redirect;
+                } else if (data.status === 'onboarding_required') {
+                    window.location.href = data.next_step;
+                } else {
+                    throw new Error(data.error || 'Authentication failed');
+                }
+            })
+            .catch(error => {
+                hideLoader();
+                const errorDiv = document.getElementById('firebase-error');
+                errorDiv.textContent = error.message;
+                errorDiv.style.display = 'block';
+            });
+    }
 </script>
 {% endblock %}

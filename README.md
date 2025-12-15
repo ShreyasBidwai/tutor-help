@@ -187,6 +187,22 @@ The application uses SQLite with the following tables:
 - Payment tracking and receipt generation
 - Advanced reporting and analytics
 
+## Troubleshooting
+
+### Firebase Authentication Errors
+
+**Error: `auth/unauthorized-domain`**
+- This error occurs if your development domain or IP address is not whitelisted in the Firebase Console.
+- **Fix:** 
+  1. Go to the [Firebase Console](https://console.firebase.google.com/)
+  2. Navigate to **Authentication** > **Settings** > **Authorized Domains**
+  3. Click **Add Domain**
+  4. Add `localhost` and your local network IP (e.g., `192.168.x.x` which you can find in the server logs)
+
+**Error: Firebase Configuration Missing**
+- Ensure you have a `.env` file with all required `FIREBASE_*` keys.
+- Check that `config.py` correctly imports these keys.
+
 ## License
 
 This is a prototype/MVP for demonstration purposes.

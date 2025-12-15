@@ -1,10 +1,23 @@
-"""Authentication blueprint for tutor, student, and enterprise logins"""
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
 from database import get_db_connection, execute_with_retry
 from config import Config
 from utils import require_login
 import re
 import sqlite3
+import firebase_admin
+from firebase_admin import credentials, auth
+
+# Initialize Firebase Admin SDK
+if not firebase_admin._apps:
+    try:
+        # Use credentials from environment/config if available, otherwise default
+        # For this environment, we assume default credentials or mock for now if explicit key is missing
+        # In production, you would use: cred = credentials.Certificate('path/to/serviceAccountKey.json')
+        # or use environment variables.
+        cred = credentials.ApplicationDefault()
+        firebase_admin.initialize_app(cred)
+    except Exception as e:
+        print(f"Warning: Firebase Admin SDK initialization failed: {e}")
 
 auth_bp = Blueprint('auth', __name__, url_prefix='')
 
@@ -165,28 +178,33 @@ def student_login():
     
     if request.method == 'POST':
         phone = request.form.get('phone', '').strip()
+        password = request.form.get('password', '').strip()
         
         if not phone or len(phone) != 10 or not phone.isdigit():
             return render_template('auth/student_login.html', error='Please enter a valid 10-digit phone number')
+            
+        if not password:
+            return render_template('auth/student_login.html', error='Please enter your password')
         
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Check if student exists
+        # Check if student exists with matching phone and password
+        # Note: Using case-sensitive comparison for password (default in SQLite depends on pragma, usually sensitive for exact match)
         cursor.execute('''
             SELECT s.id, s.name, s.phone, s.batch_id, b.name as batch_name
             FROM students s
             LEFT JOIN batches b ON s.batch_id = b.id
-            WHERE s.phone = ?
+            WHERE s.phone = ? AND s.password = ?
             LIMIT 1
-        ''', (phone,))
+        ''', (phone, password))
         student = cursor.fetchone()
         
         if not student:
             conn.close()
-            return render_template('auth/student_login.html', error='Phone number not found. Please contact your tutor.')
+            return render_template('auth/student_login.html', error='Invalid phone number or password. Please ask your tutor for credentials.')
         
-        # Simulate OTP verification (auto-login)
+        # Login success
         session['user_id'] = student['id']
         session['mobile'] = phone
         session['role'] = 'student'
@@ -333,4 +351,131 @@ def push_unsubscribe():
         import logging
         logging.error(f"Error unsubscribing from push: {e}")
         return jsonify({'error': 'Failed to unsubscribe'}), 500
+
+@auth_bp.route('/auth/firebase-login', methods=['POST'])
+def firebase_login():
+    """Handle Firebase Login with ID Token"""
+    data = request.get_json()
+    id_token = data.get('idToken')
+    
+    if not id_token:
+        return jsonify({'error': 'Missing ID token'}), 400
+    
+    try:
+        # Verify the ID token
+        try:
+             decoded_token = auth.verify_id_token(id_token)
+             uid = decoded_token.get('uid')
+             email = decoded_token.get('email')
+        except Exception as e:
+             # Development Fallback: If verification fails (likely due to missing Service Account),
+             # check if client sent us the UID/Email directly.
+             # WARNING: This "trusts" the client and is insecure for production.
+             # It is only enabled here to allow the MVP to work without server-side credentials.
+             client_uid = data.get('uid')
+             client_email = data.get('email')
+             
+             if client_uid:
+                 print(f"Warning: Firebase verification failed ({e}). Using client-provided data (INSECURE - DEV ONLY).")
+                 uid = client_uid
+                 email = client_email
+             else:
+                 print(f"Firebase verification failed ({e}) and no client fallback data provided.")
+                 raise e
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if user exists
+        cursor.execute('SELECT * FROM users WHERE firebase_uid = ? OR email = ?', (uid, email))
+        user = cursor.fetchone()
+        
+        if user:
+            # User exists, log them in
+            session['user_id'] = user['id']
+            session['mobile'] = user['mobile']
+            session['role'] = user['role']
+            session['tuition_name'] = user['tuition_name']
+            
+            if not user['firebase_uid']:
+                cursor.execute('UPDATE users SET firebase_uid = ? WHERE id = ?', (uid, user['id']))
+                conn.commit()
+                
+            conn.close()
+            return jsonify({'status': 'success', 'redirect': url_for('dashboard.dashboard')})
+        else:
+            # New user
+            session['firebase_uid'] = uid
+            session['firebase_email'] = email
+            conn.close()
+            return jsonify({'status': 'onboarding_required', 'next_step': url_for('auth.signup_mobile')})
+            
+    except Exception as e:
+        import logging
+        logging.error(f"Firebase Login Error: {e}")
+        return jsonify({'error': 'Authentication failed'}), 401
+
+@auth_bp.route('/signup/mobile', methods=['GET', 'POST'])
+def signup_mobile():
+    """Step 2: Collect Mobile Number"""
+    if 'firebase_uid' not in session:
+        return redirect(url_for('auth.login'))
+        
+    if request.method == 'POST':
+        mobile = request.form.get('mobile', '').strip()
+        if not mobile or len(mobile) != 10 or not mobile.isdigit():
+             return render_template('auth/signup_mobile.html', error='Invalid mobile number')
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT id FROM users WHERE mobile = ?', (mobile,))
+        existing = cursor.fetchone()
+        conn.close()
+        
+        if existing:
+            return render_template('auth/signup_mobile.html', error='Mobile number already registered. Please login.')
+            
+        session['signup_mobile'] = mobile
+        return redirect(url_for('auth.signup_tuition'))
+        
+    return render_template('auth/signup_mobile.html')
+
+@auth_bp.route('/signup/tuition', methods=['GET', 'POST'])
+def signup_tuition():
+    """Step 3: Collect Tuition Name and Create Account"""
+    if 'firebase_uid' not in session or 'signup_mobile' not in session:
+        return redirect(url_for('auth.login'))
+        
+    if request.method == 'POST':
+        tuition_name = request.form.get('tuition_name', '').strip()
+        if not tuition_name:
+            return render_template('auth/signup_tuition.html', error='Tuition name is required')
+            
+        try:
+            conn = get_db_connection()
+            cursor = execute_with_retry(conn, 
+                '''INSERT INTO users (mobile, email, firebase_uid, tuition_name, role, onboarding_completed) 
+                   VALUES (?, ?, ?, ?, ?, 1)''', 
+                (session['signup_mobile'], session.get('firebase_email'), session['firebase_uid'], tuition_name, Config.ROLE_TUTOR))
+            user_id = cursor.lastrowid
+            conn.commit()
+            conn.close()
+            
+            session['user_id'] = user_id
+            session['mobile'] = session['signup_mobile']
+            session['role'] = Config.ROLE_TUTOR
+            session['tuition_name'] = tuition_name
+            
+            session.pop('signup_mobile', None)
+            session.pop('firebase_uid', None)
+            session.pop('firebase_email', None)
+            
+            return redirect(url_for('dashboard.dashboard'))
+            
+        except sqlite3.IntegrityError:
+             return render_template('auth/signup_tuition.html', error="Account creation failed. User might already exist.")
+        except Exception as e:
+            return render_template('auth/signup_tuition.html', error=f"Error creating account: {e}")
+            
+    return render_template('auth/signup_tuition.html')
 

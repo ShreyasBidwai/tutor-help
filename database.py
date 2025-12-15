@@ -72,7 +72,9 @@ def init_db():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            mobile TEXT UNIQUE NOT NULL,
+            mobile TEXT NOT NULL,
+            email TEXT UNIQUE,
+            firebase_uid TEXT UNIQUE,
             tutor_name TEXT,
             tuition_name TEXT,
             address TEXT,
@@ -104,6 +106,7 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             phone TEXT NOT NULL,
+            password TEXT,
             batch_id INTEGER NOT NULL,
             address TEXT,
             school_name TEXT,
@@ -227,6 +230,20 @@ def migrate_db():
     # Migrate users table: add tuition_name and role columns
     cursor.execute("PRAGMA table_info(users)")
     user_columns = [row[1] for row in cursor.fetchall()]
+
+    if 'email' not in user_columns:
+        try:
+            cursor.execute('ALTER TABLE users ADD COLUMN email TEXT')
+            cursor.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email)')
+        except sqlite3.OperationalError:
+            pass
+
+    if 'firebase_uid' not in user_columns:
+        try:
+            cursor.execute('ALTER TABLE users ADD COLUMN firebase_uid TEXT')
+            cursor.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_firebase_uid ON users(firebase_uid)')
+        except sqlite3.OperationalError:
+            pass
     
     if 'tutor_name' not in user_columns:
         try:
@@ -259,6 +276,32 @@ def migrate_db():
             pass
     
     # Migrate batches table: add start_time, end_time, days columns
+    # Migrate students table (add password)
+    cursor.execute("PRAGMA table_info(students)")
+    student_columns = [row[1] for row in cursor.fetchall()]
+    if 'password' not in student_columns:
+        try:
+            print("Migrating students table: adding password column...")
+            cursor.execute('ALTER TABLE students ADD COLUMN password TEXT')
+            
+            # Backfill passwords for existing students
+            cursor.execute('SELECT id FROM students WHERE password IS NULL OR password = ""')
+            students_without_password = cursor.fetchall()
+            
+            import secrets
+            import string
+            alphabet = string.ascii_letters + string.digits
+            
+            for student in students_without_password:
+                # Generate 6-char random password
+                password = ''.join(secrets.choice(alphabet) for i in range(6))
+                cursor.execute('UPDATE students SET password = ? WHERE id = ?', (password, student[0])) # student[0] for id
+                print(f"Generated password for student ID {student[0]}")
+                
+        except sqlite3.OperationalError as e:
+            print(f"Migration error (students): {e}")
+            pass
+    
     cursor.execute("PRAGMA table_info(batches)")
     batch_columns = [row[1] for row in cursor.fetchall()]
     
