@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Complete Signup - Tutor Portal{% endblock %}
+
+{% block content %}
+<div style="max-width: 450px; margin: 3rem auto; padding: 1rem;">
+    <div class="card" style="box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        <div class="text-center mb-3">
+            <h1 style="font-size: 1.5rem; margin-bottom: 0.25rem; color: #4F46E5; font-weight: 700;">Mobile Number</h1>
+            <p style="color: #666; margin-bottom: 0;">Step 1 of 2: Please provide your contact number</p>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-error" style="margin-bottom: 1.5rem;">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST">
+            <div class="form-group">
+                <label class="form-label" for="mobile">Mobile Number</label>
+                <input type="tel" id="mobile" name="mobile" class="form-input"
+                    placeholder="Enter 10-digit mobile number" pattern="[0-9]{10}" maxlength="10" required autofocus>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem;">
+                Next Step
+            </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 1rem;">
+            <a href="{{ url_for('auth.logout') }}" style="color: #666; font-size: 0.875rem;">Cancel Signup</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('mobile').addEventListener('input', function (e) {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,44 @@
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+<script>
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+        apiKey: "{{ config.FIREBASE_API_KEY }}",
+        authDomain: "{{ config.FIREBASE_AUTH_DOMAIN }}",
+        projectId: "{{ config.FIREBASE_PROJECT_ID }}",
+        storageBucket: "{{ config.FIREBASE_STORAGE_BUCKET }}",
+        messagingSenderId: "{{ config.FIREBASE_MESSAGING_SENDER_ID }}",
+        appId: "{{ config.FIREBASE_APP_ID }}"
+    };
+
+    console.log("Initializing Firebase with project:", firebaseConfig.projectId);
+
+    if (!firebaseConfig.apiKey || firebaseConfig.apiKey === 'None') {
+        console.error("Firebase Configuration Missing! Check your .env file and config.py");
+        const errorDiv = document.getElementById('firebase-error');
+        if (errorDiv) {
+            errorDiv.textContent = "System Error: Firebase Configuration is missing. Please contact support.";
+            errorDiv.style.display = 'block';
+        }
+    } else {
+        try {
+            // Initialize Firebase
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+
+            // Expose auth to global scope for other scripts
+            window.auth = firebase.auth();
+            console.log("Firebase initialized successfully");
+        } catch (e) {
+            console.error("Firebase Initialization Error:", e);
+            const errorDiv = document.getElementById('firebase-error');
+            if (errorDiv) {
+                errorDiv.textContent = "System Error: Failed to initialize authentication.";
+                errorDiv.style.display = 'block';
+            }
+        }
+    }
+</script>
