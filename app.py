@@ -48,7 +48,6 @@ from blueprints.reports import reports_bp
 from blueprints.payments import payments_bp
 from blueprints.student import student_bp
 from blueprints.export import export_bp
-from blueprints.help_bot import help_bot_bp
 from blueprints.push import push_bp
 
 app.register_blueprint(auth_bp)
@@ -61,7 +60,6 @@ app.register_blueprint(reports_bp)
 app.register_blueprint(payments_bp)
 app.register_blueprint(student_bp)
 app.register_blueprint(export_bp)
-app.register_blueprint(help_bot_bp)
 app.register_blueprint(push_bp)
 
 # Make VAPID_PUBLIC_KEY available to all templates
