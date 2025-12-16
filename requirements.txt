@@ -33,10 +33,6 @@ itsdangerous==2.2.0
 Jinja2==3.1.6
 MarkupSafe==3.0.3
 msgpack==1.1.2
-<<<<<<< HEAD
-=======
-numpy==1.25.0
->>>>>>> c154b9710022129961a7680735e39cd6ef3216f9
 packaging==25.0
 proto-plus==1.26.1
 protobuf==4.25.8
