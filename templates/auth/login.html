@@ -200,9 +200,9 @@
             let userCredential;
 
             if (isLogin) {
-                userCredential = await auth.signInWithEmailAndPassword(email, password);
+                userCredential = await window.auth.signInWithEmailAndPassword(email, password);
             } else {
-                userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                userCredential = await window.auth.createUserWithEmailAndPassword(email, password);
             }
 
             const idToken = await userCredential.user.getIdToken();
@@ -220,7 +220,7 @@
         showLoader();
         const provider = new firebase.auth.GoogleAuthProvider();
         try {
-            const result = await auth.signInWithPopup(provider);
+            const result = await window.auth.signInWithPopup(provider);
             const idToken = await result.user.getIdToken();
             const user = result.user;
             sendTokenToBackend(idToken, user.uid, user.email);
@@ -249,7 +249,7 @@
             // Note: We attempt to send the email directly.
             // If the user doesn't exist, Firebase sends nothing (for security) but may not throw an error.
             // If 'Email Enumeration Protection' is on, checking existence first is not possible.
-            await auth.sendPasswordResetEmail(email);
+            await window.auth.sendPasswordResetEmail(email);
 
             alert("Password reset email sent! Please check your inbox (and spam folder).");
 
