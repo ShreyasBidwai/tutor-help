@@ -33,6 +33,8 @@ def validate_name(name):
 def index():
     """Welcome page"""
     if 'user_id' in session:
+        if session.get('role') == 'student':
+            return redirect(url_for('student.dashboard'))
         return redirect(url_for('dashboard.dashboard'))
     return redirect(url_for('auth.welcome'))
 

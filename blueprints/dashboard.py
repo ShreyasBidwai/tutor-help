@@ -10,6 +10,11 @@ dashboard_bp = Blueprint('dashboard', __name__, url_prefix='')
 @require_login
 def dashboard():
     """Main dashboard"""
+    # Check for student role and redirect
+    if session.get('role') == 'student':
+        from flask import redirect, url_for
+        return redirect(url_for('student.dashboard'))
+
     # Clean up expired homework and old attendance before showing dashboard
     cleanup_expired_homework()
     cleanup_old_attendance()
