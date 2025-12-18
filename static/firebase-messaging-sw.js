@@ -4,12 +4,12 @@ importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compa
 
 // Initialize the Firebase app in the service worker by passing in the messagingSenderId
 firebase.initializeApp({
-    apiKey: "FIREBASE_WEB_API_KEY", // Will be replaced or injected if possible, but senderId is often enough for SW
-    authDomain: "FIREBASE_WEB_AUTH_DOMAIN",
-    projectId: "FIREBASE_WEB_PROJECT_ID",
-    storageBucket: "FIREBASE_WEB_STORAGE_BUCKET",
-    messagingSenderId: "FIREBASE_MESSAGING_SENDER_ID",
-    appId: "FIREBASE_WEB_APP_ID"
+    apiKey: "AIzaSyA_zXhDXEVZNsJiAcxFU1UnLJkvS6FhaIc",
+    authDomain: "tutiontrack-48c6e.firebaseapp.com",
+    projectId: "tutiontrack-48c6e",
+    storageBucket: "tutiontrack-48c6e.firebasestorage.app",
+    messagingSenderId: "608607247798",
+    appId: "1:608607247798:web:2ca2ae115cf9c89f88b517"
 });
 
 const messaging = firebase.messaging();
