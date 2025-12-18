@@ -1,14 +1,14 @@
 {
-  "id": "/",
+  "id": "https://tutiontrack.onrender.com/",
   "name": "TuitionTrack",
   "short_name": "TuitionTrack",
   "description": "Better Tracking. Better Learning. - A comprehensive tutoring management system for home tutors.",
   "start_url": "https://tutiontrack.onrender.com/",
   "scope": "https://tutiontrack.onrender.com/",
-  "display": "fullscreen",
+  "display": "standalone",
   "display_override": [
-    "fullscreen",
     "standalone",
+    "fullscreen",
     "minimal-ui"
   ],
   "orientation": "portrait",
