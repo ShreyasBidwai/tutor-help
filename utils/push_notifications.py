@@ -1,4 +1,4 @@
-"""Push notification utilities for TuitionTrack"""
+"""Push notification utilities for TuitionTrack - Supports both Web Push and FCM"""
 from pywebpush import webpush, WebPushException
 import json
 from database import get_db_connection
@@ -7,9 +7,21 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Import FCM utilities
+try:
+    from utils.fcm_notifications import (
+        send_fcm_to_user, 
+        send_fcm_to_students,
+        get_user_fcm_tokens
+    )
+    FCM_AVAILABLE = True
+except ImportError:
+    logger.warning("FCM notifications module not available")
+    FCM_AVAILABLE = False
+
 def send_push_notification(subscription_info, title, body, url=None, notification_type=None, icon=None, badge=None):
     """
-    Send a push notification to a subscribed user
+    Send a Web Push notification to a subscribed user
     
     Args:
         subscription_info: Push subscription object (dict with keys, auth, endpoint)
@@ -48,7 +60,7 @@ def send_push_notification(subscription_info, title, body, url=None, notificatio
             }
         )
         
-        logger.info(f"Push notification sent successfully: {title}")
+        logger.info(f"Web Push notification sent successfully: {title}")
         return True
         
     except WebPushException as e:
@@ -58,12 +70,12 @@ def send_push_notification(subscription_info, title, body, url=None, notificatio
             logger.warning("Subscription expired (410), should be removed from database")
         return False
     except Exception as e:
-        logger.error(f"Error sending push notification: {e}")
+        logger.error(f"Error sending Web Push notification: {e}")
         return False
 
 def get_user_subscriptions(user_id):
     """
-    Get all push subscriptions for a user
+    Get all Web Push subscriptions for a user
     
     Args:
         user_id: User ID (tutor or student)
@@ -78,7 +90,8 @@ def get_user_subscriptions(user_id):
         cursor.execute('''
             SELECT endpoint, p256dh, auth
             FROM push_subscriptions
-            WHERE user_id = ?
+            WHERE user_id = ? AND token_type = 'webpush' 
+            AND endpoint IS NOT NULL AND p256dh IS NOT NULL AND auth IS NOT NULL
         ''', (user_id,))
         
         subscriptions = []
@@ -98,7 +111,7 @@ def get_user_subscriptions(user_id):
 
 def send_notification_to_user(user_id, title, body, url=None, notification_type=None):
     """
-    Send push notification to all subscriptions of a user
+    Send push notification to all subscriptions of a user (both Web Push and FCM)
     
     Args:
         user_id: User ID
@@ -110,18 +123,25 @@ def send_notification_to_user(user_id, title, body, url=None, notification_type=
     Returns:
         int: Number of successful notifications sent
     """
-    subscriptions = get_user_subscriptions(user_id)
     success_count = 0
     
+    # Send via Web Push
+    subscriptions = get_user_subscriptions(user_id)
     for subscription in subscriptions:
         if send_push_notification(subscription, title, body, url, notification_type):
             success_count += 1
+    
+    # Send via FCM if available
+    if FCM_AVAILABLE:
+        fcm_count = send_fcm_to_user(user_id, title, body, url, notification_type)
+        success_count += fcm_count
+        logger.info(f"Sent {fcm_count} FCM notifications to user {user_id}")
     
     return success_count
 
 def send_notification_to_students(student_ids, title, body, url=None, notification_type=None):
     """
-    Send push notification to multiple students
+    Send push notification to multiple students (both Web Push and FCM)
     
     Args:
         student_ids: List of student IDs
@@ -135,8 +155,19 @@ def send_notification_to_students(student_ids, title, body, url=None, notificati
     """
     total_sent = 0
     
+    # Send via Web Push
     for student_id in student_ids:
-        total_sent += send_notification_to_user(student_id, title, body, url, notification_type)
+        subscriptions = get_user_subscriptions(student_id)
+        for subscription in subscriptions:
+            if send_push_notification(subscription, title, body, url, notification_type):
+                total_sent += 1
+    
+    # Send via FCM if available (more efficient for multiple students)
+    if FCM_AVAILABLE:
+        fcm_count = send_fcm_to_students(student_ids, title, body, url, notification_type)
+        total_sent += fcm_count
+        logger.info(f"Sent {fcm_count} FCM notifications to {len(student_ids)} students")
     
     return total_sent
+
 

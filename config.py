@@ -41,11 +41,26 @@ class Config:
     
 
 
-    # Firebase Configuration
+    # Firebase Configuration (for Authentication)
     FIREBASE_API_KEY = os.environ.get('FIREBASE_API_KEY', '')
     FIREBASE_AUTH_DOMAIN = os.environ.get('FIREBASE_AUTH_DOMAIN', '')
     FIREBASE_PROJECT_ID = os.environ.get('FIREBASE_PROJECT_ID', '')
     FIREBASE_STORAGE_BUCKET = os.environ.get('FIREBASE_STORAGE_BUCKET', '')
     FIREBASE_MESSAGING_SENDER_ID = os.environ.get('FIREBASE_MESSAGING_SENDER_ID', '')
     FIREBASE_APP_ID = os.environ.get('FIREBASE_APP_ID', '')
+
+    # Firebase Cloud Messaging Configuration
+    # Path to Firebase service account JSON key file for server-side FCM
+    FIREBASE_SERVICE_ACCOUNT_KEY = os.environ.get('FIREBASE_SERVICE_ACCOUNT_KEY', '')
+
+    # Firebase Web Configuration (for client-side FCM)
+    FIREBASE_WEB_API_KEY = os.environ.get('FIREBASE_WEB_API_KEY', '') or FIREBASE_API_KEY
+    FIREBASE_WEB_AUTH_DOMAIN = os.environ.get('FIREBASE_WEB_AUTH_DOMAIN', '') or FIREBASE_AUTH_DOMAIN
+    FIREBASE_WEB_PROJECT_ID = os.environ.get('FIREBASE_WEB_PROJECT_ID', '') or FIREBASE_PROJECT_ID
+    FIREBASE_WEB_STORAGE_BUCKET = os.environ.get('FIREBASE_WEB_STORAGE_BUCKET', '') or FIREBASE_STORAGE_BUCKET
+    FIREBASE_WEB_MESSAGING_SENDER_ID = os.environ.get('FIREBASE_WEB_MESSAGING_SENDER_ID', '') or FIREBASE_MESSAGING_SENDER_ID
+    FIREBASE_WEB_APP_ID = os.environ.get('FIREBASE_WEB_APP_ID', '') or FIREBASE_APP_ID
+
+    # Firebase Cloud Messaging VAPID Key (Web Push certificate)
+    FIREBASE_WEB_VAPID_KEY = os.environ.get('FIREBASE_WEB_VAPID_KEY', '')
 

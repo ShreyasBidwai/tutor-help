@@ -277,9 +277,9 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    window.location.href = data.redirect;
+                    window.location.replace(data.redirect);
                 } else if (data.status === 'onboarding_required') {
-                    window.location.href = data.next_step;
+                    window.location.replace(data.next_step);
                 } else {
                     throw new Error(data.error || 'Authentication failed');
                 }

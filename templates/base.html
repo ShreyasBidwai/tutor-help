@@ -1538,57 +1538,59 @@
                 });
             });
         }
+    </script>
 
-        // Auto-request notification permission when user is logged in
-        {% if session.user_id %}
-        document.addEventListener('DOMContentLoaded', async function () {
-            // Wait a bit for page to load
+    {% if session.get('user_id') %}
+    {% include 'auth/firebase_config.html' %}
+    <script>
+        window.VAPID_PUBLIC_KEY = "{{ config.VAPID_PUBLIC_KEY }}";
+        window.FIREBASE_WEB_VAPID_KEY = "{{ config.FIREBASE_WEB_VAPID_KEY }}";
+
+        if (window.messaging) {
+            window.messaging.onMessage((payload) => {
+                console.log('Foreground message received:', payload);
+                if (typeof handleForegroundMessage === 'function') {
+                    handleForegroundMessage(payload);
+                }
+            });
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/push-notifications.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
             setTimeout(async () => {
-                if ('Notification' in window && typeof subscribeToPushNotifications === 'function') {
+                if ('Notification' in window) {
                     const currentPermission = Notification.permission;
-                    console.log('Current notification permission:', currentPermission);
 
-                    // Only request if permission is default (not yet asked)
                     if (currentPermission === 'default') {
-                        console.log('Requesting notification permission...');
                         try {
                             const permission = await Notification.requestPermission();
-                            console.log('Permission result:', permission);
-
                             if (permission === 'granted') {
-                                // Auto-subscribe to push notifications
-                                const result = await subscribeToPushNotifications();
-                                if (result && result.success) {
-                                    console.log('Auto-subscribed to push notifications');
-                                }
+                                await subscribeToPushNotifications();
                             }
                         } catch (error) {
                             console.error('Error requesting notification permission:', error);
                         }
                     } else if (currentPermission === 'granted') {
-                        // Permission already granted, check if subscribed
                         try {
-                            const checkFn = window.checkPushSubscriptionStatus || checkPushSubscriptionStatus;
-                            if (typeof checkFn === 'function') {
-                                const status = await checkFn();
-                                if (!status.subscribed) {
-                                    // Permission granted but not subscribed, subscribe now
-                                    await subscribeToPushNotifications();
-                                }
+                            const status = await checkPushSubscriptionStatus();
+                            if (!status.subscribed) {
+                                await subscribeToPushNotifications();
                             }
                         } catch (error) {
                             console.error('Error checking subscription status:', error);
                         }
                     }
                 }
-            }, 2000); // Wait 2 seconds after page load
+            }, 2000);
         });
-        {% endif %}
-
-        // Push notifications will be handled by push-notifications.js
     </script>
+    {% else %}
+    <script src="{{ url_for('static', filename='js/push-notifications.js') }}"></script>
+    {% endif %}
 
 
+    <script src="{{ url_for('static', filename='js/back-button-handler.js') }}"></script>
 </body>
 
 </html>

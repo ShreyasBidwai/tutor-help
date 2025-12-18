@@ -174,14 +174,16 @@ def init_db():
         )
     ''')
     
-    # Push subscriptions table
+    # Push subscriptions table (supports both Web Push and FCM)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS push_subscriptions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
-            endpoint TEXT NOT NULL UNIQUE,
-            p256dh TEXT NOT NULL,
-            auth TEXT NOT NULL,
+            endpoint TEXT,
+            p256dh TEXT,
+            auth TEXT,
+            fcm_token TEXT,
+            token_type TEXT DEFAULT 'webpush',
             user_agent TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -371,7 +373,7 @@ def migrate_db():
         except sqlite3.OperationalError:
             pass
     
-    # Create push_subscriptions table if it doesn't exist
+    # Create or update push_subscriptions table
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='push_subscriptions'")
     if not cursor.fetchone():
         try:
@@ -379,9 +381,11 @@ def migrate_db():
                 CREATE TABLE push_subscriptions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
-                    endpoint TEXT NOT NULL UNIQUE,
-                    p256dh TEXT NOT NULL,
-                    auth TEXT NOT NULL,
+                    endpoint TEXT,
+                    p256dh TEXT,
+                    auth TEXT,
+                    fcm_token TEXT,
+                    token_type TEXT DEFAULT 'webpush',
                     user_agent TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -389,6 +393,22 @@ def migrate_db():
             ''')
         except sqlite3.OperationalError:
             pass
+    else:
+        # Add FCM columns to existing table
+        cursor.execute("PRAGMA table_info(push_subscriptions)")
+        push_columns = [row[1] for row in cursor.fetchall()]
+        
+        if 'fcm_token' not in push_columns:
+            try:
+                cursor.execute('ALTER TABLE push_subscriptions ADD COLUMN fcm_token TEXT')
+            except sqlite3.OperationalError:
+                pass
+        
+        if 'token_type' not in push_columns:
+            try:
+                cursor.execute('ALTER TABLE push_subscriptions ADD COLUMN token_type TEXT DEFAULT "webpush"')
+            except sqlite3.OperationalError:
+                pass
     
     # Add unique constraint for students (user_id, phone) if migrating
     try:

@@ -1,15 +1,16 @@
 <!-- Firebase Configuration -->
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-messaging-compat.js"></script>
 
 <script>
     const firebaseConfig = {
-        apiKey: "{{ config.FIREBASE_API_KEY }}",
-        authDomain: "{{ config.FIREBASE_AUTH_DOMAIN }}",
-        projectId: "{{ config.FIREBASE_PROJECT_ID }}",
-        storageBucket: "{{ config.FIREBASE_STORAGE_BUCKET }}",
-        messagingSenderId: "{{ config.FIREBASE_MESSAGING_SENDER_ID }}",
-        appId: "{{ config.FIREBASE_APP_ID }}"
+        apiKey: "{{ config.FIREBASE_WEB_API_KEY or config.FIREBASE_API_KEY }}",
+        authDomain: "{{ config.FIREBASE_WEB_AUTH_DOMAIN or config.FIREBASE_AUTH_DOMAIN }}",
+        projectId: "{{ config.FIREBASE_WEB_PROJECT_ID or config.FIREBASE_PROJECT_ID }}",
+        storageBucket: "{{ config.FIREBASE_WEB_STORAGE_BUCKET or config.FIREBASE_STORAGE_BUCKET }}",
+        messagingSenderId: "{{ config.FIREBASE_WEB_MESSAGING_SENDER_ID or config.FIREBASE_MESSAGING_SENDER_ID }}",
+        appId: "{{ config.FIREBASE_WEB_APP_ID or config.FIREBASE_APP_ID }}"
     };
 
     // Initialize Firebase
@@ -17,4 +18,11 @@
         firebase.initializeApp(firebaseConfig);
     }
     window.auth = firebase.auth();
+
+    // Initialize Messaging if supported
+    if (firebase.messaging.isSupported()) {
+        window.messaging = firebase.messaging();
+    } else {
+        console.warn("Firebase Messaging is not supported in this browser.");
+    }
 </script>
