@@ -144,9 +144,9 @@ def share_homework():
                 submission_date = get_ist_today().isoformat()
             
             cursor.execute('''
-                INSERT INTO homework (title, content, file_path, youtube_url, batch_id, student_id, submission_date, user_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (title, content, file_path, youtube_url, batch_id, student_id, submission_date, session['user_id']))
+                INSERT INTO homework (title, content, file_path, youtube_url, batch_id, student_id, submission_date, user_id, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (title, content, file_path, youtube_url, batch_id, student_id, submission_date, session['user_id'], get_ist_now()))
             homework_id = cursor.lastrowid
             conn.commit()
             

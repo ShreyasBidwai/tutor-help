@@ -62,25 +62,42 @@ def send_fcm_notification(fcm_token, title, body, url=None, notification_type=No
         return False
     
     try:
+        # Build the notification image/icon absolute URLs
+        icon_url = icon
+        if icon_url and not icon_url.startswith('http'):
+            icon_url = f"https://tutiontrack.onrender.com{icon_url}"
+        else:
+            icon_url = 'https://tutiontrack.onrender.com/static/TutionTrack_appIcon_192x192.png'
+
         # Build the notification message
         message = messaging.Message(
             notification=messaging.Notification(
                 title=title,
                 body=body,
-                image=icon or '/static/TutionTrack_appIcon_192x192.png'
+                image=icon_url
             ),
             data={
                 'url': url or '/',
                 'type': notification_type or 'notification',
                 'click_action': url or '/'
             },
+            android=messaging.AndroidConfig(
+                notification=messaging.AndroidNotification(
+                    channel_id='default_channel',
+                    priority='high',
+                    default_sound=True,
+                    default_vibrate_timings=True,
+                    icon='stock_ticker_update', # Reference to android res icon
+                    color='#4F46E5'
+                )
+            ),
             token=fcm_token,
             webpush=messaging.WebpushConfig(
                 notification=messaging.WebpushNotification(
                     title=title,
                     body=body,
-                    icon=icon or '/static/TutionTrack_appIcon_192x192.png',
-                    badge=badge or '/static/TutionTrack_appIcon_96x96.png',
+                    icon=icon_url,
+                    badge='https://tutiontrack.onrender.com/static/TutionTrack_appIcon_96x96.png',
                     tag=notification_type or 'default',
                     require_interaction=False,
                     vibrate=[200, 100, 200]
@@ -195,24 +212,38 @@ def send_fcm_multicast(fcm_tokens, title, body, url=None, notification_type=None
         return 0
     
     try:
+        # Build the notification image/icon absolute URLs
+        icon_url = 'https://tutiontrack.onrender.com/static/TutionTrack_appIcon_192x192.png'
+
         # Build the multicast message
         message = messaging.MulticastMessage(
             notification=messaging.Notification(
                 title=title,
-                body=body
+                body=body,
+                image=icon_url
             ),
             data={
                 'url': url or '/',
                 'type': notification_type or 'notification',
                 'click_action': url or '/'
             },
+            android=messaging.AndroidConfig(
+                notification=messaging.AndroidNotification(
+                    channel_id='default_channel',
+                    priority='high',
+                    default_sound=True,
+                    default_vibrate_timings=True,
+                    icon='stock_ticker_update',
+                    color='#4F46E5'
+                )
+            ),
             tokens=fcm_tokens,
             webpush=messaging.WebpushConfig(
                 notification=messaging.WebpushNotification(
                     title=title,
                     body=body,
-                    icon='/static/TutionTrack_appIcon_192x192.png',
-                    badge='/static/TutionTrack_appIcon_96x96.png',
+                    icon=icon_url,
+                    badge='https://tutiontrack.onrender.com/static/TutionTrack_appIcon_96x96.png',
                     tag=notification_type or 'default',
                     require_interaction=False,
                     vibrate=[200, 100, 200]

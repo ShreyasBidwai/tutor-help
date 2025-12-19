@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, session, current_app
 from database import get_db_connection
+from utils import get_ist_now
 import json
 import logging
 
@@ -38,9 +39,9 @@ def subscribe():
             
             if not existing:
                 cursor.execute('''
-                    INSERT INTO push_subscriptions (user_id, fcm_token, token_type, user_agent)
-                    VALUES (?, ?, 'fcm', ?)
-                ''', (user_id, fcm_token, user_agent))
+                    INSERT INTO push_subscriptions (user_id, fcm_token, token_type, user_agent, created_at)
+                    VALUES (?, ?, 'fcm', ?, ?)
+                ''', (user_id, fcm_token, user_agent, get_ist_now()))
                 conn.commit()
             
             logger.info(f"FCM token saved for user {user_id}")
@@ -64,15 +65,15 @@ def subscribe():
                 # Update existing subscription
                 cursor.execute('''
                     UPDATE push_subscriptions 
-                    SET user_id = ?, p256dh = ?, auth = ?, user_agent = ?, token_type = 'webpush', created_at = CURRENT_TIMESTAMP
+                    SET user_id = ?, p256dh = ?, auth = ?, user_agent = ?, token_type = 'webpush', created_at = ?
                     WHERE endpoint = ?
-                ''', (user_id, p256dh, auth, user_agent, endpoint))
+                ''', (user_id, p256dh, auth, user_agent, get_ist_now(), endpoint))
             else:
                 # Create new subscription
                 cursor.execute('''
-                    INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth, user_agent, token_type)
-                    VALUES (?, ?, ?, ?, ?, 'webpush')
-                ''', (user_id, endpoint, p256dh, auth, user_agent))
+                    INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth, user_agent, token_type, created_at)
+                    VALUES (?, ?, ?, ?, ?, 'webpush', ?)
+                ''', (user_id, endpoint, p256dh, auth, user_agent, get_ist_now()))
                 
             conn.commit()
             logger.info(f"Web Push subscription saved for user {user_id}")

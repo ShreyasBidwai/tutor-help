@@ -334,7 +334,7 @@ def homework_reminders_api():
         conn.close()
         return jsonify({'new_homework': [], 'due_soon': [], 'due_very_soon': []})
     
-    now = datetime.now()
+    now = get_ist_now()
     today = now.date()
     tomorrow = today + timedelta(days=1)
     # 30 minutes before midnight of due date (11:30 PM the day before)
@@ -450,8 +450,8 @@ def attendance_notifications_api():
         conn.close()
         return jsonify({'notifications': [], 'should_poll': False})
     
-    now = datetime.now()
-    today = date.today()
+    now = get_ist_now()
+    today = get_ist_today()
     today_str = today.isoformat()
     should_poll = False
     
@@ -560,9 +560,9 @@ def attendance_notifications_api():
     if not notifications:
         cursor.execute('''
             UPDATE students 
-            SET last_attendance_notification = CURRENT_TIMESTAMP
+            SET last_attendance_notification = ?
             WHERE id = ?
-        ''', (student_id,))
+        ''', (get_ist_now(), student_id))
         conn.commit()
     
     conn.close()

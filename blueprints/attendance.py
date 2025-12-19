@@ -278,9 +278,9 @@ def save_attendance():
         placeholders = ','.join(['?' for _ in saved_students])
         cursor.execute(f'''
             UPDATE students 
-            SET last_attendance_notification = CURRENT_TIMESTAMP
+            SET last_attendance_notification = ?
             WHERE id IN ({placeholders})
-        ''', saved_students)
+        ''', saved_students + [get_ist_now()])
         conn.commit()
         
         # Send push notifications to students

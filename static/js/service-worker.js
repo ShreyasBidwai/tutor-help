@@ -1,18 +1,53 @@
-// Service Worker for TuitionTrack PWA
+// --- Firebase Cloud Messaging Core ---
+// Import Firebase scripts
+importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
+
+// Initialize Firebase in the service worker
+// Note: These credentials should ideally match your firebase-messaging-sw.js
+firebase.initializeApp({
+    apiKey: "AIzaSyA_zXhDXEVZNsJiAcxFU1UnLJkvS6FhaIc",
+    authDomain: "tutiontrack-48c6e.firebaseapp.com",
+    projectId: "tutiontrack-48c6e",
+    storageBucket: "tutiontrack-48c6e.firebasestorage.app",
+    messagingSenderId: "608607247798",
+    appId: "1:608607247798:web:2ca2ae115cf9c89f88b517"
+});
+
+const messaging = firebase.messaging();
+
+// Background message handler
+messaging.onBackgroundMessage((payload) => {
+    console.log('[service-worker.js] Received background message ', payload);
+
+    const notificationTitle = payload.notification.title || 'TuitionTrack';
+    const notificationOptions = {
+        body: payload.notification.body,
+        icon: payload.notification.image || '/static/TutionTrack_appIcon_192x192.png',
+        badge: '/static/TutionTrack_appIcon_96x96.png',
+        data: payload.data || {},
+        vibrate: [200, 100, 200],
+        tag: payload.data ? payload.data.type : 'default',
+        actions: payload.data && payload.data.url ? [{ action: 'open_url', title: 'View Details' }] : []
+    };
+
+    return self.registration.showNotification(notificationTitle, notificationOptions);
+});
+// --- End FCM Core ---
 const CACHE_NAME = 'tuitiontrack-v1';
 const STATIC_CACHE = 'static-v1';
 const DYNAMIC_CACHE = 'dynamic-v1';
 
 // Assets to cache on install
 const STATIC_ASSETS = [
-  '/',
-  '/static/manifest.json',
-  '/static/TutionTrack_appIcon_192x192.png',
-  '/static/TutionTrack_headerLogo.png',
-  '/static/TutionTrack_logoNoBG.png',
-  '/static/js/swipe-gestures.js',
-  '/static/js/form-validation.js',
-  '/static/js/tours.js'
+    '/',
+    '/static/manifest.json',
+    '/static/TutionTrack_appIcon_192x192.png',
+    '/static/TutionTrack_headerLogo.png',
+    '/static/TutionTrack_logoNoBG.png',
+    '/static/js/swipe-gestures.js',
+    '/static/js/form-validation.js',
+    '/static/js/tours.js'
 ];
 
 // Install event - cache static assets
@@ -36,8 +71,8 @@ self.addEventListener('activate', (event) => {
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME && 
-                        cacheName !== STATIC_CACHE && 
+                    if (cacheName !== CACHE_NAME &&
+                        cacheName !== STATIC_CACHE &&
                         cacheName !== DYNAMIC_CACHE) {
                         console.log('Deleting old cache:', cacheName);
                         return caches.delete(cacheName);
@@ -99,7 +134,7 @@ self.addEventListener('fetch', (event) => {
 // Push event - handle incoming push notifications
 self.addEventListener('push', (event) => {
     console.log('Push notification received:', event);
-    
+
     let notificationData = {
         title: 'TuitionTrack',
         body: 'You have a new notification',
@@ -167,7 +202,7 @@ self.addEventListener('push', (event) => {
 // Notification click event
 self.addEventListener('notificationclick', (event) => {
     console.log('Notification clicked:', event);
-    
+
     event.notification.close();
 
     const notificationData = event.notification.data;
@@ -204,7 +239,7 @@ self.addEventListener('notificationclick', (event) => {
 // Background sync (for offline support)
 self.addEventListener('sync', (event) => {
     console.log('Background sync:', event.tag);
-    
+
     if (event.tag === 'sync-attendance') {
         event.waitUntil(syncAttendance());
     } else if (event.tag === 'sync-homework') {
@@ -237,11 +272,11 @@ async function syncHomework() {
 // Message event - handle messages from main thread
 self.addEventListener('message', (event) => {
     console.log('Service Worker received message:', event.data);
-    
+
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();
     }
-    
+
     if (event.data && event.data.type === 'CACHE_URLS') {
         event.waitUntil(
             caches.open(DYNAMIC_CACHE).then((cache) => {

@@ -113,14 +113,13 @@ def manifest():
         mimetype='application/manifest+json'
     )
 
-# Serve firebase-messaging-sw.js at root for FCM
 @app.route('/firebase-messaging-sw.js')
 def firebase_messaging_sw():
-    """Serve firebase-messaging-sw.js for FCM"""
+    """Serve the consolidated service worker for both PWA and FCM"""
     from flask import send_from_directory
     return send_from_directory(
-        os.path.join(app.root_path, 'static'), 
-        'firebase-messaging-sw.js', 
+        os.path.join(app.root_path, 'static', 'js'), 
+        'service-worker.js', 
         mimetype='application/javascript'
     )
 
@@ -130,10 +129,10 @@ def assetlinks():
     """Serve assetlinks.json for Android TWA verification"""
     from flask import send_from_directory
     return send_from_directory(
-        os.path.join(app.root_path, 'static', '.well-known'), 
+        os.path.join(app.root_path,'.well-known'), 
         'assetlinks.json', 
         mimetype='application/json'
-    )
+    ) 
 
 # Health check endpoint for monitoring
 @app.route('/health')
