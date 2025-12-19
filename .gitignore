@@ -78,3 +78,6 @@ data/niya_vectorizer.pkl
 # Firebase
 *-firebase-adminsdk-*.json
 firebase-service-account.json
+
+#apk
+/TutionTrack
