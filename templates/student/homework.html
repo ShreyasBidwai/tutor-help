@@ -26,101 +26,232 @@
 
 <!-- Actual Homework List Content -->
 <div id="homework-list-content" class="content-loading">
-{% if homework_list %}
-    {% for hw in homework_list %}
-    <div class="card" style="margin-bottom: 1rem; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-radius: 8px; overflow: hidden;">
-        <div class="card-header" style="border-bottom: 1px solid #E5E7EB; padding: 1rem; background: #FFFFFF; display: flex; flex-direction: column;">
-            {# Row 1: Title #}
-            <h3 class="card-title" style="font-size: 1rem; font-weight: 600; color: #111827; margin: 0 0 0.75rem 0; line-height: 1.4; word-wrap: break-word; width: 100%;">{{ hw.title }}</h3>
-            
-            {# Row 2: Due Date - Always on second row #}
-            <div style="margin-bottom: 0.5rem; width: 100%;">
+    {% if homework_list %}
+    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        {% for hw in homework_list %}
+        <div class="card card-clickable hw-card" onclick="openHomeworkModal(this)" data-title="{{ hw.title }}"
+            data-date="{{ hw.submission_date | ddmmyyyy if hw.submission_date else '' }}"
+            data-content="{{ hw.content }}"
+            data-file="{{ url_for('homework.uploaded_file', filename=hw.file_path) if hw.file_path else '' }}"
+            data-filename="{{ hw.file_path.split('/')[-1] if hw.file_path else '' }}"
+            data-is-image="{{ 'true' if hw.file_path and hw.file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')) else 'false' }}"
+            data-youtube="{{ hw.youtube_url if hw.youtube_url else '' }}"
+            data-batch="{{ hw.batch_name if hw.batch_name else '' }}"
+            style="margin-bottom: 0; padding: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+
+            <div style="flex: 1; min-width: 0;">
+                <h3
+                    style="font-size: 1rem; font-weight: 600; color: #111827; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    {{ hw.title }}
+                </h3>
                 {% if hw.submission_date %}
-                <div style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.5rem; background: #FEF3C7; border-radius: 6px;">
-                    <span style="font-size: 0.875rem;">📅</span>
-                    <span style="font-weight: 500; color: #92400E; font-size: 0.8125rem;">Due: {{ hw.submission_date | ddmmyyyy }}</span>
+                <div style="font-size: 0.8125rem; color: #6B7280; margin-top: 0.25rem;">
+                    Due: <span style="font-weight: 500; color: #92400E;">{{ hw.submission_date | ddmmyyyy }}</span>
                 </div>
                 {% endif %}
             </div>
-            
-            {# Row 3: Batch - Always on third row #}
-            <div style="width: 100%;">
-                {% if hw.batch_name %}
-                <div style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.5rem; background: #F9FAFB; border-radius: 6px;">
-                    <span style="font-size: 0.875rem;">📚</span>
-                    <span style="font-weight: 500; color: #374151; font-size: 0.8125rem;">{{ hw.batch_name }}</span>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        <div style="padding: 0.75rem;">
-            {% if hw.content %}
-            <div style="margin-bottom: 0.625rem; color: #374151; white-space: pre-line; font-size: 0.8125rem; line-height: 1.5; background: #F9FAFB; padding: 0.5rem; border-radius: 4px; border-left: 2px solid #4F46E5;">
-                {{ hw.content }}
-            </div>
-            {% endif %}
-            
-            {% if hw.file_path %}
-            <div style="margin-bottom: 0.625rem;">
-                <a href="{{ url_for('homework.uploaded_file', filename=hw.file_path) }}" target="_blank" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.375rem 0.5rem; font-size: 0.75rem; border-radius: 4px;">
-                    📎 Document
-                </a>
-                {% if hw.file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')) %}
-                <div style="margin-top: 0.375rem;">
-                    <img src="{{ url_for('homework.uploaded_file', filename=hw.file_path) }}" alt="Homework document" style="max-width: 100%; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
-                </div>
-                {% endif %}
-            </div>
-            {% endif %}
-            
-            {% if hw.youtube_url %}
-            <div style="margin-bottom: 0.625rem;">
-                {% set video_id = '' %}
-                {% if 'v=' in hw.youtube_url %}
-                    {% set video_id = hw.youtube_url.split('v=')[-1].split('&')[0] %}
-                {% elif 'youtu.be/' in hw.youtube_url %}
-                    {% set video_id = hw.youtube_url.split('youtu.be/')[-1].split('?')[0] %}
-                {% elif 'embed/' in hw.youtube_url %}
-                    {% set video_id = hw.youtube_url.split('embed/')[-1].split('?')[0] %}
-                {% else %}
-                    {% set video_id = hw.youtube_url.split('/')[-1] %}
-                {% endif %}
-                {% if video_id %}
-                <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
-                    <iframe 
-                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
-                        src="https://www.youtube.com/embed/{{ video_id }}" 
-                        frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowfullscreen>
-                    </iframe>
-                </div>
-                {% else %}
-                <a href="{{ hw.youtube_url }}" target="_blank" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.375rem 0.5rem; font-size: 0.75rem; border-radius: 4px;">
-                    🎥 Video
+
+            <div style="flex-shrink: 0;">
+                {% if hw.file_path %}
+                <a href="{{ url_for('homework.uploaded_file', filename=hw.file_path) }}"
+                    download="{{ hw.file_path.split('/')[-1] }}" class="btn btn-primary btn-sm"
+                    onclick="event.stopPropagation()"
+                    style="padding: 0.5rem 0.75rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.25rem;">
+                    Download
                 </a>
                 {% endif %}
             </div>
-            {% endif %}
         </div>
+        {% endfor %}
     </div>
-    {% endfor %}
-{% else %}
+    {% else %}
     <div class="empty-state">
         <div class="empty-state-icon">📚</div>
         <h3>No homework assigned</h3>
         <p>Your tutor hasn't assigned any homework yet</p>
     </div>
-{% endif %}
+    {% endif %}
+</div>
+
+<!-- Homework Detail Modal -->
+<div id="homeworkModal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);">
+    <div
+        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 600px; max-height: 90vh; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow-y: auto;">
+
+        <div
+            style="position: sticky; top: 0; background: white; padding: 1.25rem; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: flex-start; z-index: 10;">
+            <div style="flex: 1;">
+                <div style="display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap;">
+                    <h2 id="modalTitle" style="margin: 0; font-size: 1.25rem; font-weight: 700; color: #111827;"></h2>
+                    <span id="modalDate"
+                        style="font-size: 0.875rem; font-weight: 500; color: #92400E; background: #FEF3C7; padding: 0.125rem 0.5rem; border-radius: 99px;"></span>
+                </div>
+                <div id="modalTarget" style="font-size: 0.8125rem; color: #6B7280; margin-top: 0.25rem;"></div>
+            </div>
+            <button onclick="closeHomeworkModal()"
+                style="background: none; border: none; font-size: 1.5rem; color: #6B7280; cursor: pointer; padding: 0.25rem; margin-left: 0.5rem; line-height: 1;">&times;</button>
+        </div>
+
+        <div style="padding: 1.25rem;">
+            <!-- Image goes here -->
+            <div id="modalImageContainer" style="display: none; margin-bottom: 1rem;">
+                <img id="modalImage" src="" alt="Homework Image"
+                    style="width: 100%; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            </div>
+
+            <!-- Content -->
+            <div id="modalContent"
+                style="white-space: pre-line; color: #374151; font-size: 1rem; line-height: 1.6; margin-bottom: 1.25rem;">
+            </div>
+
+            <!-- Attachments -->
+            <div id="modalAttachments" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                <!-- Download Button -->
+                <a id="modalDownloadLink" href="#" download class="btn btn-primary btn-sm"
+                    style="display: none; align-items: center; gap: 0.25rem;">
+                    Download
+                </a>
+
+                <a id="modalFileLink" href="#" target="_blank" class="btn btn-secondary btn-sm"
+                    style="display: none; align-items: center; gap: 0.25rem;">
+                    📎 View Document
+                </a>
+                <a id="modalYoutubeLink" href="#" target="_blank" class="btn btn-secondary btn-sm"
+                    style="display: none; align-items: center; gap: 0.25rem;">
+                    🔗 Visit Link
+                </a>
+            </div>
+
+            <!-- YouTube Embed -->
+            <div id="modalYoutubeEmbed"
+                style="display: none; margin-top: 1rem; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px;">
+                <iframe id="modalYoutubeFrame" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+                    frameborder="0" allowfullscreen></iframe>
+            </div>
+
+        </div>
+    </div>
 </div>
 
 <script>
-// Hide skeleton and show content after page load
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(function() {
-        hideSkeleton('homework-list-skeleton', 'homework-list-content');
-    }, 500);
-});
+    function openHomeworkModal(element) {
+        const title = element.dataset.title;
+        const date = element.dataset.date;
+        const content = element.dataset.content;
+        const fileUrl = element.dataset.file;
+        const filename = element.dataset.filename;
+        const isImage = element.dataset.isImage === 'true';
+        const youtubeUrl = element.dataset.youtube;
+        const batch = element.dataset.batch;
+
+        // Populate Modal
+        document.getElementById('modalTitle').textContent = title;
+
+        // Date
+        const dateEl = document.getElementById('modalDate');
+        if (date) {
+            dateEl.textContent = 'Due: ' + date;
+            dateEl.style.display = 'inline-block';
+        } else {
+            dateEl.style.display = 'none';
+        }
+
+        // Target (Batch)
+        const targetEl = document.getElementById('modalTarget');
+        if (batch) {
+            targetEl.textContent = 'Batch: ' + batch;
+        } else {
+            targetEl.textContent = '';
+        }
+
+        // Content
+        document.getElementById('modalContent').textContent = content;
+
+        // Image
+        const imgContainer = document.getElementById('modalImageContainer');
+        const img = document.getElementById('modalImage');
+        if (fileUrl && isImage) {
+            img.src = fileUrl;
+            imgContainer.style.display = 'block';
+        } else {
+            imgContainer.style.display = 'none';
+        }
+
+        // Download Button
+        const downloadLink = document.getElementById('modalDownloadLink');
+        if (fileUrl) {
+            downloadLink.href = fileUrl;
+            downloadLink.download = filename || 'download';
+            downloadLink.style.display = 'inline-flex';
+        } else {
+            downloadLink.style.display = 'none';
+        }
+
+        // File Link ( View)
+        const fileLink = document.getElementById('modalFileLink');
+        if (fileUrl && !isImage) {
+            fileLink.href = fileUrl;
+            fileLink.style.display = 'inline-flex';
+        } else {
+            fileLink.style.display = 'none';
+        }
+
+        // YouTube/Link
+        const ytLink = document.getElementById('modalYoutubeLink');
+        const ytEmbed = document.getElementById('modalYoutubeEmbed');
+        const ytFrame = document.getElementById('modalYoutubeFrame');
+
+        if (youtubeUrl) {
+            let videoId = '';
+            if (youtubeUrl.includes('v=')) {
+                videoId = youtubeUrl.split('v=')[1].split('&')[0];
+            } else if (youtubeUrl.includes('youtu.be/')) {
+                videoId = youtubeUrl.split('youtu.be/')[1].split('?')[0];
+            } else if (youtubeUrl.includes('embed/')) {
+                videoId = youtubeUrl.split('embed/')[1].split('?')[0];
+            }
+
+            if (videoId) {
+                ytFrame.src = 'https://www.youtube.com/embed/' + videoId;
+                ytEmbed.style.display = 'block';
+                ytLink.style.display = 'none'; // Hide link if we can embed
+            } else {
+                ytLink.href = youtubeUrl;
+                ytLink.style.display = 'inline-flex';
+                ytEmbed.style.display = 'none';
+            }
+        } else {
+            ytLink.style.display = 'none';
+            ytEmbed.style.display = 'none';
+        }
+
+        // Show Modal
+        document.getElementById('homeworkModal').style.display = 'block';
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+
+    function closeHomeworkModal() {
+        document.getElementById('homeworkModal').style.display = 'none';
+        document.body.style.overflow = '';
+        // Stop video
+        document.getElementById('modalYoutubeFrame').src = '';
+    }
+
+    // Close on outside click
+    document.getElementById('homeworkModal').addEventListener('click', function (e) {
+        if (e.target === this) {
+            closeHomeworkModal();
+        }
+    });
+</script>
+
+<script>
+    // Hide skeleton and show content after page load
+    document.addEventListener('DOMContentLoaded', function () {
+        setTimeout(function () {
+            hideSkeleton('homework-list-skeleton', 'homework-list-content');
+        }, 500);
+    });
 </script>
 {% endblock %}
-
