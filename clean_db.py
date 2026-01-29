@@ -35,9 +35,9 @@ def clean_database():
         print(f"✓ Deleted {batches_count} batch records")
         
         # 5. Delete users (optional - uncomment if you want to delete users too)
-        # cursor.execute('DELETE FROM users')
-        # users_count = cursor.rowcount
-        # print(f"✓ Deleted {users_count} user records")
+        cursor.execute('DELETE FROM users')
+        users_count = cursor.rowcount
+        print(f"✓ Deleted {users_count} user records")
         
         # Re-enable foreign key constraints
         cursor.execute('PRAGMA foreign_keys = ON')

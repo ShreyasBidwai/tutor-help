@@ -7,97 +7,86 @@
     <div class="card" style="box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
         <div class="text-center mb-3">
             <div style="margin-bottom: 0.25rem;">
-                <img src="{{ url_for('static', filename='TutionTrack_logoNoBG.png') }}" alt="TuitionTrack Logo" style="max-width: 250px; height: auto;">
+                <img src="{{ url_for('static', filename='TutionTrack_logoNoBG.png') }}" alt="TuitionTrack Logo"
+                    style="max-width: 250px; height: auto;">
             </div>
-            <h1 style="font-size: 1.75rem; margin-bottom: 0.25rem; color: #4F46E5; font-weight: 700; margin-top: 0.5rem;">Tutor Portal</h1>
+            <h1
+                style="font-size: 1.75rem; margin-bottom: 0.25rem; color: #4F46E5; font-weight: 700; margin-top: 0.5rem;">
+                Tutor Portal</h1>
             <p style="color: #666; margin-bottom: 0;">Better Tracking. Better Learning.</p>
         </div>
-        
+
         <!-- Tabs -->
         <div style="display: flex; gap: 0.5rem; margin: 1.5rem 0 1.25rem 0; border-bottom: 2px solid #E5E7EB;">
-            <button 
-                onclick="switchTab('login')" 
-                id="tab-login"
-                style="flex: 1; padding: 0.75rem; border: none; background: none; font-size: 1rem; font-weight: 600; color: #4F46E5; border-bottom: 3px solid #4F46E5; cursor: pointer; transition: all 0.2s;"
-            >
+            <button onclick="switchTab('login')" id="tab-login"
+                style="flex: 1; padding: 0.75rem; border: none; background: none; font-size: 1rem; font-weight: 600; color: #4F46E5; border-bottom: 3px solid #4F46E5; cursor: pointer; transition: all 0.2s;">
                 Login
             </button>
-            <button 
-                onclick="switchTab('signup')" 
-                id="tab-signup"
-                style="flex: 1; padding: 0.75rem; border: none; background: none; font-size: 1rem; font-weight: 600; color: #999; cursor: pointer; transition: all 0.2s;"
-            >
+            <button onclick="switchTab('signup')" id="tab-signup"
+                style="flex: 1; padding: 0.75rem; border: none; background: none; font-size: 1rem; font-weight: 600; color: #999; cursor: pointer; transition: all 0.2s;">
                 Sign Up
             </button>
         </div>
-        
+
         {% if error %}
         <div class="alert alert-error" style="margin-bottom: 1.5rem;">
             {{ error }}
         </div>
         {% endif %}
-        
+
         <!-- Login Form -->
         <div id="form-login">
             <form method="POST" action="{{ url_for('auth.login') }}">
                 <input type="hidden" name="action" value="login">
                 <div class="form-group">
                     <label class="form-label" for="mobile-login">Mobile Number</label>
-                    <input 
-                        type="tel" 
-                        id="mobile-login" 
-                        name="mobile" 
-                        class="form-input" 
-                        placeholder="Enter 10-digit mobile number"
-                        pattern="[0-9]{10}"
-                        maxlength="10"
-                        required
-                        autofocus
-                    >
+                    <input type="tel" id="mobile-login" name="mobile" class="form-input"
+                        placeholder="Enter 10-digit mobile number" pattern="[0-9]{10}" maxlength="10" required
+                        autofocus>
                 </div>
-                
+
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label class="form-label" for="password-login">Password</label>
+                    <input type="password" id="password-login" name="password" class="form-input"
+                        placeholder="Enter your password" required>
+                </div>
+
                 <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem;">
-                    Continue with OTP
+                    Login
                 </button>
             </form>
             <div style="text-align: center; margin-top: 1rem;">
-                <a href="{{ url_for('auth.welcome') }}" style="color: #4F46E5; text-decoration: none; font-size: 0.9375rem; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 500; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all 0.2s; background: rgba(79, 70, 229, 0.05);">
+                <a href="{{ url_for('auth.welcome') }}"
+                    style="color: #4F46E5; text-decoration: none; font-size: 0.9375rem; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 500; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all 0.2s; background: rgba(79, 70, 229, 0.05);">
                     <span style="font-size: 1.125rem;">←</span> Back to Welcome
                 </a>
             </div>
         </div>
-        
+
         <!-- Signup Form -->
         <div id="form-signup" style="display: none;">
             <form method="POST" action="{{ url_for('auth.login') }}">
                 <input type="hidden" name="action" value="signup">
                 <div class="form-group">
                     <label class="form-label" for="mobile-signup">Mobile Number</label>
-                    <input 
-                        type="tel" 
-                        id="mobile-signup" 
-                        name="mobile" 
-                        class="form-input" 
-                        placeholder="Enter 10-digit mobile number"
-                        pattern="[0-9]{10}"
-                        maxlength="10"
-                        required
-                    >
+                    <input type="tel" id="mobile-signup" name="mobile" class="form-input"
+                        placeholder="Enter 10-digit mobile number" pattern="[0-9]{10}" maxlength="10" required>
                 </div>
-                
+
                 <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem;">
                     Continue to Sign Up
                 </button>
             </form>
             <div style="text-align: center; margin-top: 1rem;">
-                <a href="{{ url_for('auth.welcome') }}" style="color: #4F46E5; text-decoration: none; font-size: 0.9375rem; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 500; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all 0.2s; background: rgba(79, 70, 229, 0.05);">
+                <a href="{{ url_for('auth.welcome') }}"
+                    style="color: #4F46E5; text-decoration: none; font-size: 0.9375rem; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 500; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all 0.2s; background: rgba(79, 70, 229, 0.05);">
                     <span style="font-size: 1.125rem;">←</span> Back to Welcome
                 </a>
             </div>
         </div>
-        
+
         <p style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem; color: #999;">
-            By continuing, you agree to receive an OTP for verification
+            By continuing, you agree to our Terms of Service
         </p>
     </div>
 </div>
@@ -116,18 +105,18 @@
     if (activeTab === 'signup') {
         switchTab('signup');
     }
-    
+
     function switchTab(tab) {
         // Hide all forms
         document.getElementById('form-login').style.display = 'none';
         document.getElementById('form-signup').style.display = 'none';
-        
+
         // Reset tab styles
         document.getElementById('tab-login').style.color = '#999';
         document.getElementById('tab-login').style.borderBottom = 'none';
         document.getElementById('tab-signup').style.color = '#999';
         document.getElementById('tab-signup').style.borderBottom = 'none';
-        
+
         // Show selected form and update tab
         if (tab === 'login') {
             document.getElementById('form-login').style.display = 'block';
@@ -141,13 +130,13 @@
             document.getElementById('mobile-signup').focus();
         }
     }
-    
+
     // Auto-format mobile number inputs
-    document.getElementById('mobile-login').addEventListener('input', function(e) {
+    document.getElementById('mobile-login').addEventListener('input', function (e) {
         this.value = this.value.replace(/[^0-9]/g, '');
     });
-    
-    document.getElementById('mobile-signup').addEventListener('input', function(e) {
+
+    document.getElementById('mobile-signup').addEventListener('input', function (e) {
         this.value = this.value.replace(/[^0-9]/g, '');
     });
 </script>

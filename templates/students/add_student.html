@@ -9,36 +9,21 @@
     <form method="POST" action="{{ url_for('students.add_student') }}">
         <div class="form-group">
             <label class="form-label" for="name">Student Name *</label>
-            <input 
-                type="text" 
-                id="name" 
-                name="name" 
-                class="form-input" 
-                placeholder="Enter student name"
+            <input type="text" id="name" name="name" class="form-input" placeholder="Enter student name"
                 pattern="[a-zA-Z\s\u00C0-\u017F\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]+"
-                title="Name can only contain letters and spaces. No numbers or special characters allowed."
-                required
-                autofocus
-            >
+                title="Name can only contain letters and spaces. No numbers or special characters allowed." required
+                autofocus>
             <p style="font-size: 0.75rem; color: #666; margin-top: 0.5rem;">
                 Only letters and spaces allowed. No numbers or special characters.
             </p>
         </div>
-        
+
         <div class="form-group">
             <label class="form-label" for="phone">Parent Phone Number *</label>
-            <input 
-                type="tel" 
-                id="phone" 
-                name="phone" 
-                class="form-input" 
-                placeholder="Enter 10-digit phone number"
-                pattern="[0-9]{10}"
-                maxlength="10"
-                required
-            >
+            <input type="tel" id="phone" name="phone" class="form-input" placeholder="Enter 10-digit phone number"
+                pattern="[0-9]{10}" maxlength="10" required>
         </div>
-        
+
         <div class="form-group">
             <label class="form-label" for="batch_id">Batch *</label>
             <select id="batch_id" name="batch_id" class="form-select" required>
@@ -48,46 +33,48 @@
                 {% endfor %}
             </select>
         </div>
-        
+
         <div class="form-group">
             <label class="form-label" for="standard">Standard/Class</label>
-            <input 
-                type="text" 
-                id="standard" 
-                name="standard" 
-                class="form-input" 
-                placeholder="e.g., 10th, 12th, Class 5"
-            >
+            <input type="text" id="standard" name="standard" class="form-input" placeholder="e.g., 10th, 12th, Class 5">
         </div>
-        
+
         <div class="form-group">
             <label class="form-label" for="school_name">School Name</label>
-            <input 
-                type="text" 
-                id="school_name" 
-                name="school_name" 
-                class="form-input" 
-                placeholder="Enter school name"
-            >
+            <input type="text" id="school_name" name="school_name" class="form-input" placeholder="Enter school name">
         </div>
-        
+
         <div class="form-group">
             <label class="form-label" for="address">Address</label>
-            <textarea 
-                id="address" 
-                name="address" 
-                class="form-textarea" 
-                placeholder="Enter student address"
-                style="min-height: 80px;"
-            ></textarea>
+            <textarea id="address" name="address" class="form-textarea" placeholder="Enter student address"
+                style="min-height: 80px;"></textarea>
         </div>
-        
+
         {% if not batches %}
-        <div class="alert alert-error">
-            No batches available. <a href="{{ url_for('batches.add_batch') }}">Create a batch first</a>
-        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    title: 'No Batches Available',
+                    text: 'You need to create a batch before adding a student.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Create Batch',
+                    cancelButtonText: 'Dismiss',
+                    confirmButtonColor: '#4F46E5',
+                    cancelButtonColor: '#6B7280',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = "{{ url_for('batches.add_batch') }}";
+                    } else {
+                        window.location.href = "{{ url_for('dashboard.dashboard') }}";
+                    }
+                });
+            });
+        </script>
         {% endif %}
-        
+
         <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
             <a href="{{ url_for('students.students') }}" class="btn btn-secondary" style="flex: 1;">
                 Cancel
@@ -101,9 +88,8 @@
 
 <script>
     // Auto-format phone number input
-    document.getElementById('phone').addEventListener('input', function(e) {
+    document.getElementById('phone').addEventListener('input', function (e) {
         this.value = this.value.replace(/[^0-9]/g, '');
     });
 </script>
 {% endblock %}
-

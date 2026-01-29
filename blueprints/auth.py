@@ -1,5 +1,6 @@
 """Authentication blueprint for tutor, student, and enterprise logins"""
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
+from werkzeug.security import generate_password_hash, check_password_hash
 from database import get_db_connection, execute_with_retry
 from config import Config
 from utils import require_login
@@ -52,7 +53,7 @@ def login():
         cursor = conn.cursor()
         
         # Check if user exists
-        cursor.execute('SELECT id, tuition_name, role FROM users WHERE mobile = ?', (mobile,))
+        cursor.execute('SELECT id, tuition_name, role, password_hash FROM users WHERE mobile = ?', (mobile,))
         user = cursor.fetchone()
         
         if action == 'login':
@@ -75,7 +76,18 @@ def login():
                 flash('Please complete your signup by providing your tuition name.', 'error')
                 return redirect(url_for('auth.signup'))
             
-            # Simulate OTP verification (auto-login)
+            # Verify password
+            password = request.form.get('password', '').strip()
+            if not password:
+                conn.close()
+                return render_template('auth/login.html', error='Please enter your password', active_tab='login')
+
+            if not user['password_hash'] or not check_password_hash(user['password_hash'], password):
+                conn.close()
+                flash('Invalid mobile number or password.', 'error')
+                return render_template('auth/login.html', error='Invalid mobile number or password.', active_tab='login')
+            
+            # Login successful
             session['user_id'] = user_id
             session['mobile'] = mobile
             session['role'] = role
@@ -111,6 +123,14 @@ def signup():
     
     if request.method == 'POST':
         tuition_name = request.form.get('tuition_name', '').strip()
+        password = request.form.get('password', '').strip()
+        confirm_password = request.form.get('confirm_password', '').strip()
+        
+        if not password or len(password) < 6:
+            return render_template('auth/signup.html', mobile=mobile, error='Password must be at least 6 characters long')
+            
+        if password != confirm_password:
+             return render_template('auth/signup.html', mobile=mobile, error='Passwords do not match')
         
         if not tuition_name:
             return render_template('auth/signup.html', mobile=mobile, error='Please enter your tuition name')
@@ -130,8 +150,8 @@ def signup():
             
             # Create new user with tutor role - use retry logic for write operations
             insert_cursor = execute_with_retry(conn, 
-                'INSERT INTO users (mobile, tuition_name, role) VALUES (?, ?, ?)', 
-                (mobile, tuition_name, Config.ROLE_TUTOR))
+                'INSERT INTO users (mobile, tuition_name, role, password_hash) VALUES (?, ?, ?, ?)', 
+                (mobile, tuition_name, Config.ROLE_TUTOR, generate_password_hash(password)))
             conn.commit()
             user_id = insert_cursor.lastrowid
             conn.close()
