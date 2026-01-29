@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Complete Signup - Tutor Portal{% endblock %}
+
+{% block content %}
+<div style="max-width: 450px; margin: 3rem auto; padding: 1rem;">
+    <div class="card" style="box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        <div class="text-center mb-3">
+            <h1 style="font-size: 1.5rem; margin-bottom: 0.25rem; color: #4F46E5; font-weight: 700;">Tuition Name</h1>
+            <p style="color: #666; margin-bottom: 0;">Step 2 of 2: What should students call your tuition?</p>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-error" style="margin-bottom: 1.5rem;">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST">
+            <div class="form-group">
+                <label class="form-label" for="tuition_name">Tuition Name</label>
+                <input type="text" id="tuition_name" name="tuition_name" class="form-input"
+                    placeholder="e.g. Sharma Physics Classes" required autofocus>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem;">
+                Complete Signup
+            </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 1rem;">
+            <a href="{{ url_for('auth.logout') }}" style="color: #666; font-size: 0.875rem;">Cancel Signup</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
