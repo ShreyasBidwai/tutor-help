@@ -1601,21 +1601,7 @@
         // Push notifications will be handled by push-notifications.js
     </script>
 
-    <!-- Niya Help Bot - Only show if logged in -->
-    {% if session.user_id %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/help-bot.css') }}">
-    <script>
-        // Pass user role to help bot
-        window.userLoggedIn = true;
-        window.userRole = '{{ session.role or "tutor" }}';
-        console.log('Niya: Template loaded, userLoggedIn=', window.userLoggedIn, 'userRole=', window.userRole);
-    </script>
-    <script src="{{ url_for('static', filename='js/help-bot.js') }}"></script>
-    {% else %}
-    <script>
-        console.log('Niya: User not logged in (no session.user_id)');
-    </script>
-    {% endif %}
+
 </body>
 
 </html>
