@@ -7,45 +7,40 @@
     <div class="card">
         <div class="text-center mb-3">
             <div style="margin-bottom: 0.25rem;">
-                <img src="{{ url_for('static', filename='TutionTrack_logoNoBG.png') }}" alt="TuitionTrack Logo" style="max-width: 250px; height: auto;">
+                <img src="{{ url_for('static', filename='TutionTrack_logoNoBG.png') }}" alt="TuitionTrack Logo"
+                    style="max-width: 250px; height: auto;">
             </div>
-            <h1 style="font-size: 1.75rem; margin-bottom: 0.25rem; color: #4F46E5; margin-top: 0.5rem;">Student Login</h1>
+            <h1 style="font-size: 1.75rem; margin-bottom: 0.25rem; color: #4F46E5; margin-top: 0.5rem;">Student Login
+            </h1>
             <p style="color: #666; margin-bottom: 1.5rem; font-size: 1rem;">
                 Better Tracking. Better Learning.
             </p>
         </div>
-        
+
         {% if error %}
         <div class="alert alert-error" style="margin-bottom: 1.5rem;">
             {{ error }}
         </div>
         {% endif %}
-        
-        <form method="POST" action="{{ url_for('auth.student_login') }}">
+
+        <div id="js-error-alert" class="alert alert-error" style="display: none; margin-bottom: 1.5rem;"></div>
+
+        <form id="student-login-form" method="POST" action="{{ url_for('auth.student_login') }}" novalidate>
             <div class="form-group">
                 <label class="form-label" for="phone">Phone Number</label>
-                <input 
-                    type="tel" 
-                    id="phone" 
-                    name="phone" 
-                    class="form-input" 
-                    placeholder="Enter 10-digit phone number"
-                    maxlength="10"
-                    pattern="[0-9]{10}"
-                    required
-                    autofocus
-                    style="font-size: 1rem; padding: 0.875rem;"
-                >
+                <input type="tel" id="phone" name="phone" class="form-input" placeholder="Enter 10-digit phone number"
+                    maxlength="10" autofocus style="font-size: 1rem; padding: 0.875rem;">
                 <p style="font-size: 0.75rem; color: #666; margin-top: 0.5rem;">
                     Use the phone number registered with your tutor
                 </p>
             </div>
-            
-            <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem; padding: 1rem; font-size: 1rem;">
+
+            <button type="submit" class="btn btn-primary btn-block"
+                style="margin-top: 1.5rem; padding: 1rem; font-size: 1rem;">
                 Login
             </button>
         </form>
-        
+
         <div style="margin-top: 1.5rem; text-align: center;">
             <a href="{{ url_for('auth.welcome') }}" style="color: #4F46E5; text-decoration: none; font-size: 0.875rem;">
                 ← Back to Welcome
@@ -53,4 +48,44 @@
         </div>
     </div>
 </div>
+</div>
+
+<script>
+    function hideError() {
+        const errorDiv = document.getElementById('js-error-alert');
+        if (errorDiv.style.display !== 'none') {
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
+        }
+    }
+
+    // Auto-format mobile number inputs and hide errors
+    document.getElementById('phone').addEventListener('input', function (e) {
+        this.value = this.value.replace(/[^0-9]/g, '');
+        hideError();
+    });
+
+    document.getElementById('student-login-form').addEventListener('submit', function (e) {
+        const phone = document.getElementById('phone').value.trim();
+        const errorDiv = document.getElementById('js-error-alert');
+
+        // Reset error
+        errorDiv.style.display = 'none';
+        errorDiv.textContent = '';
+
+        if (!phone) {
+            e.preventDefault();
+            errorDiv.textContent = 'Please enter your phone number.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        if (phone.length !== 10) {
+            e.preventDefault();
+            errorDiv.textContent = 'Please enter a valid 10-digit phone number.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+    });
+</script>
 {% endblock %}
