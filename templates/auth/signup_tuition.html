@@ -16,11 +16,13 @@
         </div>
         {% endif %}
 
-        <form method="POST">
+        <div id="js-error-alert" class="alert alert-error" style="display: none; margin-bottom: 1.5rem;"></div>
+
+        <form id="signup-tuition-form" method="POST" novalidate>
             <div class="form-group">
                 <label class="form-label" for="tuition_name">Tuition Name</label>
                 <input type="text" id="tuition_name" name="tuition_name" class="form-input"
-                    placeholder="e.g. Sharma Physics Classes" required autofocus>
+                    placeholder="e.g. Sharma Physics Classes" autofocus>
             </div>
 
             <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem;">
@@ -33,4 +35,32 @@
         </div>
     </div>
 </div>
+
+<script>
+    function hideError() {
+        const errorDiv = document.getElementById('js-error-alert');
+        if (errorDiv.style.display !== 'none') {
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
+        }
+    }
+
+    document.getElementById('tuition_name').addEventListener('input', hideError);
+
+    document.getElementById('signup-tuition-form').addEventListener('submit', function (e) {
+        const name = document.getElementById('tuition_name').value.trim();
+        const errorDiv = document.getElementById('js-error-alert');
+
+        // Reset error
+        errorDiv.style.display = 'none';
+        errorDiv.textContent = '';
+
+        if (!name) {
+            e.preventDefault();
+            errorDiv.textContent = 'Please enter your Tuition Name.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+    });
+</script>
 {% endblock %}

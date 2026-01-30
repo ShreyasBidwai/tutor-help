@@ -34,21 +34,22 @@
         </div>
         {% endif %}
 
+        <div id="js-error-alert" class="alert alert-error" style="display: none; margin-bottom: 1.5rem;"></div>
+
         <!-- Login Form -->
         <div id="form-login">
-            <form method="POST" action="{{ url_for('auth.login') }}">
+            <form id="login-form" method="POST" action="{{ url_for('auth.login') }}" novalidate>
                 <input type="hidden" name="action" value="login">
                 <div class="form-group">
                     <label class="form-label" for="mobile-login">Mobile Number</label>
                     <input type="tel" id="mobile-login" name="mobile" class="form-input"
-                        placeholder="Enter 10-digit mobile number" pattern="[0-9]{10}" maxlength="10" required
-                        autofocus>
+                        placeholder="Enter 10-digit mobile number" maxlength="10" autofocus>
                 </div>
 
                 <div class="form-group" style="margin-top: 1rem;">
                     <label class="form-label" for="password-login">Password</label>
                     <input type="password" id="password-login" name="password" class="form-input"
-                        placeholder="Enter your password" required>
+                        placeholder="Enter your password">
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem;">
@@ -65,12 +66,12 @@
 
         <!-- Signup Form -->
         <div id="form-signup" style="display: none;">
-            <form method="POST" action="{{ url_for('auth.login') }}">
+            <form id="signup-start-form" method="POST" action="{{ url_for('auth.login') }}" novalidate>
                 <input type="hidden" name="action" value="signup">
                 <div class="form-group">
                     <label class="form-label" for="mobile-signup">Mobile Number</label>
                     <input type="tel" id="mobile-signup" name="mobile" class="form-input"
-                        placeholder="Enter 10-digit mobile number" pattern="[0-9]{10}" maxlength="10" required>
+                        placeholder="Enter 10-digit mobile number" maxlength="10">
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem;">
@@ -131,13 +132,81 @@
         }
     }
 
-    // Auto-format mobile number inputs
+    function hideError() {
+        const errorDiv = document.getElementById('js-error-alert');
+        if (errorDiv.style.display !== 'none') {
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
+        }
+    }
+
+    // Auto-format mobile number inputs and hide errors
     document.getElementById('mobile-login').addEventListener('input', function (e) {
         this.value = this.value.replace(/[^0-9]/g, '');
+        hideError();
+    });
+
+    document.getElementById('password-login').addEventListener('input', function (e) {
+        hideError();
     });
 
     document.getElementById('mobile-signup').addEventListener('input', function (e) {
         this.value = this.value.replace(/[^0-9]/g, '');
+        hideError();
+    });
+
+    document.getElementById('login-form').addEventListener('submit', function (e) {
+        const mobile = document.getElementById('mobile-login').value.trim();
+        const password = document.getElementById('password-login').value.trim();
+        const errorDiv = document.getElementById('js-error-alert');
+
+        // Reset error
+        errorDiv.style.display = 'none';
+        errorDiv.textContent = '';
+
+        if (!mobile) {
+            e.preventDefault();
+            errorDiv.textContent = 'Please enter your mobile number.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        if (mobile.length !== 10) {
+            e.preventDefault();
+            errorDiv.textContent = 'Please enter a valid 10-digit mobile number.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        if (!password) {
+            e.preventDefault();
+            errorDiv.textContent = 'Please enter your password.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+    });
+
+    document.getElementById('signup-start-form').addEventListener('submit', function (e) {
+        const mobile = document.getElementById('mobile-signup').value.trim();
+        const errorDiv = document.getElementById('js-error-alert');
+
+        // Reset error
+        errorDiv.style.display = 'none';
+        errorDiv.textContent = '';
+
+        if (!mobile) {
+            e.preventDefault();
+            errorDiv.textContent = 'Please enter your mobile number.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        if (mobile.length !== 10) {
+            e.preventDefault();
+            errorDiv.textContent = 'Please enter a valid 10-digit mobile number.';
+            errorDiv.style.display = 'block';
+            return;
+        }
     });
 </script>
 {% endblock %}

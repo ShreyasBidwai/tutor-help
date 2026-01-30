@@ -16,11 +16,13 @@
         </div>
         {% endif %}
 
-        <form method="POST">
+        <div id="js-error-alert" class="alert alert-error" style="display: none; margin-bottom: 1.5rem;"></div>
+
+        <form id="signup-mobile-form" method="POST" novalidate>
             <div class="form-group">
                 <label class="form-label" for="mobile">Mobile Number</label>
                 <input type="tel" id="mobile" name="mobile" class="form-input"
-                    placeholder="Enter 10-digit mobile number" pattern="[0-9]{10}" maxlength="10" required autofocus>
+                    placeholder="Enter 10-digit mobile number" maxlength="10" autofocus>
             </div>
 
             <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem;">
@@ -35,8 +37,40 @@
 </div>
 
 <script>
+    function hideError() {
+        const errorDiv = document.getElementById('js-error-alert');
+        if (errorDiv.style.display !== 'none') {
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
+        }
+    }
+
     document.getElementById('mobile').addEventListener('input', function (e) {
         this.value = this.value.replace(/[^0-9]/g, '');
+        hideError();
+    });
+
+    document.getElementById('signup-mobile-form').addEventListener('submit', function (e) {
+        const mobile = document.getElementById('mobile').value.trim();
+        const errorDiv = document.getElementById('js-error-alert');
+
+        // Reset error
+        errorDiv.style.display = 'none';
+        errorDiv.textContent = '';
+
+        if (!mobile) {
+            e.preventDefault();
+            errorDiv.textContent = 'Please enter your mobile number.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        if (mobile.length !== 10) {
+            e.preventDefault();
+            errorDiv.textContent = 'Please enter a valid 10-digit mobile number.';
+            errorDiv.style.display = 'block';
+            return;
+        }
     });
 </script>
 {% endblock %}

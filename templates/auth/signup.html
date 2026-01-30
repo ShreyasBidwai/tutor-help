@@ -30,11 +30,13 @@
         </div>
         {% endif %}
 
-        <form method="POST" action="{{ url_for('auth.signup') }}">
+        <div id="js-error-alert" class="alert alert-error" style="display: none; margin-bottom: 1.5rem;"></div>
+
+        <form id="signup-complete-form" method="POST" action="{{ url_for('auth.signup') }}" novalidate>
             <div class="form-group">
                 <label class="form-label" for="tuition_name">Tuition Name *</label>
                 <input type="text" id="tuition_name" name="tuition_name" class="form-input"
-                    placeholder="e.g., ABC Coaching Classes, XYZ Tuition" required autofocus maxlength="100">
+                    placeholder="e.g., ABC Coaching Classes, XYZ Tuition" autofocus maxlength="100">
                 <p style="font-size: 0.75rem; color: #666; margin-top: 0.5rem;">
                     This name will be displayed at the top of all pages
                 </p>
@@ -43,13 +45,13 @@
             <div class="form-group" style="margin-top: 1rem;">
                 <label class="form-label" for="password">Password *</label>
                 <input type="password" id="password" name="password" class="form-input"
-                    placeholder="Create a password (min 6 chars)" required minlength="6">
+                    placeholder="Create a password (min 6 chars)" minlength="6">
             </div>
 
             <div class="form-group" style="margin-top: 1rem;">
                 <label class="form-label" for="confirm_password">Confirm Password *</label>
                 <input type="password" id="confirm_password" name="confirm_password" class="form-input"
-                    placeholder="Confirm your password" required minlength="6">
+                    placeholder="Confirm your password" minlength="6">
             </div>
 
             <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem;">
@@ -62,4 +64,61 @@
         </p>
     </div>
 </div>
+
+<script>
+    function hideError() {
+        const errorDiv = document.getElementById('js-error-alert');
+        if (errorDiv.style.display !== 'none') {
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
+        }
+    }
+
+    const inputs = ['tuition_name', 'password', 'confirm_password'];
+    inputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', hideError);
+        }
+    });
+
+    document.getElementById('signup-complete-form').addEventListener('submit', function (e) {
+        const name = document.getElementById('tuition_name').value.trim();
+        const password = document.getElementById('password').value;
+        const confirm = document.getElementById('confirm_password').value;
+        const errorDiv = document.getElementById('js-error-alert');
+
+        // Reset error
+        errorDiv.style.display = 'none';
+        errorDiv.textContent = '';
+
+        if (!name) {
+            e.preventDefault();
+            errorDiv.textContent = 'Please enter your Tuition Name.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        if (!password) {
+            e.preventDefault();
+            errorDiv.textContent = 'Please enter a password.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        if (password.length < 6) {
+            e.preventDefault();
+            errorDiv.textContent = 'Password must be at least 6 characters long.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        if (password !== confirm) {
+            e.preventDefault();
+            errorDiv.textContent = 'Passwords do not match.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+    });
+</script>
 {% endblock %}
