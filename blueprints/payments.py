@@ -10,3 +10,9 @@ def payments_locked():
     """Locked payment management system"""
     return render_template('payments/payments_locked.html')
 
+@payments_bp.route('/payments/pro-details')
+@require_login
+def pro_details():
+    """Pro features details page"""
+    return render_template('payments/pro_details.html')
+

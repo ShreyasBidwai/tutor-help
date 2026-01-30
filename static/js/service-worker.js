@@ -5,14 +5,15 @@ const DYNAMIC_CACHE = 'dynamic-v1';
 
 // Assets to cache on install
 const STATIC_ASSETS = [
-  '/',
-  '/static/manifest.json',
-  '/static/TutionTrack_appIcon_192x192.png',
-  '/static/TutionTrack_headerLogo.png',
-  '/static/TutionTrack_logoNoBG.png',
-  '/static/js/swipe-gestures.js',
-  '/static/js/form-validation.js',
-  '/static/js/tours.js'
+    '/',
+    '/static/manifest.json',
+    '/static/TutionTrack_appIcon_192x192.png',
+    '/static/TutionTrack_headerLogo.png',
+    '/static/TutionTrack_logoNoBG.png',
+    '/static/js/swipe-gestures.js',
+    '/static/js/form-validation.js',
+    '/static/js/tours.js',
+    '/static/offline.html'
 ];
 
 // Install event - cache static assets
@@ -36,8 +37,8 @@ self.addEventListener('activate', (event) => {
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME && 
-                        cacheName !== STATIC_CACHE && 
+                    if (cacheName !== CACHE_NAME &&
+                        cacheName !== STATIC_CACHE &&
                         cacheName !== DYNAMIC_CACHE) {
                         console.log('Deleting old cache:', cacheName);
                         return caches.delete(cacheName);
@@ -89,7 +90,7 @@ self.addEventListener('fetch', (event) => {
             }).catch(() => {
                 // Network failed, try to serve offline page
                 if (request.headers.get('accept').includes('text/html')) {
-                    return caches.match('/');
+                    return caches.match('/static/offline.html');
                 }
             });
         })
@@ -99,7 +100,7 @@ self.addEventListener('fetch', (event) => {
 // Push event - handle incoming push notifications
 self.addEventListener('push', (event) => {
     console.log('Push notification received:', event);
-    
+
     let notificationData = {
         title: 'TuitionTrack',
         body: 'You have a new notification',
@@ -167,7 +168,7 @@ self.addEventListener('push', (event) => {
 // Notification click event
 self.addEventListener('notificationclick', (event) => {
     console.log('Notification clicked:', event);
-    
+
     event.notification.close();
 
     const notificationData = event.notification.data;
@@ -204,7 +205,7 @@ self.addEventListener('notificationclick', (event) => {
 // Background sync (for offline support)
 self.addEventListener('sync', (event) => {
     console.log('Background sync:', event.tag);
-    
+
     if (event.tag === 'sync-attendance') {
         event.waitUntil(syncAttendance());
     } else if (event.tag === 'sync-homework') {
@@ -237,11 +238,11 @@ async function syncHomework() {
 // Message event - handle messages from main thread
 self.addEventListener('message', (event) => {
     console.log('Service Worker received message:', event.data);
-    
+
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();
     }
-    
+
     if (event.data && event.data.type === 'CACHE_URLS') {
         event.waitUntil(
             caches.open(DYNAMIC_CACHE).then((cache) => {
