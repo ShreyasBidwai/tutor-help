@@ -23,7 +23,6 @@
         <label class="form-label" for="batch-filter">Select Batch <span style="color: #EF4444;">*</span></label>
         <select id="batch-filter" class="form-select" onchange="handleBatchFilter()" required>
             {% if not batch_filter and batches %}
-            {# Auto-select first batch if none selected #}
             <option value="{{ batches[0].id }}" selected>{{ batches[0].name }}</option>
             {% for batch in batches[1:] %}
             <option value="{{ batch.id }}">{{ batch.name }}</option>
@@ -42,33 +41,23 @@
     <div class="card" style="background: #FEE2E2; border-left: 4px solid #EF4444;">
         <div style="padding: 1.5rem; text-align: center;">
             <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔒</div>
-            <div style="font-weight: 600; color: #991B1B; margin-bottom: 0.5rem; font-size: 1.1rem;">Future Attendance
-                Cannot Be Marked</div>
-            <div style="font-size: 0.875rem; color: #7F1D1D; margin-bottom: 1.5rem;">You can only mark attendance for
-                today or yesterday.</div>
-            <a href="{{ url_for('attendance.attendance') }}" class="btn btn-primary">
-                View Today's Attendance
-            </a>
+            <div style="font-weight: 600; color: #991B1B; margin-bottom: 0.5rem; font-size: 1.1rem;">Future Attendance Cannot Be Marked</div>
+            <div style="font-size: 0.875rem; color: #7F1D1D; margin-bottom: 1.5rem;">You can only mark attendance for today or yesterday.</div>
+            <a href="{{ url_for('attendance.attendance') }}" class="btn btn-primary">View Today's Attendance</a>
         </div>
     </div>
     {% elif is_past_before_yesterday %}
     <div class="card" style="background: #FEE2E2; border-left: 4px solid #EF4444;">
         <div style="padding: 1.5rem; text-align: center;">
             <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔒</div>
-            <div style="font-weight: 600; color: #991B1B; margin-bottom: 0.5rem; font-size: 1.1rem;">Past Attendance
-                Cannot Be Marked</div>
-            <div style="font-size: 0.875rem; color: #7F1D1D; margin-bottom: 1.5rem;">You can only mark attendance for
-                today or yesterday.</div>
-            <a href="{{ url_for('attendance.attendance') }}" class="btn btn-primary">
-                📅 View Today's Attendance
-            </a>
+            <div style="font-weight: 600; color: #991B1B; margin-bottom: 0.5rem; font-size: 1.1rem;">Past Attendance Cannot Be Marked</div>
+            <div style="font-size: 0.875rem; color: #7F1D1D; margin-bottom: 1.5rem;">You can only mark attendance for today or yesterday.</div>
+            <a href="{{ url_for('attendance.attendance') }}" class="btn btn-primary">📅 View Today's Attendance</a>
         </div>
     </div>
     {% elif selected_date != today and selected_date != yesterday %}
     <div style="margin-top: 0.5rem;">
-        <a href="{{ url_for('attendance.attendance') }}" class="btn btn-secondary btn-sm">
-            View Today
-        </a>
+        <a href="{{ url_for('attendance.attendance') }}" class="btn btn-secondary btn-sm">View Today</a>
     </div>
     {% endif %}
 </div>
@@ -87,24 +76,19 @@
             <span style="font-size: 1.5rem;">✓</span>
             <div>
                 <div style="font-weight: 600; color: #065F46; margin-bottom: 0.25rem;">Attendance Already Saved</div>
-                <div style="font-size: 0.875rem; color: #047857;">Attendance for <strong>{{ selected_batch_name
-                        }}</strong> on {{ selected_date }} has already been marked.</div>
+                <div style="font-size: 0.875rem; color: #047857;">Attendance for <strong>{{ selected_batch_name }}</strong> on {{ selected_date }} has already been marked.</div>
             </div>
         </div>
     </div>
 </div>
 {% elif is_today and not selected_batch_can_mark and selected_batch.start_time %}
-<div id="batch-locked-warning" data-start-time="{{ selected_batch.start_time }}" class="card"
-    style="background: #FEF3C7; border-left: 4px solid #F59E0B; margin-top: 1rem;">
+<div id="batch-locked-warning" data-start-time="{{ selected_batch.start_time }}" class="card" style="background: #FEF3C7; border-left: 4px solid #F59E0B; margin-top: 1rem;">
     <div style="padding: 1rem;">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
             <span style="font-size: 1.5rem;">⏰</span>
             <div>
-                <div style="font-weight: 600; color: #92400E; margin-bottom: 0.25rem;">Batch Time Hasn't Started Yet
-                </div>
-                <div style="font-size: 0.875rem; color: #78350F;">Attendance for <strong>{{ selected_batch_name
-                        }}</strong> can only be marked after the batch start time ({{ selected_batch.start_time }}).
-                </div>
+                <div style="font-weight: 600; color: #92400E; margin-bottom: 0.25rem;">Batch Time Hasn't Started Yet</div>
+                <div style="font-size: 0.875rem; color: #78350F;">Attendance for <strong>{{ selected_batch_name }}</strong> can only be marked after the batch start time ({{ selected_batch.start_time }}).</div>
             </div>
         </div>
     </div>
@@ -118,8 +102,7 @@
             <span style="font-size: 1.5rem;">ℹ️</span>
             <div>
                 <div style="font-weight: 600; color: #1E40AF; margin-bottom: 0.25rem;">Please Select a Batch</div>
-                <div style="font-size: 0.875rem; color: #1E3A8A;">Select a batch from the dropdown above to mark
-                    attendance.</div>
+                <div style="font-size: 0.875rem; color: #1E3A8A;">Select a batch from the dropdown above to mark attendance.</div>
             </div>
         </div>
     </div>
@@ -127,31 +110,22 @@
 {% endif %}
 
 {% if is_future %}
-{# Don't show any batch cards for future dates #}
+{# No cards shown #}
 {% elif batch_filter and students_by_batch %}
 {% for batch_name, batch_students in students_by_batch.items() %}
 <div class="card">
-    <div class="card-header"
-        style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
         <h3 class="card-title" style="font-size: 1rem; margin: 0;">📚 {{ batch_name }}</h3>
         <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
             <span style="font-size: 0.875rem; color: #666;">{{ batch_students|length }} students</span>
-            {% if (is_today or is_yesterday) and not batch_attendance_saved.get(batch_name, False) and not is_future and
-            (is_yesterday or batch_can_mark.get(batch_name, False)) %}
+            {% if (is_today or is_yesterday) and not batch_attendance_saved.get(batch_name, False) and not is_future and (is_yesterday or batch_can_mark.get(batch_name, False)) %}
             <div style="display: flex; gap: 0.25rem;">
-                <button onclick="markBatchAllPresent('{{ batch_name }}')" class="btn btn-secondary btn-sm"
-                    style="padding: 0.4rem 0.6rem; font-size: 0.75rem; white-space: nowrap;" title="Mark all present">
-                    ✓ All
-                </button>
-                <button onclick="markBatchAllAbsent('{{ batch_name }}')" class="btn btn-secondary btn-sm"
-                    style="padding: 0.4rem 0.6rem; font-size: 0.75rem; white-space: nowrap;" title="Mark all absent">
-                    ✗ All
-                </button>
+                <button onclick="markBatchAllPresent('{{ batch_name }}')" class="btn btn-secondary btn-sm" style="padding: 0.4rem 0.6rem; font-size: 0.75rem; white-space: nowrap;">✓ All</button>
+                <button onclick="markBatchAllAbsent('{{ batch_name }}')" class="btn btn-secondary btn-sm" style="padding: 0.4rem 0.6rem; font-size: 0.75rem; white-space: nowrap;">✗ All</button>
             </div>
             {% endif %}
         </div>
     </div>
-    {# Batch-specific messages are shown at the top when batch is selected #}
     {% for student in batch_students %}
     <div class="list-item" style="margin-bottom: 0.75rem; border-bottom: 1px solid #f0f0f0; padding-bottom: 0.75rem;">
         <div class="list-item-content" style="flex: 1;">
@@ -160,21 +134,13 @@
         <div class="list-item-actions" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <label class="toggle-switch">
-                    <input type="checkbox" id="present-{{ student.id }}" {% if student.attendance_status==1 or
-                        student.attendance_status==2 %}checked{% endif %} {% if is_future or is_past_before_yesterday or
-                        batch_attendance_saved.get(batch_name, False) or (selected_date==today and
-                        batch_can_mark.get(batch_name, False)==False) %}disabled{% endif %}
-                        onchange="updateAttendancePreview({{ student.id }})">
+                    <input type="checkbox" id="present-{{ student.id }}" {% if student.attendance_status==1 or student.attendance_status==2 %}checked{% endif %} {% if is_future or is_past_before_yesterday or batch_attendance_saved.get(batch_name, False) or (selected_date==today and batch_can_mark.get(batch_name, False)==False) %}disabled{% endif %} onchange="updateAttendancePreview({{ student.id }})">
                     <span class="toggle-slider"></span>
                 </label>
                 <span style="font-size: 0.875rem; color: #666; min-width: 60px;">Present</span>
             </div>
             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <input type="checkbox" id="late-{{ student.id }}" {% if student.attendance_status==2 %}checked{% endif
-                    %} {% if is_future or is_past_before_yesterday or batch_attendance_saved.get(batch_name, False) or
-                    (selected_date==today and batch_can_mark.get(batch_name, False)==False) %}disabled{% endif %}
-                    onchange="updateAttendancePreview({{ student.id }})"
-                    style="width: 20px; height: 20px; cursor: {% if is_future or is_past_before_yesterday or batch_attendance_saved.get(batch_name, False) or (selected_date == today and batch_can_mark.get(batch_name, False) == False) %}not-allowed{% else %}pointer{% endif %};">
+                <input type="checkbox" id="late-{{ student.id }}" {% if student.attendance_status==2 %}checked{% endif %} {% if is_future or is_past_before_yesterday or batch_attendance_saved.get(batch_name, False) or (selected_date==today and batch_can_mark.get(batch_name, False)==False) %}disabled{% endif %} onchange="updateAttendancePreview({{ student.id }})" style="width: 20px; height: 20px;">
                 <span style="font-size: 0.875rem; color: #666; min-width: 50px;">Late</span>
             </div>
         </div>
@@ -183,455 +149,113 @@
 </div>
 {% endfor %}
 
-{# Save Attendance Button - Always show when date is valid and students exist #}
+{# Reduced height save button #}
 {% if batch_filter and (is_today or is_yesterday) and not is_future and students_by_batch|length > 0 %}
-<div class="card"
-    style="position: sticky; bottom: 80px; z-index: 10; margin-top: 1rem; box-shadow: 0 -4px 12px rgba(0,0,0,0.1); background: white;">
-    <button id="save-attendance-btn" class="btn btn-primary btn-block" onclick="saveAttendance()"
-        style="font-size: 1.1rem; padding: 1.25rem; font-weight: 600;">
-        💾 Save Attendance
+{% set btn_batch = batches|selectattr('id', 'equalto', batch_filter)|first %}
+{% set btn_is_saved = btn_batch and batch_attendance_saved.get(btn_batch.name) %}
+<div class="card" style="position: sticky; bottom: 80px; z-index: 10; margin-top: 1rem; box-shadow: 0 -4px 12px rgba(0,0,0,0.1); background: white;">
+    <button id="save-attendance-btn" class="btn btn-primary btn-block" onclick="saveAttendance()" style="font-size: 1rem; padding: 0.75rem; font-weight: 600;" {% if btn_is_saved %}disabled{% endif %}>
+        {% if btn_is_saved %}✓ Attendance Saved{% else %}💾 Save Attendance{% endif %}
     </button>
 </div>
 {% endif %}
-{% elif students %}
-{# Fallback for backward compatibility #}
-{% for student in students %}
-<div class="list-item">
-    <div class="list-item-content">
-        <div class="list-item-title">{{ student.name }}</div>
-        <div class="list-item-subtitle">{{ student.batch_name }}</div>
-    </div>
-    <div class="list-item-actions" style="display: flex; align-items: center; gap: 1rem;">
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <label class="toggle-switch">
-                <input type="checkbox" id="present-{{ student.id }}" {% if student.attendance_status==1 %}checked{%
-                    endif %} onchange="updateAttendance({{ student.id }}, '{{ selected_date }}')">
-                <span class="toggle-slider"></span>
-            </label>
-            <span style="font-size: 0.875rem; color: #666;">Present</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <input type="checkbox" id="late-{{ student.id }}" {% if student.attendance_status==2 %}checked{% endif %}
-                onchange="updateAttendance({{ student.id }}, '{{ selected_date }}')"
-                style="width: 20px; height: 20px; cursor: pointer;">
-            <span style="font-size: 0.875rem; color: #666;">Late</span>
-        </div>
-    </div>
-</div>
-{% endfor %}
 
-{# Save Attendance button for fallback students section #}
-{% if batch_filter and (is_today or is_yesterday) and not is_future and students %}
-<div class="card"
-    style="position: sticky; bottom: 80px; z-index: 10; margin-top: 1rem; box-shadow: 0 -4px 12px rgba(0,0,0,0.1);">
-    <button id="save-attendance-btn" class="btn btn-primary btn-block" onclick="saveAttendance()"
-        style="font-size: 1.1rem; padding: 1.25rem; font-weight: 600;">
-        💾 Save Attendance
-    </button>
-</div>
-{% endif %}
 {% else %}
 <div class="empty-state">
     <div class="empty-state-icon">👥</div>
     <h3>No students found</h3>
-    <p>Add students to start tracking attendance</p>
-    <a href="{{ url_for('students.add_student') }}" class="btn btn-primary mt-2">
-        Add Student
-    </a>
+    <a href="{{ url_for('students.add_student') }}" class="btn btn-primary mt-2">Add Student</a>
 </div>
 {% endif %}
 
 <script>
     function changeDate(dateValue) {
-        // If date is cleared/empty, default to today
-        if (!dateValue || dateValue.trim() === '') {
-            // Reset to today's date
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('date-select').value = today;
-            dateValue = today;
-        }
-
+        if (!dateValue) dateValue = new Date().toISOString().split('T')[0];
         const batch = document.getElementById('batch-filter').value;
-        let url = `{{ url_for('attendance.attendance') }}?date=${dateValue}`;
-        if (batch) {
-            url += `&batch=${batch}`;
-        }
-        window.location.href = url;
+        window.location.href = `{{ url_for('attendance.attendance') }}?date=${dateValue}${batch ? '&batch=' + batch : ''}`;
     }
 
     function handleBatchFilter() {
         const batch = document.getElementById('batch-filter').value;
         const date = document.getElementById('date-select').value;
-        let url = `{{ url_for('attendance.attendance') }}?date=${date}`;
-        if (batch) {
-            url += `&batch=${batch}`;
-        }
-        window.location.href = url;
+        window.location.href = `{{ url_for('attendance.attendance') }}?date=${date}${batch ? '&batch=' + batch : ''}`;
     }
 
     function updateAttendancePreview(studentId) {
-        const presentCheckbox = document.getElementById(`present-${studentId}`);
-        const lateCheckbox = document.getElementById(`late-${studentId}`);
+        const present = document.getElementById(`present-${studentId}`);
+        const late = document.getElementById(`late-${studentId}`);
+        if (!present.checked) late.checked = false;
+        if (late.checked) present.checked = true;
 
-        // Logic: 
-        // - If present is checked and late is checked -> status = 2 (Late)
-        // - If present is checked and late is unchecked -> status = 1 (Present)
-        // - If present is unchecked -> status = 0 (Absent), and late must be unchecked
-
-        if (presentCheckbox.checked) {
-            // Present is checked
-        } else {
-            // Present is unchecked (absent) - automatically uncheck late
-            if (lateCheckbox.checked) {
-                lateCheckbox.checked = false;
-            }
-        }
-
-        // If late is checked, ensure present is also checked
-        if (lateCheckbox.checked && !presentCheckbox.checked) {
-            presentCheckbox.checked = true;
-        }
-
-        // Visual feedback (preview only, not saved yet)
-        const listItem = presentCheckbox.closest('.list-item');
-        let status = 0;
-        if (presentCheckbox.checked) {
-            status = lateCheckbox.checked ? 2 : 1;
-        }
-
-        if (status === 1) {
-            listItem.style.background = '#f0fdf4'; // Light green for present
-        } else if (status === 2) {
-            listItem.style.background = '#fffbeb'; // Light amber for late
-        } else {
-            listItem.style.background = '#fef2f2'; // Light red for absent
-        }
+        const item = present.closest('.list-item');
+        item.style.background = !present.checked ? '#fef2f2' : (late.checked ? '#fffbeb' : '#f0fdf4');
     }
 
     async function saveAttendance() {
-        const saveBtn = document.getElementById('save-attendance-btn');
-        const originalText = saveBtn.innerHTML;
-        saveBtn.disabled = true;
-        saveBtn.innerHTML = '💾 Saving...';
+        const btn = document.getElementById('save-attendance-btn');
+        btn.disabled = true;
+        btn.innerHTML = '💾 Saving...';
 
-        const dateStr = document.getElementById('date-select').value || '{{ selected_date }}';
-        const attendanceData = [];
-        const today = new Date().toISOString().split('T')[0];
+        const dateStr = document.getElementById('date-select').value;
+        const data = [];
 
-        // Collect all student attendance data (only for batches that can be marked)
         {% for batch_name, batch_students in students_by_batch.items() %}
-        {% for student in batch_students %}
-        const present{{ student.id }
-    } = document.getElementById('present-{{ student.id }}');
-    const late{{ student.id }} = document.getElementById('late-{{ student.id }}');
+            {% if not is_future and not is_past_before_yesterday and (is_yesterday or batch_can_mark.get(batch_name, False)) %}
+                {% for student in batch_students %}
+                (function() {
+                    const p = document.getElementById('present-{{ student.id }}');
+                    const l = document.getElementById('late-{{ student.id }}');
+                    if (p && !p.disabled) {
+                        data.push({
+                            student_id: {{ student.id }},
+                            status: p.checked ? (l.checked ? 2 : 1) : 0,
+                            date: dateStr
+                        });
+                    }
+                })();
+                {% endfor %}
+            {% endif %}
+        {% endfor %}
 
-    // Skip if not today/yesterday or if this batch can't be marked today
-    {% if is_future or is_past_before_yesterday or(selected_date == today and batch_can_mark.get(batch_name, False) == False) %}
-    // Skip this student - not today/yesterday or batch hasn't started
-    {% else %}
-    let status{{ student.id }} = 0;
-    if (present{ { student.id } } && !present{ { student.id } }.disabled && present{ { student.id } }.checked) {
-                status{ { student.id } } = (late{ { student.id } } && !late{ { student.id } }.disabled && late{ { student.id } }.checked) ?2 : 1;
-    }
-
-    attendanceData.push({
-        student_id: {{ student.id }},
-        status: status{{ student.id }},
-        date: dateStr
+        try {
+            const resp = await fetch('/api/attendance/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ attendance: data, date: dateStr })
             });
-    {% endif %}
-    {% endfor %}
-    {% endfor %}
-
-    try {
-        const response = await fetch('/api/attendance/save', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                attendance: attendanceData,
-                date: dateStr
-            })
-        });
-
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-            throw new Error(result.error || 'Failed to save attendance');
+            if (resp.ok) {
+                btn.innerHTML = '✓ Saved!';
+                setTimeout(() => location.reload(), 1000);
+            } else { throw new Error(); }
+        } catch (e) {
+            btn.disabled = false;
+            btn.innerHTML = '💾 Save Attendance';
+            alert('Error saving attendance');
         }
-
-        // Success feedback
-        saveBtn.innerHTML = '✓ Saved!';
-        saveBtn.style.background = '#10B981';
-
-        // Show success notification
-        showNotification(`Attendance saved for ${result.saved_count} student(s)!`, 'success');
-
-        // Reload page after a short delay
-        setTimeout(() => {
-            location.reload();
-        }, 1500);
-
-    } catch (error) {
-        showNotification('Error saving attendance: ' + error.message, 'error');
-        saveBtn.disabled = false;
-        saveBtn.innerHTML = originalText;
     }
-}
 
-    // Bulk operations - Mark all students in a batch as present/absent
-    function markBatchAllPresent(batchName) {
-        const batchCard = Array.from(document.querySelectorAll('.card')).find(card =>
-            card.querySelector('.card-title') && card.querySelector('.card-title').textContent.includes(batchName)
-        );
-
-        if (!batchCard) return;
-
-        const presentCheckboxes = batchCard.querySelectorAll('input[id^="present-"]:not([disabled])');
-        const lateCheckboxes = batchCard.querySelectorAll('input[id^="late-"]:not([disabled])');
-
-        presentCheckboxes.forEach(cb => {
+    function markBatchAllPresent(name) {
+        document.querySelectorAll('input[id^="present-"]:not([disabled])').forEach(cb => {
             cb.checked = true;
-            const studentId = cb.id.replace('present-', '');
-            if (typeof updateAttendancePreview === 'function') {
-                updateAttendancePreview(parseInt(studentId));
-            }
+            updateAttendancePreview(cb.id.split('-')[1]);
         });
-
-        lateCheckboxes.forEach(cb => cb.checked = false);
-
-        // Scroll to save button
-        const saveBtn = document.getElementById('save-attendance-btn');
-        if (saveBtn) {
-            saveBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
     }
 
-    function markBatchAllAbsent(batchName) {
-        const batchCard = Array.from(document.querySelectorAll('.card')).find(card =>
-            card.querySelector('.card-title') && card.querySelector('.card-title').textContent.includes(batchName)
-        );
-
-        if (!batchCard) return;
-
-        const presentCheckboxes = batchCard.querySelectorAll('input[id^="present-"]:not([disabled])');
-        const lateCheckboxes = batchCard.querySelectorAll('input[id^="late-"]:not([disabled])');
-
-        presentCheckboxes.forEach(cb => {
+    function markBatchAllAbsent(name) {
+        document.querySelectorAll('input[id^="present-"]:not([disabled])').forEach(cb => {
             cb.checked = false;
-            const studentId = cb.id.replace('present-', '');
-            if (typeof updateAttendancePreview === 'function') {
-                updateAttendancePreview(parseInt(studentId));
-            }
+            updateAttendancePreview(cb.id.split('-')[1]);
         });
-
-        lateCheckboxes.forEach(cb => cb.checked = false);
-    }
-
-    // Show notification (mobile-friendly) using SweetAlert2
-    function showNotification(message, type = 'success') {
-        Swal.fire({
-            title: type === 'success' ? 'Success!' : 'Error!',
-            text: message,
-            icon: type === 'success' ? 'success' : 'error',
-            timer: 3000,
-            showConfirmButton: false,
-            toast: true,
-            position: 'bottom',
-            width: '90%',
-            customClass: {
-                popup: 'swal2-toast-mobile'
-            }
-        });
-    }
-
-    // Time-Locked Access Control
-    document.addEventListener('DOMContentLoaded', initTimeLock);
-
-    function initTimeLock() {
-        const warningCard = document.getElementById('batch-locked-warning');
-        if (!warningCard) return;
-
-        const startTimeStr = warningCard.dataset.startTime; // Format HH:MM
-        if (!startTimeStr) return;
-
-        // Parse start time (Assumes Today because warning only shows for Today)
-        const now = new Date();
-        const [hours, minutes] = startTimeStr.split(':').map(Number);
-
-        // Create target date object for Today at HH:MM
-        const targetTime = new Date();
-        targetTime.setHours(hours, minutes, 0, 0);
-
-        const delay = targetTime - now;
-
-        if (delay > 0) {
-            console.log(`Attendance locked. Unlocking in ${Math.ceil(delay / 1000)} seconds.`);
-            setTimeout(unlockAttendance, delay);
-        } else {
-            // Should catch cases where page loaded just as time passed
-            unlockAttendance();
-        }
-
-        // Visibility Listener for PWA/Mobile sleep
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && document.getElementById('batch-locked-warning')) {
-                const currentNow = new Date();
-                // Re-calculate target time to be safe (though it shouldn't change for same day)
-                const checkTarget = new Date();
-                checkTarget.setHours(hours, minutes, 0, 0);
-
-                if (currentNow >= checkTarget) {
-                    unlockAttendance();
-                }
-            }
-        });
-    }
-
-    function unlockAttendance() {
-        const warningCard = document.getElementById('batch-locked-warning');
-        if (!warningCard) return; // Already unlocked
-
-        // 1. Hide Warning
-        warningCard.style.display = 'none';
-
-        // 2. Enable Checkboxes
-        // Select all disabled checkboxes within the card container or global if not specific
-        // The warning applies to the selected batch, and the list shows the selected batch.
-        const disabledInputs = document.querySelectorAll('input[type="checkbox"]:disabled');
-        let unlockedCount = 0;
-
-        disabledInputs.forEach(input => {
-            input.disabled = false;
-            input.style.cursor = 'pointer';
-
-            // Also fix the parent list item opacity if it exists
-            const listItem = input.closest('.list-item');
-            if (listItem) {
-                listItem.style.opacity = '1';
-                listItem.style.backgroundColor = ''; // Reset to default
-            }
-
-            unlockedCount++;
-        });
-
-        // 3. Update cursor on Late inputs special styling
-        document.querySelectorAll('input[id^="late-"]').forEach(input => {
-            input.style.cursor = 'pointer';
-        });
-
-        // 4. Update Save Button text if needed
-        const saveBtn = document.getElementById('save-attendance-btn');
-        if (saveBtn) {
-            // It shouldn't be disabled by default, but just in case
-            saveBtn.disabled = false;
-        }
-
-        // 5. Show Notification
-        if (unlockedCount > 0) {
-            showNotification('Batch Unlocked! You can now mark attendance.', 'success');
-
-            // Vibrate for feedback (if supported)
-            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-        }
     }
 </script>
 
 <style>
-    .btn-warning {
-        background: #F59E0B;
-        color: white;
-    }
-
-    .btn-warning:hover {
-        background: #D97706;
-    }
-
-    .toggle-switch {
-        position: relative;
-        width: 50px;
-        height: 28px;
-    }
-
-    .toggle-switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-
-    .toggle-slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #ccc;
-        transition: 0.3s;
-        border-radius: 28px;
-    }
-
-    .toggle-slider:before {
-        position: absolute;
-        content: "";
-        height: 20px;
-        width: 20px;
-        left: 4px;
-        bottom: 4px;
-        background-color: white;
-        transition: 0.3s;
-        border-radius: 50%;
-    }
-
-    input:checked+.toggle-slider {
-        background-color: #10B981;
-    }
-
-    input:checked+.toggle-slider:before {
-        transform: translateX(22px);
-    }
-
-    input:disabled+.toggle-slider {
-        background-color: #E5E7EB;
-        cursor: not-allowed;
-    }
-
-    input:disabled:checked+.toggle-slider {
-        background-color: #9CA3AF;
-    }
-
-    input[type="checkbox"]:disabled {
-        cursor: not-allowed;
-        opacity: 0.6;
-    }
-
-    .list-item:has(input:disabled) {
-        opacity: 0.7;
-        background-color: #F9FAFB !important;
-    }
-
-    /* Notification animations */
-    @keyframes slideUp {
-        from {
-            transform: translateX(-50%) translateY(100px);
-            opacity: 0;
-        }
-
-        to {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-    }
-
-    @keyframes fadeOut {
-        from {
-            opacity: 1;
-        }
-
-        to {
-            opacity: 0;
-        }
-    }
+    .toggle-switch { position: relative; width: 44px; height: 24px; display: inline-block; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; border-radius: 24px; transition: .3s; }
+    .toggle-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .3s; }
+    input:checked + .toggle-slider { background: #10B981; }
+    input:checked + .toggle-slider:before { transform: translateX(20px); }
+    input:disabled + .toggle-slider { opacity: 0.5; cursor: not-allowed; }
 </style>
 {% endblock %}
