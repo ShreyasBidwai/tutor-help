@@ -3,6 +3,37 @@ const CACHE_NAME = 'tuitiontrack-v1';
 const STATIC_CACHE = 'static-v1';
 const DYNAMIC_CACHE = 'dynamic-v1';
 
+// Import Firebase scripts
+importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
+importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
+
+// Initialize Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyCPaRplhZqjt78BcBdAt9OjMzb-Rt4g0Tw",
+    authDomain: "tuitiontrack-2101.firebaseapp.com",
+    projectId: "tuitiontrack-2101",
+    storageBucket: "tuitiontrack-2101.firebasestorage.app",
+    messagingSenderId: "1023026597582",
+    appId: "1:1023026597582:web:166624b400de07d8064a9f",
+    measurementId: "G-Q3V3TDKRLH"
+};
+firebase.initializeApp(firebaseConfig);
+const messaging = firebase.messaging();
+
+// Handle background messages
+messaging.setBackgroundMessageHandler(function (payload) {
+    console.log('[firebase-messaging-sw.js] Received background message ', payload);
+    // Customize notification here
+    const notificationTitle = payload.data.title || 'TuitionTrack';
+    const notificationOptions = {
+        body: payload.data.body,
+        icon: payload.data.icon || '/static/TutionTrack_appIcon_192x192.png',
+        data: payload.data
+    };
+
+    return self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
 // Assets to cache on install
 const STATIC_ASSETS = [
     '/',
@@ -97,72 +128,25 @@ self.addEventListener('fetch', (event) => {
     );
 });
 
-// Push event - handle incoming push notifications
+// Push event - handled by Firebase messaging.setBackgroundMessageHandler
+// We keep this listener for non-Firebase pushes or if Firebase fails to capture
 self.addEventListener('push', (event) => {
+    // If payload is JSON and contains 'firebase-messaging-msg-data', it's handled by SDK usually.
+    // But if we want custom handling for everything:
     console.log('Push notification received:', event);
 
-    let notificationData = {
-        title: 'TuitionTrack',
-        body: 'You have a new notification',
-        icon: '/static/TutionTrack_appIcon_192x192.png',
-        badge: '/static/TutionTrack_appIcon_96x96.png',
-        tag: 'default',
-        requireInteraction: false,
-        data: {}
-    };
-
-    // Parse push data if available
     if (event.data) {
+        // Check if it's a valid JSON
         try {
             const data = event.data.json();
-            notificationData = {
-                title: data.title || notificationData.title,
-                body: data.body || notificationData.body,
-                icon: data.icon || notificationData.icon,
-                badge: data.badge || notificationData.badge,
-                tag: data.tag || notificationData.tag,
-                requireInteraction: data.requireInteraction || false,
-                data: data.data || {},
-                actions: data.actions || []
-            };
+            // If it came from Firebase SDK, it might have specific structure.
+            // We can rely on setBackgroundMessageHandler for data messages.
         } catch (e) {
-            notificationData.body = event.data.text();
+            console.log('Push data is not JSON');
         }
     }
 
-    // Check if app is open (has active clients)
-    event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-            if (clientList.length > 0) {
-                // App is open - send message to show SweetAlert instead of browser notification
-                console.log('App is open, sending message to show SweetAlert');
-                clientList.forEach(client => {
-                    client.postMessage({
-                        type: 'push-notification',
-                        title: notificationData.title,
-                        body: notificationData.body,
-                        icon: notificationData.icon,
-                        data: notificationData.data,
-                        url: notificationData.data.url || '/'
-                    });
-                });
-            } else {
-                // App is closed - show browser notification
-                console.log('App is closed, showing browser notification');
-                return self.registration.showNotification(notificationData.title, {
-                    body: notificationData.body,
-                    icon: notificationData.icon,
-                    badge: notificationData.badge,
-                    tag: notificationData.tag,
-                    requireInteraction: notificationData.requireInteraction,
-                    data: notificationData.data,
-                    actions: notificationData.actions,
-                    vibrate: [200, 100, 200],
-                    timestamp: Date.now()
-                });
-            }
-        })
-    );
+    // Logic for app-open handling (postMessage) is migrated to base.html/foreground handler
 });
 
 // Notification click event

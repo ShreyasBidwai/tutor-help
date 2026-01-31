@@ -60,8 +60,7 @@ def login():
             # Login flow - user MUST exist
             if not user:
                 conn.close()
-                flash('Mobile number not found. Please sign up first.', 'error')
-                return render_template('auth/login.html', error='Mobile number not found. Please sign up first.', active_tab='login')
+                return render_template('auth/login.html', error='Mobile number not registered. Please sign up first.', active_tab='login')
             
             # Additional validation: ensure user has completed signup (has tuition_name)
             # This prevents login if signup was incomplete
@@ -84,7 +83,6 @@ def login():
 
             if not user['password_hash'] or not check_password_hash(user['password_hash'], password):
                 conn.close()
-                flash('Invalid mobile number or password.', 'error')
                 return render_template('auth/login.html', error='Invalid mobile number or password.', active_tab='login')
             
             # Login successful
@@ -100,7 +98,6 @@ def login():
             # Signup flow - user must NOT exist
             if user:
                 conn.close()
-                flash('Mobile number already registered. Please login instead.', 'error')
                 return render_template('auth/login.html', error='Mobile number already registered. Please login instead.', active_tab='signup')
             
             # For signup, redirect to signup page to get tuition name
@@ -276,42 +273,43 @@ def logout():
 @auth_bp.route('/api/push/subscribe', methods=['POST'])
 @require_login
 def push_subscribe():
-    """Subscribe user to push notifications"""
+    """Subscribe user to push notifications using Firebase FCM token"""
     try:
         data = request.get_json()
         
-        if not data or 'endpoint' not in data or 'keys' not in data:
+        if not data or 'token' not in data:
             return jsonify({'error': 'Invalid subscription data'}), 400
         
-        endpoint = data['endpoint']
-        keys = data['keys']
-        p256dh = keys.get('p256dh')
-        auth = keys.get('auth')
+        token = data['token']
         user_agent = request.headers.get('User-Agent', '')
         
-        if not p256dh or not auth:
-            return jsonify({'error': 'Missing subscription keys'}), 400
+        if not token:
+            return jsonify({'error': 'Missing FCM token'}), 400
         
         conn = get_db_connection()
         cursor = conn.cursor()
         
         # Check if subscription already exists
-        cursor.execute('SELECT id FROM push_subscriptions WHERE endpoint = ?', (endpoint,))
+        cursor.execute('SELECT id FROM push_subscriptions WHERE endpoint = ?', (token,))
         existing = cursor.fetchone()
+        
+        # We store the token in the 'endpoint' column for backward compatibility with table schema
+        # The p256dh and auth columns are no longer needed for FCM but kept for schema compatibility
         
         if existing:
             # Update existing subscription
             cursor.execute('''
                 UPDATE push_subscriptions
-                SET user_id = ?, p256dh = ?, auth = ?, user_agent = ?, created_at = CURRENT_TIMESTAMP
+                SET user_id = ?, user_agent = ?, created_at = CURRENT_TIMESTAMP
                 WHERE endpoint = ?
-            ''', (session['user_id'], p256dh, auth, user_agent, endpoint))
+            ''', (session['user_id'], user_agent, token))
         else:
             # Insert new subscription
+            # Providing dummy values for p256dh and auth to satisfy NOT NULL constraints if migration hasn't run
             cursor.execute('''
                 INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth, user_agent)
                 VALUES (?, ?, ?, ?, ?)
-            ''', (session['user_id'], endpoint, p256dh, auth, user_agent))
+            ''', (session['user_id'], token, 'fcm', 'fcm', user_agent))
         
         conn.commit()
         conn.close()
@@ -330,10 +328,10 @@ def push_unsubscribe():
     try:
         data = request.get_json()
         
-        if not data or 'endpoint' not in data:
+        if not data or 'token' not in data:
             return jsonify({'error': 'Invalid request'}), 400
         
-        endpoint = data['endpoint']
+        token = data['token']
         
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -342,7 +340,7 @@ def push_unsubscribe():
         cursor.execute('''
             DELETE FROM push_subscriptions
             WHERE endpoint = ? AND user_id = ?
-        ''', (endpoint, session['user_id']))
+        ''', (token, session['user_id']))
         
         conn.commit()
         conn.close()

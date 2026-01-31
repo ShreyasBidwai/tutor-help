@@ -5,6 +5,9 @@ from database import init_db, migrate_db, add_indexes
 from datetime import datetime, date
 import os
 import logging
+import firebase_admin
+from firebase_admin import credentials
+from flask_apscheduler import APScheduler
 
 # Set timezone to IST (Indian Standard Time)
 os.environ['TZ'] = 'Asia/Kolkata'
@@ -18,6 +21,34 @@ except AttributeError:
 # Initialize Flask app
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# Initialize Firebase Admin SDK
+try:
+    cred = credentials.Certificate('firebase-service-account.json')
+    firebase_admin.initialize_app(cred)
+    print("Firebase Admin SDK initialized successfully")
+except Exception as e:
+    print(f"Error initializing Firebase Admin SDK: {e}")
+
+# Initialize APScheduler
+scheduler = APScheduler()
+scheduler.init_app(app)
+
+# Import and schedule jobs
+from jobs import check_batch_start_reminders, check_attendance_reminders
+
+# Schedule jobs to run every 5 minutes for efficiency
+@scheduler.task('interval', id='batch_start_job', minutes=5)
+def job_batch_start():
+    with app.app_context():
+        check_batch_start_reminders()
+
+@scheduler.task('interval', id='attendance_reminder_job', minutes=5)
+def job_attendance_reminder():
+    with app.app_context():
+        check_attendance_reminders()
+
+scheduler.start()
 
 # Production session security (for HTTPS)
 # These settings ensure secure cookies when deployed with HTTPS

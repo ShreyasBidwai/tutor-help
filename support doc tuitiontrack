@@ -1,0 +1,13 @@
+Can 5 teachers right simultaneously?
+
+in your scenario, 5 teachers taking attendance "at the same time" is perfectly safe.
+
+Here is why your current setup works effectively:
+
+WAL Mode (Write-Ahead Logging): This is enabled in your 
+database.py
+. It allows the database to handle checking attendance (writing) without blocking other people from viewing reports (reading).
+Retry Logic: If two teachers happen to hit "Submit" at the exact same millisecond, SQLite might briefly lock. However, your code has a smart 
+execute_with_retry
+ function. If Teacher B's request is blocked by Teacher A, the system automatically waits a fraction of a second and tries again. The users won't even notice.
+Scale: SQLite can comfortably handle 50-100 writes per second. 5 teachers clicking buttons will likely generate only a few writes incident per minute, which is negligible load.

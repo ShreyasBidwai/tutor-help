@@ -15,6 +15,15 @@
     <!-- Intro.js for onboarding tours -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intro.js@7.2.0/minified/intro.min.css">
     <script src="https://cdn.jsdelivr.net/npm/intro.js@7.2.0/minified/intro.min.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
+
+    <script>
+        // Store VAPID Key globally if needed for other libs, though we use Firebase now
+        window.VAPID_PUBLIC_KEY = "{{ config.VAPID_PUBLIC_KEY }}";
+    </script>
+
     <style>
         * {
             margin: 0;
@@ -1597,6 +1606,21 @@
             }, 2000); // Wait 2 seconds after page load
         });
         {% endif %}
+
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCPaRplhZqjt78BcBdAt9OjMzb-Rt4g0Tw",
+            authDomain: "tuitiontrack-2101.firebaseapp.com",
+            projectId: "tuitiontrack-2101",
+            storageBucket: "tuitiontrack-2101.firebasestorage.app",
+            messagingSenderId: "1023026597582",
+            appId: "1:1023026597582:web:166624b400de07d8064a9f",
+            measurementId: "G-Q3V3TDKRLH"
+        };
+
+        // Initialize Firebase globally
+        firebase.initializeApp(firebaseConfig);
+        const messaging = firebase.messaging();
 
         // Push notifications will be handled by push-notifications.js
     </script>
