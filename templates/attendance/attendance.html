@@ -320,27 +320,28 @@
 
         // Collect all student attendance data (only for batches that can be marked)
         {% for batch_name, batch_students in students_by_batch.items() %}
-            {% for student in batch_students %}
-            const present{{ student.id }} = document.getElementById('present-{{ student.id }}');
-            const late{{ student.id }} = document.getElementById('late-{{ student.id }}');
-            
-            // Skip if not today/yesterday or if this batch can't be marked today
-            {% if is_future or is_past_before_yesterday or (selected_date == today and batch_can_mark.get(batch_name, False) == False) %}
-            // Skip this student - not today/yesterday or batch hasn't started
-            {% else %}
-            let status{{ student.id }} = 0;
-            if (present{{ student.id }} && !present{{ student.id }}.disabled && present{{ student.id }}.checked) {
-                status{{ student.id }} = (late{{ student.id }} && !late{{ student.id }}.disabled && late{{ student.id }}.checked) ? 2 : 1;
-            }
-            
-            attendanceData.push({
-                student_id: {{ student.id }},
-                status: status{{ student.id }},
-                date: dateStr
+        {% for student in batch_students %}
+        const present{{ student.id }
+    } = document.getElementById('present-{{ student.id }}');
+    const late{{ student.id }} = document.getElementById('late-{{ student.id }}');
+
+    // Skip if not today/yesterday or if this batch can't be marked today
+    {% if is_future or is_past_before_yesterday or(selected_date == today and batch_can_mark.get(batch_name, False) == False) %}
+    // Skip this student - not today/yesterday or batch hasn't started
+    {% else %}
+    let status{{ student.id }} = 0;
+    if (present{ { student.id } } && !present{ { student.id } }.disabled && present{ { student.id } }.checked) {
+                status{ { student.id } } = (late{ { student.id } } && !late{ { student.id } }.disabled && late{ { student.id } }.checked) ?2 : 1;
+    }
+
+    attendanceData.push({
+        student_id: {{ student.id }},
+        status: status{{ student.id }},
+        date: dateStr
             });
-            {% endif %}
-            {% endfor %}
-        {% endfor %}
+    {% endif %}
+    {% endfor %}
+    {% endfor %}
 
     try {
         const response = await fetch('/api/attendance/save', {
