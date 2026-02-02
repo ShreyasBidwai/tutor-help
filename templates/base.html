@@ -22,6 +22,22 @@
     <script>
         // Store VAPID Key globally if needed for other libs, though we use Firebase now
         window.VAPID_PUBLIC_KEY = "{{ config.VAPID_PUBLIC_KEY }}";
+
+        // Prevent Pull-to-Refresh
+        let touchStartY = 0;
+        document.addEventListener('touchstart', function (e) {
+            touchStartY = e.touches[0].clientY;
+        }, { passive: false });
+
+        document.addEventListener('touchmove', function (e) {
+            const touchY = e.touches[0].clientY;
+            const touchDelta = touchY - touchStartY;
+
+            // If scrolled to top and pulling down, prevent default
+            if (document.documentElement.scrollTop === 0 && touchDelta > 0) {
+                e.preventDefault();
+            }
+        }, { passive: false });
     </script>
 
     <style>
@@ -51,7 +67,7 @@
             /* Allow vertical scrolling and pinch zoom, but enable horizontal swipe detection */
             min-height: 100vh;
             /* Ensure body takes full height for swipe detection */
-            overscroll-behavior-y: contain;
+            overscroll-behavior-y: none;
             /* Disable pull-to-refresh */
             user-select: none;
             /* Disable text selection */
