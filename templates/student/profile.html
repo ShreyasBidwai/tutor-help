@@ -113,4 +113,15 @@
         </div>
     </div>
 </div>
+<div style="margin-top: 2rem; margin-bottom: 3rem;">
+    <a href="{{ url_for('auth.logout') }}" class="btn"
+        style="background-color: #EF4444; color: white; width: 100%; justify-content: center; padding: 0.75rem; font-weight: 600; text-decoration: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);">
+        <svg style="width: 20px; height: 20px; margin-right: 0.5rem;" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+        </svg>
+        Logout
+    </a>
+</div>
 {% endblock %}
