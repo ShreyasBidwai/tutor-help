@@ -17,38 +17,89 @@
             </a>
         </div>
     </div>
-    
+
     <div style="margin-top: 1rem;">
         <div style="margin-bottom: 1rem;">
             <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📱 Phone</div>
             <div style="font-weight: 600;">{{ student.phone }}</div>
         </div>
-        
+
         <div style="margin-bottom: 1rem;">
             <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📚 Batch</div>
             <div style="font-weight: 600;">{{ student.batch_name or 'No Batch' }}</div>
         </div>
-        
+
         {% if student.standard %}
         <div style="margin-bottom: 1rem;">
             <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">🎓 Standard/Class</div>
             <div style="font-weight: 600;">{{ student.standard }}</div>
         </div>
         {% endif %}
-        
+
         {% if student.school_name %}
         <div style="margin-bottom: 1rem;">
             <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">🏫 School</div>
             <div style="font-weight: 600;">{{ student.school_name }}</div>
         </div>
         {% endif %}
-        
+
         {% if student.address %}
         <div style="margin-bottom: 1rem;">
             <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📍 Address</div>
             <div style="font-weight: 600;">{{ student.address }}</div>
         </div>
         {% endif %}
+
+        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
+            <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Login Credentials</h3>
+            <div style="background: #f9fafb; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
+                <div style="margin-bottom: 0.75rem;">
+                    <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.1rem;">Mobile Number</div>
+                    <div style="font-weight: 600; font-family: monospace; font-size: 1.1rem;">{{ student.phone }}</div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.1rem;">Password</div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span id="password-display"
+                            style="font-weight: 600; font-family: monospace; font-size: 1.1rem; letter-spacing: 1px;">
+                            {% if student.password %}
+                            {{ student.password }}
+                            {% else %}
+                            <span style="color: #999; font-weight: normal; font-size: 0.9rem;">(Not set yet)</span>
+                            {% endif %}
+                        </span>
+                        <button onclick="togglePasswordEdit()" class="btn btn-secondary btn-sm"
+                            style="padding: 0.2rem 0.5rem; font-size: 0.8rem;">
+                            ✏️ Edit
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Password Edit Form (Hidden by default) -->
+                <div id="password-edit-form"
+                    style="display: none; margin-bottom: 1rem; background: #fff; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 0.375rem;">
+                    <div style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Set New Password</div>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <input type="text" id="new-password" class="form-input" placeholder="Enter new password"
+                            style="flex: 1; min-width: 150px; padding: 0.5rem;">
+                        <button onclick="savePassword()" class="btn btn-primary btn-sm">Save</button>
+                        <button onclick="togglePasswordEdit()" class="btn btn-secondary btn-sm">Cancel</button>
+                    </div>
+                </div>
+
+                {% if student.password %}
+                <div>
+                    {% set msg = "Welcome to TuitionTrack! Your login details are:\n\n📱 Mobile: " + student.phone +
+                    "\n🔑 Password: " + student.password + "\n\nLogin here: " + url_for('auth.student_login',
+                    _external=True) %}
+                    <a href="https://wa.me/91{{ student.phone }}?text={{ msg|urlencode }}" target="_blank"
+                        class="btn btn-success btn-sm" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                        <span>💬 Send Details via WhatsApp</span>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 
@@ -73,7 +124,8 @@
         </div>
         {% endif %}
         <div style="text-align: center; margin: 0.5rem;">
-            <div style="font-size: 1.5rem; font-weight: 700; color: #EF4444;">{{ attendance_stats.total_days - attendance_stats.present_days - (attendance_stats.late_days or 0) }}</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: #EF4444;">{{ attendance_stats.total_days -
+                attendance_stats.present_days - (attendance_stats.late_days or 0) }}</div>
             <div style="font-size: 0.875rem; color: #666;">Absent</div>
         </div>
     </div>
@@ -94,7 +146,8 @@
 <div class="card">
     <div class="card-header">
         <h2 class="card-title">Recent Attendance</h2>
-        <a href="{{ url_for('attendance.attendance') }}" style="font-size: 0.875rem; color: #4F46E5; text-decoration: none;">View All</a>
+        <a href="{{ url_for('attendance.attendance') }}"
+            style="font-size: 0.875rem; color: #4F46E5; text-decoration: none;">View All</a>
     </div>
     {% for record in recent_attendance %}
     <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f0f0f0;">
@@ -132,3 +185,55 @@
 </div>
 {% endblock %}
 
+{% block scripts %}
+<script>
+    function togglePasswordEdit() {
+        const form = document.getElementById('password-edit-form');
+        if (form.style.display === 'none') {
+            form.style.display = 'block';
+            document.getElementById('new-password').focus();
+        } else {
+            form.style.display = 'none';
+            document.getElementById('new-password').value = '';
+        }
+    }
+
+    async function savePassword() {
+        const password = document.getElementById('new-password').value.trim();
+        if (!password) {
+            alert('Please enter a password');
+            return;
+        }
+
+        if (password.length < 4) {
+            alert('Password must be at least 4 characters');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/students/{{ student.id }}/update-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ password: password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Update display
+                document.getElementById('password-display').textContent = password;
+
+                // Reload page to update WhatsApp link logic which is rendered server-side
+                window.location.reload();
+            } else {
+                alert(data.error || 'Failed to update password');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while updating the password');
+        }
+    }
+</script>
+{% endblock %}

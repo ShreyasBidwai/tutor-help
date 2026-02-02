@@ -3,8 +3,11 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from datetime import date
 from database import get_db_connection
 from utils import require_login, get_ist_today
+from werkzeug.security import generate_password_hash
 import sqlite3
 import re
+import random
+import string
 
 students_bp = Blueprint('students', __name__, url_prefix='')
 
@@ -96,6 +99,78 @@ def students():
                          total_count=total_count,
                          per_page=per_page)
 
+@students_bp.route('/api/students/<int:student_id>/update-password', methods=['POST'])
+@require_login
+def update_student_password(student_id):
+    """Update student password"""
+    data = request.get_json()
+    new_password = data.get('password')
+    
+    if not new_password or len(new_password) < 4:
+        return jsonify({'error': 'Password must be at least 4 characters'}), 400
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Check if student exists and belongs to tutor
+    cursor.execute('SELECT id FROM students WHERE id = ? AND user_id = ?', (student_id, session['user_id']))
+    if not cursor.fetchone():
+        conn.close()
+        return jsonify({'error': 'Student not found'}), 404
+        
+    try:
+        password_hash = generate_password_hash(new_password)
+        cursor.execute('''
+            UPDATE students 
+            SET password = ?, password_hash = ? 
+            WHERE id = ?
+        ''', (new_password, password_hash, student_id))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        conn.rollback()
+        conn.close()
+        return jsonify({'error': str(e)}), 500
+
+@students_bp.route('/students/credentials')
+@require_login
+def student_credentials():
+    """List student credentials for bulk sharing"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    batch_filter = request.args.get('batch', type=int)
+    
+    # Build query
+    query = '''
+        SELECT s.name, s.phone, s.password, b.name as batch_name 
+        FROM students s 
+        LEFT JOIN batches b ON s.batch_id = b.id 
+        WHERE s.user_id = ?
+    '''
+    params = [session['user_id']]
+    
+    if batch_filter:
+        query += ' AND s.batch_id = ?'
+        params.append(batch_filter)
+    
+    query += ' ORDER BY b.name, s.name'
+    
+    cursor.execute(query, params)
+    students = cursor.fetchall()
+    
+    # Get all batches for filter dropdown
+    cursor.execute('SELECT * FROM batches WHERE user_id = ? ORDER BY name', (session['user_id'],))
+    batches = cursor.fetchall()
+    
+    conn.close()
+    
+    return render_template('students/student_credentials.html', 
+                         students=students, 
+                         batches=batches,
+                         batch_filter=batch_filter)
+
 @students_bp.route('/students/add', methods=['GET', 'POST'])
 @require_login
 def add_student():
@@ -145,10 +220,14 @@ def add_student():
         
         if name and phone and batch_id:
             try:
+                # Generate random 6-digit numeric password
+                password = ''.join(random.choices(string.digits, k=6))
+                password_hash = generate_password_hash(password)
+                
                 cursor.execute('''
-                    INSERT INTO students (name, phone, batch_id, address, school_name, standard, user_id) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                ''', (name, phone, int(batch_id), address, school_name, standard, session['user_id']))
+                    INSERT INTO students (name, phone, batch_id, address, school_name, standard, user_id, password, password_hash) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (name, phone, int(batch_id), address, school_name, standard, session['user_id'], password, password_hash))
                 conn.commit()
                 conn.close()
                 flash('Student added successfully!', 'success')

@@ -112,6 +112,8 @@ def init_db():
             user_id INTEGER NOT NULL,
             last_attendance_notification TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            password TEXT,
+            password_hash TEXT,
             FOREIGN KEY (batch_id) REFERENCES batches (id),
             FOREIGN KEY (user_id) REFERENCES users (id),
             UNIQUE(user_id, phone)
@@ -222,6 +224,18 @@ def migrate_db():
     if 'last_attendance_notification' not in columns:
         try:
             cursor.execute('ALTER TABLE students ADD COLUMN last_attendance_notification TIMESTAMP')
+        except sqlite3.OperationalError:
+            pass
+
+    if 'password' not in columns:
+        try:
+            cursor.execute('ALTER TABLE students ADD COLUMN password TEXT')
+        except sqlite3.OperationalError:
+            pass
+
+    if 'password_hash' not in columns:
+        try:
+            cursor.execute('ALTER TABLE students ADD COLUMN password_hash TEXT')
         except sqlite3.OperationalError:
             pass
     

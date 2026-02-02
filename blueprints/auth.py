@@ -182,16 +182,20 @@ def student_login():
     
     if request.method == 'POST':
         phone = request.form.get('phone', '').strip()
+        password = request.form.get('password', '').strip()
         
         if not phone or len(phone) != 10 or not phone.isdigit():
             return render_template('auth/student_login.html', error='Please enter a valid 10-digit phone number')
+            
+        if not password:
+            return render_template('auth/student_login.html', error='Please enter your password')
         
         conn = get_db_connection()
         cursor = conn.cursor()
         
         # Check if student exists
         cursor.execute('''
-            SELECT s.id, s.name, s.phone, s.batch_id, b.name as batch_name
+            SELECT s.id, s.name, s.phone, s.batch_id, s.password_hash, b.name as batch_name
             FROM students s
             LEFT JOIN batches b ON s.batch_id = b.id
             WHERE s.phone = ?
@@ -203,7 +207,16 @@ def student_login():
             conn.close()
             return render_template('auth/student_login.html', error='Phone number not found. Please contact your tutor.')
         
-        # Simulate OTP verification (auto-login)
+        # Verify password
+        if not student['password_hash']:
+            conn.close()
+            return render_template('auth/student_login.html', error='No password set. Please contact your tutor.')
+            
+        if not check_password_hash(student['password_hash'], password):
+            conn.close()
+            return render_template('auth/student_login.html', error='Invalid phone number or password.')
+        
+        # Login success
         session['user_id'] = student['id']
         session['mobile'] = phone
         session['role'] = 'student'
