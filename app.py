@@ -133,6 +133,26 @@ else:
     migrate_db()
     add_indexes()
 
+# Test notification endpoint
+@app.route('/test-notification')
+def test_notification():
+    """Send a test notification to the current user"""
+    from flask import session, jsonify
+    from jobs import send_fcm_notification
+    
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not logged in'}), 401
+        
+    try:
+        send_fcm_notification(
+            session['user_id'],
+            "Test Notification",
+            "This is a test notification from TuitionTrack"
+        )
+        return jsonify({'success': True, 'message': 'Test notification sent'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 # Serve manifest.json at root for TWA compatibility
 @app.route('/manifest.json')
 def manifest():
@@ -153,6 +173,17 @@ def assetlinks():
         os.path.join(app.root_path, 'static', '.well-known'), 
         'assetlinks.json', 
         mimetype='application/json'
+    )
+
+# Serve firebase-messaging-sw.js at root for Firebase Cloud Messaging
+@app.route('/firebase-messaging-sw.js')
+def firebase_messaging_sw():
+    """Serve firebase-messaging-sw.js for FCM"""
+    from flask import send_from_directory
+    return send_from_directory(
+        os.path.join(app.root_path, 'static', 'js'), 
+        'service-worker.js', 
+        mimetype='application/javascript'
     )
 
 # Health check endpoint for monitoring

@@ -38,9 +38,10 @@ def send_fcm_notification(user_id, title, body, data=None):
                     ),
                     data=data or {},
                     token=token,
+                    fcm_options=messaging.FCMOptions(analytics_label='tuition_track_notification')
                 )
                 messaging.send(message)
-                logger.info(f"Sent notification to user {user_id}")
+                logger.info(f"Sent notification to user {user_id} with label tuition_track_notification")
             except Exception as e:
                 # Log error but continue
                 pass
