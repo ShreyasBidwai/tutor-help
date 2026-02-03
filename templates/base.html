@@ -5,10 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#4F46E5">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='TutionTrack_appIcon_192x192.png') }}">
     <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='TutionTrack_appIcon_48x48.png') }}">
     <title>{% block title %}TuitionTrack{% endblock %}</title>
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -1642,18 +1644,25 @@
 
         // Initialize Firebase
         const firebaseConfig = {
-            apiKey: "AIzaSyCPaRplhZqjt78BcBdAt9OjMzb-Rt4g0Tw",
-            authDomain: "tuitiontrack-2101.firebaseapp.com",
-            projectId: "tuitiontrack-2101",
-            storageBucket: "tuitiontrack-2101.firebasestorage.app",
-            messagingSenderId: "1023026597582",
-            appId: "1:1023026597582:web:166624b400de07d8064a9f",
-            measurementId: "G-Q3V3TDKRLH"
+            apiKey: "AIzaSyA_zXhDXEVZNsJiAcxFU1UnLJkvS6FhaIc",
+            authDomain: "tutiontrack-48c6e.firebaseapp.com",
+            projectId: "tutiontrack-48c6e",
+            storageBucket: "tutiontrack-48c6e.firebasestorage.app",
+            messagingSenderId: "608607247798",
+            appId: "1:608607247798:web:2ca2ae115cf9c89f88b517",
+            measurementId: "G-Z2TRPL3HMW"
         };
 
         // Initialize Firebase globally
         firebase.initializeApp(firebaseConfig);
-        const messaging = firebase.messaging();
+
+        // Safely initialize messaging
+        let messaging = null;
+        if (firebase.messaging.isSupported()) {
+            messaging = firebase.messaging();
+        } else {
+            console.warn("Firebase Messaging is not supported in this browser/context. Ensure you are using HTTPS or localhost.");
+        }
 
         // Push notifications will be handled by push-notifications.js
     </script>

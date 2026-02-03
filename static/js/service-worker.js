@@ -9,13 +9,13 @@ importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js')
 
 // Initialize Firebase
 const firebaseConfig = {
-    apiKey: "AIzaSyCPaRplhZqjt78BcBdAt9OjMzb-Rt4g0Tw",
-    authDomain: "tuitiontrack-2101.firebaseapp.com",
-    projectId: "tuitiontrack-2101",
-    storageBucket: "tuitiontrack-2101.firebasestorage.app",
-    messagingSenderId: "1023026597582",
-    appId: "1:1023026597582:web:166624b400de07d8064a9f",
-    measurementId: "G-Q3V3TDKRLH"
+    apiKey: "AIzaSyA_zXhDXEVZNsJiAcxFU1UnLJkvS6FhaIc",
+    authDomain: "tutiontrack-48c6e.firebaseapp.com",
+    projectId: "tutiontrack-48c6e",
+    storageBucket: "tutiontrack-48c6e.firebasestorage.app",
+    messagingSenderId: "608607247798",
+    appId: "1:608607247798:web:2ca2ae115cf9c89f88b517",
+    measurementId: "G-Z2TRPL3HMW"
 };
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();

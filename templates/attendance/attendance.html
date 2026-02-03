@@ -168,15 +168,25 @@
     </div>
     {% endfor %}
 </div>
-});
-}
+{% endfor %}
+{% endif %}
 
-function markBatchAllAbsent(name) {
-document.querySelectorAll('input[id^="present-"]:not([disabled])').forEach(cb => {
-cb.checked = false;
-updateAttendancePreview(cb.id.split('-')[1]);
-});
-}
+<script>
+    function markBatchAllPresent(batchName) {
+        // Find all checkboxes in this batch's card
+        // Note: Ideally we'd scope this better, but for now select all enabled present checkboxes
+        document.querySelectorAll('input[id^="present-"]:not([disabled])').forEach(cb => {
+            cb.checked = true;
+            updateAttendancePreview(cb.id.split('-')[1]);
+        });
+    }
+
+    function markBatchAllAbsent(name) {
+        document.querySelectorAll('input[id^="present-"]:not([disabled])').forEach(cb => {
+            cb.checked = false;
+            updateAttendancePreview(cb.id.split('-')[1]);
+        });
+    }
 </script>
 
 <style>

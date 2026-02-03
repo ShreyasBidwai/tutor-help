@@ -24,7 +24,8 @@ app.config.from_object(Config)
 
 # Initialize Firebase Admin SDK
 try:
-    cred = credentials.Certificate('firebase-service-account.json')
+    service_account_path = os.environ.get('FIREBASE_SERVICE_ACCOUNT_KEY', 'firebase-service-account.json')
+    cred = credentials.Certificate(service_account_path)
     firebase_admin.initialize_app(cred)
     print("Firebase Admin SDK initialized successfully")
 except Exception as e:

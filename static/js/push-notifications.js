@@ -7,9 +7,10 @@
 async function subscribeToPushNotifications() {
     console.log('subscribeToPushNotifications called');
 
-    // Check if Firebase is initialized
-    if (typeof firebase === 'undefined' || !firebase.messaging) {
-        return { success: false, message: 'Firebase not initialized. Please refresh the page.' };
+    // Check if Firebase is initialized and messaging is supported
+    if (typeof firebase === 'undefined' || !firebase.messaging || !messaging) {
+        console.warn('Firebase messaging not initialized or not supported.');
+        return { success: false, message: 'Push notifications not supported in this browser.' };
     }
 
     // Check for required APIs
@@ -36,6 +37,7 @@ async function subscribeToPushNotifications() {
         // Get FCM Token
         console.log('Getting FCM token...');
         const currentToken = await messaging.getToken({
+            vapidKey: window.VAPID_PUBLIC_KEY,
             serviceWorkerRegistration: registration
         });
 
