@@ -1,7 +1,7 @@
 // Service Worker for TuitionTrack PWA
-const CACHE_NAME = 'tuitiontrack-v1';
-const STATIC_CACHE = 'static-v1';
-const DYNAMIC_CACHE = 'dynamic-v1';
+const CACHE_NAME = 'tuitiontrack-v2';
+const STATIC_CACHE = 'static-v2';
+const DYNAMIC_CACHE = 'dynamic-v2';
 
 // Import Firebase scripts
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
@@ -36,7 +36,6 @@ messaging.setBackgroundMessageHandler(function (payload) {
 
 // Assets to cache on install
 const STATIC_ASSETS = [
-    '/',
     '/static/manifest.json',
     '/static/TutionTrack_appIcon_192x192.png',
     '/static/TutionTrack_headerLogo.png',
@@ -81,7 +80,7 @@ self.addEventListener('activate', (event) => {
     return self.clients.claim(); // Take control of all pages
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - smart caching strategy
 self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
@@ -96,36 +95,44 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Strategy: Cache First, then Network
-    event.respondWith(
-        caches.match(request).then((cachedResponse) => {
-            if (cachedResponse) {
-                return cachedResponse;
-            }
+    // Determine if this is a static asset (safe to cache) or dynamic content (user-specific)
+    const isStaticAsset = url.pathname.startsWith('/static/') ||
+        url.pathname === '/manifest.json' ||
+        url.pathname === '/favicon.ico';
 
-            return fetch(request).then((response) => {
-                // Don't cache non-successful responses
-                if (!response || response.status !== 200 || response.type !== 'basic') {
-                    return response;
+    if (isStaticAsset) {
+        // Strategy for STATIC assets: Cache First, then Network
+        event.respondWith(
+            caches.match(request).then((cachedResponse) => {
+                if (cachedResponse) {
+                    return cachedResponse;
                 }
-
-                // Clone the response
-                const responseToCache = response.clone();
-
-                // Cache dynamic content
-                caches.open(DYNAMIC_CACHE).then((cache) => {
-                    cache.put(request, responseToCache);
+                return fetch(request).then((response) => {
+                    if (!response || response.status !== 200 || response.type !== 'basic') {
+                        return response;
+                    }
+                    const responseToCache = response.clone();
+                    caches.open(STATIC_CACHE).then((cache) => {
+                        cache.put(request, responseToCache);
+                    });
+                    return response;
                 });
-
+            })
+        );
+    } else {
+        // Strategy for DYNAMIC pages (HTML, API): Network First, fallback to offline page
+        // NEVER serve cached HTML because it contains user-specific data
+        event.respondWith(
+            fetch(request).then((response) => {
                 return response;
             }).catch(() => {
-                // Network failed, try to serve offline page
-                if (request.headers.get('accept').includes('text/html')) {
+                // Network failed - show offline page for HTML requests
+                if (request.headers.get('accept') && request.headers.get('accept').includes('text/html')) {
                     return caches.match('/static/offline.html');
                 }
-            });
-        })
-    );
+            })
+        );
+    }
 });
 
 // Push event - handled by Firebase messaging.setBackgroundMessageHandler

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Push Notification Debugger</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: #4F46E5;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+        }
+
+        #log {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .info {
+            color: blue;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Push Notification Debugger</h1>
+    <p>Use this page to force-enable notifications and see detailed errors.</p>
+
+    <div>
+        <button id="resetBtn" class="btn" style="background: #EF4444;">⚠️ Force Reset Service Workers</button>
+        <button id="enableBtn" class="btn">Enable Push Notifications</button>
+        <button id="checkBtn" class="btn" style="background: #10B981;">Check Permission Status</button>
+        <button id="tokenBtn" class="btn" style="background: #F59E0B;">Get FCM Token</button>
+    </div>
+
+    <h3>Debug Log:</h3>
+    <div id="log">Logs will appear here...</div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
+
+    <script>
+        function log(msg, type = 'normal') {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            if (type === 'error') entry.className = 'error';
+            if (type === 'success') entry.className = 'success';
+            if (type === 'info') entry.className = 'info';
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(msg);
+        }
+
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "{{ config.FIREBASE_API_KEY }}",
+            authDomain: "{{ config.FIREBASE_AUTH_DOMAIN }}",
+            projectId: "{{ config.FIREBASE_PROJECT_ID }}",
+            storageBucket: "{{ config.FIREBASE_STORAGE_BUCKET }}",
+            messagingSenderId: "{{ config.FIREBASE_MESSAGING_SENDER_ID }}",
+            appId: "{{ config.FIREBASE_APP_ID }}",
+            measurementId: "{{ config.FIREBASE_MEASUREMENT_ID }}"
+        };
+
+        log("Firebase Project ID: {{ config.FIREBASE_PROJECT_ID }}", "info");
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            log("Firebase initialized successfully", "success");
+        } catch (e) {
+            log("Firebase init error: " + e.message, "error");
+        }
+
+        const messaging = firebase.messaging();
+
+        // 0. Force Reset - unregister ALL service workers and clear ALL caches
+        document.getElementById('resetBtn').addEventListener('click', async () => {
+            log("Force resetting all service workers and caches...");
+            try {
+                // Unregister all service workers
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (let reg of registrations) {
+                    await reg.unregister();
+                    log("Unregistered SW: " + reg.scope, "success");
+                }
+
+                // Clear all caches
+                const cacheNames = await caches.keys();
+                for (let name of cacheNames) {
+                    await caches.delete(name);
+                    log("Deleted cache: " + name, "success");
+                }
+
+                // Delete FCM token
+                try {
+                    await messaging.deleteToken();
+                    log("Deleted old FCM token", "success");
+                } catch (e) {
+                    log("No old token to delete (OK)", "info");
+                }
+
+                log("✅ Reset complete! Now click 'Enable Push Notifications' to get a fresh token.", "success");
+            } catch (e) {
+                log("Reset error: " + e.message, "error");
+            }
+        });
+
+        // 1. Check Permission
+        document.getElementById('checkBtn').addEventListener('click', () => {
+            log("Checking notification permission...");
+            if (!('Notification' in window)) {
+                log("This browser does not support desktop notification", "error");
+            } else {
+                log("Permission status: " + Notification.permission, "info");
+            }
+        });
+
+        // 2. Enable Notifications
+        document.getElementById('enableBtn').addEventListener('click', async () => {
+            log("Requesting permission...");
+            try {
+                const permission = await Notification.requestPermission();
+                log("Permission result: " + permission, permission === 'granted' ? 'success' : 'error');
+                if (permission === 'granted') {
+                    // Trigger token fetch
+                    document.getElementById('tokenBtn').click();
+                }
+            } catch (e) {
+                log("Error requesting permission: " + e.message, "error");
+            }
+        });
+
+        // 3. Get Token (with fresh service worker registration)
+        document.getElementById('tokenBtn').addEventListener('click', async () => {
+            log("Fetching FCM Token...");
+            try {
+                // Register Service Worker fresh
+                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { updateViaCache: 'none' });
+                log("Service Worker registered: " + registration.scope, "success");
+
+                // Wait for the service worker to be active
+                if (registration.installing) {
+                    log("Service Worker installing, waiting...", "info");
+                    await new Promise((resolve) => {
+                        registration.installing.addEventListener('statechange', (e) => {
+                            if (e.target.state === 'activated') {
+                                resolve();
+                            }
+                        });
+                    });
+                    log("Service Worker activated!", "success");
+                }
+
+                const currentToken = await messaging.getToken({ serviceWorkerRegistration: registration });
+
+                if (currentToken) {
+                    log("Token: " + currentToken, "success");
+                    log("Token ending: ..." + currentToken.slice(-5), "info");
+                    // Send to server
+                    sendTokenToServer(currentToken);
+                } else {
+                    log("No Instance ID token available. Request permission to generate one.", "error");
+                }
+            } catch (err) {
+                log("An error occurred while retrieving token: " + err, "error");
+                log("Make sure you are running on HTTPS or localhost!", "info");
+            }
+        });
+
+        async function sendTokenToServer(token) {
+            log("Sending token to server...");
+            try {
+                const response = await fetch('/api/push/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: token })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    log("Server response: " + data.message, "success");
+                } else {
+                    log("Server error: " + (data.error || 'Unknown error'), "error");
+                }
+            } catch (e) {
+                log("Network error sending token: " + e.message, "error");
+            }
+        }
+    </script>
+</body>
+
+</html>

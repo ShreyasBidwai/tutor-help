@@ -52,6 +52,8 @@ def login():
         conn = get_db_connection()
         cursor = conn.cursor()
         
+        print(f"DEBUG: Auth Action: {action}, Mobile: {mobile}")
+        
         # Check if user exists
         cursor.execute('SELECT id, tuition_name, role, password_hash FROM users WHERE mobile = ?', (mobile,))
         user = cursor.fetchone()
@@ -86,6 +88,8 @@ def login():
                 return render_template('auth/login.html', error='Invalid mobile number or password.', active_tab='login')
             
             # Login successful
+            # Force session regeneration to prevent fixation
+            session.clear()
             session['user_id'] = user_id
             session['mobile'] = mobile
             session['role'] = role

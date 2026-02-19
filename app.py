@@ -22,6 +22,14 @@ except AttributeError:
 app = Flask(__name__)
 app.config.from_object(Config)
 
+# Prevent caching of dynamic pages (Wait, this is aggressive but necessary for session issues)
+@app.after_request
+def add_header(response):
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
 # Initialize Firebase Admin SDK
 try:
     service_account_path = os.environ.get('FIREBASE_SERVICE_ACCOUNT_KEY', 'firebase-service-account.json')
@@ -187,6 +195,13 @@ def firebase_messaging_sw():
     response.headers['Content-Type'] = 'application/javascript'
     response.headers['Service-Worker-Allowed'] = '/'
     return response
+
+# Push Notification Debugger Route
+@app.route('/debug/push')
+def debug_push():
+    """Render push notification debugger page"""
+    from flask import render_template
+    return render_template('debug_push.html')
 
 # Health check endpoint for monitoring
 @app.route('/health')

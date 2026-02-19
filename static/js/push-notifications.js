@@ -36,10 +36,21 @@ async function subscribeToPushNotifications() {
 
         // Get FCM Token
         console.log('Getting FCM token...');
-        const currentToken = await messaging.getToken({
-            vapidKey: window.VAPID_PUBLIC_KEY,
-            serviceWorkerRegistration: registration
-        });
+
+        // Delete old cached token to force fresh generation
+        try {
+            await messaging.deleteToken();
+            console.log('Old token deleted');
+        } catch (e) {
+            console.log('No old token to delete');
+        }
+
+        const tokenOptions = { serviceWorkerRegistration: registration };
+        // Add VAPID key if available (required for stable tokens)
+        if (window.VAPID_PUBLIC_KEY && window.VAPID_PUBLIC_KEY !== 'your-vapid-public-key-here') {
+            tokenOptions.vapidKey = window.VAPID_PUBLIC_KEY;
+        }
+        const currentToken = await messaging.getToken(tokenOptions);
 
         if (currentToken) {
             console.log('FCM Token received:', currentToken.substring(0, 20) + '...');
