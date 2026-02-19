@@ -52,7 +52,6 @@ def login():
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        print(f"DEBUG: Auth Action: {action}, Mobile: {mobile}")
         
         # Check if user exists
         cursor.execute('SELECT id, tuition_name, role, password_hash FROM users WHERE mobile = ?', (mobile,))
