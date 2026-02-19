@@ -22,7 +22,7 @@ The installation may take a few minutes, especially for sentence-transformers wh
 The `.env` file has been created with your API key. Make sure it contains:
 
 ```
-GEMINI_API_KEY=AIzaSyA0zZO5SqlgN6QdiRnC0mroRhNnR9JXvc8
+GEMINI_API_KEY=your-gemini-api-key-here
 ```
 
 ### Option B: Environment Variable (Production/Render)
@@ -32,7 +32,7 @@ In Render dashboard:
 2. Navigate to "Environment" section
 3. Add new environment variable:
    - **Key**: `GEMINI_API_KEY`
-   - **Value**: `AIzaSyA0zZO5SqlgN6QdiRnC0mroRhNnR9JXvc8`
+   - **Value**: Your Gemini API key from Google AI Studio
 4. Save and redeploy
 
 ## Step 3: Build FAISS Index

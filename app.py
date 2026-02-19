@@ -179,13 +179,14 @@ def assetlinks():
 # Serve firebase-messaging-sw.js at root for Firebase Cloud Messaging
 @app.route('/firebase-messaging-sw.js')
 def firebase_messaging_sw():
-    """Serve firebase-messaging-sw.js for FCM"""
-    from flask import send_from_directory
-    return send_from_directory(
-        os.path.join(app.root_path, 'static', 'js'), 
-        'service-worker.js', 
-        mimetype='application/javascript'
+    """Serve firebase-messaging-sw.js with Firebase config injected from env vars"""
+    from flask import render_template, make_response
+    response = make_response(
+        render_template('firebase-messaging-sw.js')
     )
+    response.headers['Content-Type'] = 'application/javascript'
+    response.headers['Service-Worker-Allowed'] = '/'
+    return response
 
 # Health check endpoint for monitoring
 @app.route('/health')

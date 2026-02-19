@@ -1644,13 +1644,13 @@
 
         // Initialize Firebase
         const firebaseConfig = {
-            apiKey: "AIzaSyA_zXhDXEVZNsJiAcxFU1UnLJkvS6FhaIc",
-            authDomain: "tutiontrack-48c6e.firebaseapp.com",
-            projectId: "tutiontrack-48c6e",
-            storageBucket: "tutiontrack-48c6e.firebasestorage.app",
-            messagingSenderId: "608607247798",
-            appId: "1:608607247798:web:2ca2ae115cf9c89f88b517",
-            measurementId: "G-Z2TRPL3HMW"
+            apiKey: "{{ config.FIREBASE_API_KEY }}",
+            authDomain: "{{ config.FIREBASE_AUTH_DOMAIN }}",
+            projectId: "{{ config.FIREBASE_PROJECT_ID }}",
+            storageBucket: "{{ config.FIREBASE_STORAGE_BUCKET }}",
+            messagingSenderId: "{{ config.FIREBASE_MESSAGING_SENDER_ID }}",
+            appId: "{{ config.FIREBASE_APP_ID }}",
+            measurementId: "{{ config.FIREBASE_MEASUREMENT_ID }}"
         };
 
         // Initialize Firebase globally

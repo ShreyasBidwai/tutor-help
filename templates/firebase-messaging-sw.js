@@ -7,27 +7,32 @@ const DYNAMIC_CACHE = 'dynamic-v1';
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
-// NOTE: Firebase config is now loaded dynamically via the /firebase-messaging-sw.js route.
-// This static file is kept as a fallback but the dynamic template version in
-// templates/firebase-messaging-sw.js is the primary service worker served to clients.
-// If using this file directly, Firebase messaging will not be initialized.
-let messaging = null;
+// Initialize Firebase (config injected from server-side env vars)
+const firebaseConfig = {
+    apiKey: "{{ config.FIREBASE_API_KEY }}",
+    authDomain: "{{ config.FIREBASE_AUTH_DOMAIN }}",
+    projectId: "{{ config.FIREBASE_PROJECT_ID }}",
+    storageBucket: "{{ config.FIREBASE_STORAGE_BUCKET }}",
+    messagingSenderId: "{{ config.FIREBASE_MESSAGING_SENDER_ID }}",
+    appId: "{{ config.FIREBASE_APP_ID }}",
+    measurementId: "{{ config.FIREBASE_MEASUREMENT_ID }}"
+};
+firebase.initializeApp(firebaseConfig);
+const messaging = firebase.messaging();
 
-// Handle background messages (only if Firebase is initialized)
-if (messaging) {
-    messaging.setBackgroundMessageHandler(function (payload) {
-        console.log('[firebase-messaging-sw.js] Received background message ', payload);
-        // Customize notification here
-        const notificationTitle = payload.data.title || 'TuitionTrack';
-        const notificationOptions = {
-            body: payload.data.body,
-            icon: payload.data.icon || '/static/TutionTrack_appIcon_192x192.png',
-            data: payload.data
-        };
+// Handle background messages
+messaging.setBackgroundMessageHandler(function (payload) {
+    console.log('[firebase-messaging-sw.js] Received background message ', payload);
+    // Customize notification here
+    const notificationTitle = payload.data.title || 'TuitionTrack';
+    const notificationOptions = {
+        body: payload.data.body,
+        icon: payload.data.icon || '/static/TutionTrack_appIcon_192x192.png',
+        data: payload.data
+    };
 
-        return self.registration.showNotification(notificationTitle, notificationOptions);
-    });
-}
+    return self.registration.showNotification(notificationTitle, notificationOptions);
+});
 
 // Assets to cache on install
 const STATIC_ASSETS = [
@@ -230,4 +235,3 @@ self.addEventListener('message', (event) => {
         );
     }
 });
-

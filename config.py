@@ -39,6 +39,19 @@ class Config:
     VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', '')
     VAPID_CLAIM_EMAIL = os.environ.get('VAPID_CLAIM_EMAIL', 'tuitiontrack@example.com')
     
+    # Firebase Client Configuration (for browser SDK)
+    # Set these via environment variables - get values from Firebase Console > Project Settings
+    FIREBASE_API_KEY = os.environ.get('FIREBASE_API_KEY', '')
+    FIREBASE_AUTH_DOMAIN = os.environ.get('FIREBASE_AUTH_DOMAIN', '')
+    FIREBASE_PROJECT_ID = os.environ.get('FIREBASE_PROJECT_ID', '')
+    FIREBASE_STORAGE_BUCKET = os.environ.get('FIREBASE_STORAGE_BUCKET', '')
+    FIREBASE_MESSAGING_SENDER_ID = os.environ.get('FIREBASE_MESSAGING_SENDER_ID', '')
+    FIREBASE_APP_ID = os.environ.get('FIREBASE_APP_ID', '')
+    FIREBASE_MEASUREMENT_ID = os.environ.get('FIREBASE_MEASUREMENT_ID', '')
+    
+    # Firebase Admin SDK service account path
+    FIREBASE_SERVICE_ACCOUNT_KEY = os.environ.get('FIREBASE_SERVICE_ACCOUNT_KEY', 'firebase-service-account.json')
+    
     # Gemini AI API Configuration
     # Set GEMINI_API_KEY in environment variables
     GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')

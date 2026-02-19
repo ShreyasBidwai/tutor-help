@@ -60,6 +60,8 @@ Thumbs.db
 *.pem
 vapid_keys.txt
 secret_key.txt
+firebase-service-account.json
+*-firebase-adminsdk-*.json
 
 # APK/Build files
 *.apk
