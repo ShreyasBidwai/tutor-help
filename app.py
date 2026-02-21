@@ -7,7 +7,6 @@ import os
 import logging
 import firebase_admin
 from firebase_admin import credentials
-from flask_apscheduler import APScheduler
 
 # Set timezone to IST (Indian Standard Time)
 os.environ['TZ'] = 'Asia/Kolkata'
@@ -39,26 +38,6 @@ try:
 except Exception as e:
     print(f"Error initializing Firebase Admin SDK: {e}")
 
-# Initialize APScheduler
-scheduler = APScheduler()
-scheduler.init_app(app)
-
-# Import and schedule jobs
-from jobs import check_batch_start_reminders, check_attendance_reminders
-
-# Schedule jobs to run every 5 minutes for efficiency
-@scheduler.task('interval', id='batch_start_job', minutes=5)
-def job_batch_start():
-    with app.app_context():
-        check_batch_start_reminders()
-
-@scheduler.task('interval', id='attendance_reminder_job', minutes=5)
-def job_attendance_reminder():
-    with app.app_context():
-        check_attendance_reminders()
-
-scheduler.start()
-
 # Production session security (for HTTPS)
 # These settings ensure secure cookies when deployed with HTTPS
 app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
@@ -88,6 +67,7 @@ from blueprints.reports import reports_bp
 from blueprints.payments import payments_bp
 from blueprints.student import student_bp
 from blueprints.export import export_bp
+from blueprints.webhooks import webhooks_bp
 
 
 app.register_blueprint(auth_bp)
@@ -100,6 +80,7 @@ app.register_blueprint(reports_bp)
 app.register_blueprint(payments_bp)
 app.register_blueprint(student_bp)
 app.register_blueprint(export_bp)
+app.register_blueprint(webhooks_bp)
 
 
 # Make VAPID_PUBLIC_KEY available to all templates

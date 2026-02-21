@@ -1,6 +1,4 @@
 
-Flask-APScheduler==1.13.1
-Flask-APScheduler>=1.12.4
 Flask==3.0.0
 Werkzeug==3.0.1
 firebase-admin>=6.2.0
