@@ -312,9 +312,10 @@ def push_subscribe():
         # We store the token in the 'endpoint' column for backward compatibility with table schema
         # The p256dh and auth columns are no longer needed for FCM but kept for schema compatibility
         
+        from database import execute_with_retry
         if existing:
             # Update existing subscription
-            cursor.execute('''
+            execute_with_retry(conn, '''
                 UPDATE push_subscriptions
                 SET user_id = ?, user_agent = ?, created_at = CURRENT_TIMESTAMP
                 WHERE endpoint = ?
@@ -322,7 +323,7 @@ def push_subscribe():
         else:
             # Insert new subscription
             # Providing dummy values for p256dh and auth to satisfy NOT NULL constraints if migration hasn't run
-            cursor.execute('''
+            execute_with_retry(conn, '''
                 INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth, user_agent)
                 VALUES (?, ?, ?, ?, ?)
             ''', (session['user_id'], token, 'fcm', 'fcm', user_agent))
