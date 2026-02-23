@@ -66,15 +66,13 @@
         onclick="window.location.href='{{ url_for('students.view_student', student_id=student.id) }}'">
         <div class="list-item-content" style="flex: 1;">
             <div class="list-item-title">{{ student.name }}</div>
-            <div class="list-item-subtitle">
+            <div class="list-item-subtitle"
+                style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 15ch;">
                 📚 {{ student.batch_name or 'No Batch' }}
-                {% if student.standard %}
-                | 🎓 {{ student.standard }}
-                {% endif %}
             </div>
-            {% if student.school_name %}
-            <div class="list-item-subtitle" style="margin-top: 0.25rem; font-size: 0.8rem;">
-                🏫 {{ student.school_name }}
+            {% if student.standard %}
+            <div class="list-item-subtitle" style="margin-top: 0.15rem;">
+                🎓 Class {{ student.standard }}
             </div>
             {% endif %}
         </div>

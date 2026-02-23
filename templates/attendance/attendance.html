@@ -166,12 +166,15 @@
         </div>
     </div>
     {% for student in batch_students %}
-    <div class="list-item" style="margin-bottom: 0.75rem; border-bottom: 1px solid #f0f0f0; padding-bottom: 0.75rem;">
-        <div class="list-item-content" style="flex: 1;">
-            <div class="list-item-title">{{ student.name }}</div>
+    <div class="list-item"
+        style="margin-bottom: 0.75rem; border-bottom: 1px solid #f0f0f0; padding-bottom: 0.75rem; flex-wrap: nowrap; align-items: center; gap: 0.5rem; justify-content: space-between;">
+        <div class="list-item-content"
+            style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            <div class="list-item-title" style="margin-bottom: 0; font-size: 0.9rem;">{{ student.name }}</div>
         </div>
-        <div class="list-item-actions" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <div class="list-item-actions"
+            style="display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem; flex-shrink: 0;">
+            <div style="display: flex; align-items: center; gap: 0.25rem;">
                 <label class="toggle-switch">
                     <input type="checkbox" id="present-{{ student.id }}" {% if student.attendance_status==1 or
                         student.attendance_status==2 %}checked{% endif %} {% if is_future or is_past_before_yesterday or
@@ -180,14 +183,14 @@
                         onchange="updateAttendancePreview({{ student.id }})">
                     <span class="toggle-slider"></span>
                 </label>
-                <span style="font-size: 0.875rem; color: #666; min-width: 60px;">Present</span>
+                <span style="font-size: 0.75rem; color: #666; min-width: 45px;">Present</span>
             </div>
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.25rem;">
                 <input type="checkbox" id="late-{{ student.id }}" {% if student.attendance_status==2 %}checked{% endif
                     %} {% if is_future or is_past_before_yesterday or batch_attendance_saved.get(batch_name, False) or
                     (selected_date==today and batch_can_mark.get(batch_name, False)==False) %}disabled{% endif %}
-                    onchange="updateAttendancePreview({{ student.id }})" style="width: 20px; height: 20px;">
-                <span style="font-size: 0.875rem; color: #666; min-width: 50px;">Late</span>
+                    onchange="updateAttendancePreview({{ student.id }})" style="width: 16px; height: 16px; margin: 0;">
+                <span style="font-size: 0.75rem; color: #666; min-width: 30px;">Late</span>
             </div>
         </div>
     </div>
@@ -201,9 +204,10 @@
 <style>
     .toggle-switch {
         position: relative;
-        width: 44px;
-        height: 24px;
+        width: 36px;
+        height: 20px;
         display: inline-block;
+        flex-shrink: 0;
     }
 
     .toggle-switch input {
@@ -220,15 +224,15 @@
         right: 0;
         bottom: 0;
         background: #ccc;
-        border-radius: 24px;
+        border-radius: 20px;
         transition: .3s;
     }
 
     .toggle-slider:before {
         position: absolute;
         content: "";
-        height: 18px;
-        width: 18px;
+        height: 14px;
+        width: 14px;
         left: 3px;
         bottom: 3px;
         background: white;
@@ -241,7 +245,7 @@
     }
 
     input:checked+.toggle-slider:before {
-        transform: translateX(20px);
+        transform: translateX(16px);
     }
 
     input:disabled+.toggle-slider {
