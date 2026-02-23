@@ -10,6 +10,7 @@
         <div class="form-group">
             <label class="form-label" for="name">Student Name *</label>
             <input type="text" id="name" name="name" class="form-input" placeholder="Enter student name"
+                value="{{ request.form.get('name', '') }}"
                 pattern="[a-zA-Z\s\u00C0-\u017F\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]+"
                 title="Name can only contain letters and spaces. No numbers or special characters allowed." required
                 autofocus>
@@ -21,7 +22,7 @@
         <div class="form-group">
             <label class="form-label" for="phone">Parent Phone Number *</label>
             <input type="tel" id="phone" name="phone" class="form-input" placeholder="Enter 10-digit phone number"
-                pattern="[0-9]{10}" maxlength="10" required>
+                value="{{ request.form.get('phone', '') }}" pattern="[0-9]{10}" maxlength="10" required>
         </div>
 
         <div class="form-group">
@@ -29,25 +30,28 @@
             <select id="batch_id" name="batch_id" class="form-select" required>
                 <option value="">Select a batch</option>
                 {% for batch in batches %}
-                <option value="{{ batch.id }}">{{ batch.name }}</option>
+                <option value="{{ batch.id }}" {% if request.form.get('batch_id')==batch.id|string %}selected{% endif
+                    %}>{{ batch.name }}</option>
                 {% endfor %}
             </select>
         </div>
 
         <div class="form-group">
             <label class="form-label" for="standard">Standard/Class</label>
-            <input type="text" id="standard" name="standard" class="form-input" placeholder="e.g., 10th, 12th, Class 5">
+            <input type="text" id="standard" name="standard" class="form-input" placeholder="e.g., 10th, 12th, Class 5"
+                value="{{ request.form.get('standard', '') }}">
         </div>
 
         <div class="form-group">
             <label class="form-label" for="school_name">School Name</label>
-            <input type="text" id="school_name" name="school_name" class="form-input" placeholder="Enter school name">
+            <input type="text" id="school_name" name="school_name" class="form-input" placeholder="Enter school name"
+                value="{{ request.form.get('school_name', '') }}">
         </div>
 
         <div class="form-group">
             <label class="form-label" for="address">Address</label>
             <textarea id="address" name="address" class="form-textarea" placeholder="Enter student address"
-                style="min-height: 80px;"></textarea>
+                style="min-height: 80px;">{{ request.form.get('address', '') }}</textarea>
         </div>
 
         {% if not batches %}

@@ -33,9 +33,14 @@
             box-sizing: border-box;
         }
 
-        /* Remove all default focus outlines globally */
-        *:focus {
+        /* Remove focus outline for mouse users, keep for keyboard */
+        *:focus:not(:focus-visible) {
             outline: none !important;
+        }
+
+        *:focus-visible {
+            outline: 2px solid #4F46E5 !important;
+            outline-offset: 2px;
         }
 
         /* Remove tap highlight on mobile */
@@ -182,10 +187,15 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        .header-btn:focus,
-        .header-btn:active,
-        .header-btn:focus-visible {
+        /* Header button focus */
+        .header-btn:focus:not(:focus-visible) {
             outline: none !important;
+            box-shadow: none !important;
+        }
+
+        .header-btn:focus-visible {
+            outline: 2px solid white !important;
+            outline-offset: 2px;
             box-shadow: none !important;
         }
 
@@ -311,7 +321,6 @@
             padding: 0.5rem;
             min-width: 60px;
             transition: all 0.2s ease;
-            outline: none !important;
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -396,28 +405,23 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Remove blue focus outline from all interactive elements */
-        .btn:focus,
-        .btn:active,
-        .btn:focus-visible,
-        a:focus,
-        a:active,
-        a:focus-visible,
-        button:focus,
-        button:active,
-        button:focus-visible {
-            outline: none !important;
-            box-shadow: none !important;
-            -webkit-tap-highlight-color: transparent !important;
+        /* Disabled button styles */
+        .btn:disabled,
+        button:disabled,
+        input[type="submit"]:disabled {
+            opacity: 0.6 !important;
+            cursor: not-allowed !important;
+            pointer-events: none !important;
         }
 
-        /* Custom subtle focus style for accessibility */
-        .btn:focus-visible {
-            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3) !important;
+        /* Hover states for interactive elements */
+        .list-item,
+        .card {
+            transition: all 0.2s ease;
         }
 
-        a:focus-visible {
-            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2) inset !important;
+        .list-item:hover {
+            background-color: #F9FAFB;
         }
 
         .btn-primary {
@@ -483,11 +487,16 @@
             border-color: #4F46E5;
         }
 
-        input:focus,
-        textarea:focus,
-        select:focus {
+        input:focus:not(:focus-visible),
+        textarea:focus:not(:focus-visible) {
             outline: none !important;
             -webkit-tap-highlight-color: transparent !important;
+        }
+
+        input:focus-visible,
+        textarea:focus-visible {
+            outline: 2px solid #4F46E5 !important;
+            outline-offset: 2px;
         }
 
         .form-select {
@@ -1043,7 +1052,7 @@
                     <div class="header-title-text">
                         <h1>{% if session.tuition_name %}{{ session.tuition_name }}{% else %}TuitionTrack{% endif %}
                         </h1>
-                        <p>{% if session.student_name %}{{ session.student_name }}{% else %}Student{% endif %}</p>
+                        <p>Student</p>
                     </div>
                 </div>
             </a>
@@ -1549,8 +1558,23 @@
                                     // New service worker available
                                     console.log('New Service Worker available');
                                     // Optionally show update notification to user
-                                    if (confirm('A new version is available. Reload to update?')) {
-                                        window.location.reload();
+                                    if (typeof Swal !== 'undefined') {
+                                        Swal.fire({
+                                            title: 'Update Available',
+                                            text: 'A new version is available. Reload to update?',
+                                            icon: 'info',
+                                            showCancelButton: true,
+                                            confirmButtonText: 'Reload',
+                                            confirmButtonColor: '#4F46E5',
+                                        }).then((result) => {
+                                            if (result.isConfirmed) {
+                                                window.location.reload();
+                                            }
+                                        });
+                                    } else {
+                                        if (confirm('A new version is available. Reload to update?')) {
+                                            window.location.reload();
+                                        }
                                     }
                                 }
                             });

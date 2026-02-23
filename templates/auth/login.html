@@ -43,6 +43,7 @@
                 <div class="form-group">
                     <label class="form-label" for="mobile-login">Mobile Number</label>
                     <input type="tel" id="mobile-login" name="mobile" class="form-input"
+                        value="{{ request.form.get('mobile', '') if request.form.get('action', '') == 'login' else '' }}"
                         placeholder="Enter 10-digit mobile number" maxlength="10" autofocus>
                 </div>
 
@@ -71,6 +72,7 @@
                 <div class="form-group">
                     <label class="form-label" for="mobile-signup">Mobile Number</label>
                     <input type="tel" id="mobile-signup" name="mobile" class="form-input"
+                        value="{{ request.form.get('mobile', '') if request.form.get('action', '') == 'signup' else '' }}"
                         placeholder="Enter 10-digit mobile number" maxlength="10">
                 </div>
 

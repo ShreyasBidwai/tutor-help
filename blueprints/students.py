@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, flash
 from datetime import date
 from database import get_db_connection
-from utils import require_login, get_ist_today
+from utils import require_login, get_ist_today, validate_name
 from werkzeug.security import generate_password_hash
 import sqlite3
 import re
@@ -10,14 +10,6 @@ import random
 import string
 
 students_bp = Blueprint('students', __name__, url_prefix='')
-
-def validate_name(name):
-    """Validate name: only letters and spaces, no numbers or special characters"""
-    if not name or not name.strip():
-        return False
-    # Allow only letters (including accented characters) and spaces
-    name_pattern = re.compile(r'^[a-zA-Z\s\u00C0-\u017F\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]+$')
-    return bool(name_pattern.match(name.strip()))
 
 @students_bp.route('/students')
 @require_login
@@ -372,8 +364,8 @@ def view_student(student_id):
     cursor.execute('''
         SELECT 
             COUNT(*) as total_days,
-            SUM(CASE WHEN COALESCE(status, present, 0) = 1 THEN 1 ELSE 0 END) as present_days,
-            SUM(CASE WHEN COALESCE(status, present, 0) = 2 THEN 1 ELSE 0 END) as late_days
+            SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as present_days,
+            SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) as late_days
         FROM attendance 
         WHERE student_id = ? AND user_id = ?
     ''', (student_id, session['user_id']))
@@ -381,7 +373,7 @@ def view_student(student_id):
     
     # Get recent attendance (last 10 days)
     cursor.execute('''
-        SELECT date, COALESCE(status, present, 0) as status
+        SELECT date, status as status
         FROM attendance 
         WHERE student_id = ? AND user_id = ?
         ORDER BY date DESC

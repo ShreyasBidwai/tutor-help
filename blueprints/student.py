@@ -69,10 +69,10 @@ def dashboard():
     cursor.execute('''
         SELECT 
             COUNT(*) as total_days,
-            SUM(CASE WHEN COALESCE(status, present, 0) IN (1, 2) THEN 1 ELSE 0 END) as attended_days,
-            SUM(CASE WHEN COALESCE(status, present, 0) = 1 THEN 1 ELSE 0 END) as present_days,
-            SUM(CASE WHEN COALESCE(status, present, 0) = 2 THEN 1 ELSE 0 END) as late_days,
-            SUM(CASE WHEN COALESCE(status, present, 0) = 0 THEN 1 ELSE 0 END) as absent_days
+            SUM(CASE WHEN status IN (1, 2) THEN 1 ELSE 0 END) as attended_days,
+            SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as present_days,
+            SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) as late_days,
+            SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) as absent_days
         FROM attendance
         WHERE student_id = ? AND date >= ?
     ''', (student_id, thirty_days_ago))
@@ -207,10 +207,10 @@ def attendance():
     cursor.execute('''
         SELECT 
             COUNT(*) as total_days,
-            SUM(CASE WHEN COALESCE(status, present, 0) IN (1, 2) THEN 1 ELSE 0 END) as attended_days,
-            SUM(CASE WHEN COALESCE(status, present, 0) = 1 THEN 1 ELSE 0 END) as present_days,
-            SUM(CASE WHEN COALESCE(status, present, 0) = 2 THEN 1 ELSE 0 END) as late_days,
-            SUM(CASE WHEN COALESCE(status, present, 0) = 0 THEN 1 ELSE 0 END) as absent_days
+            SUM(CASE WHEN status IN (1, 2) THEN 1 ELSE 0 END) as attended_days,
+            SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as present_days,
+            SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) as late_days,
+            SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) as absent_days
         FROM attendance
         WHERE student_id = ? AND date >= ?
     ''', (student_id, thirty_days_ago))
@@ -236,7 +236,7 @@ def attendance():
     attendance_by_date = {}
     for date_str in date_range:
         cursor.execute('''
-            SELECT COALESCE(status, present, -1) as status
+            SELECT status as status
             FROM attendance
             WHERE student_id = ? AND date = ?
         ''', (student_id, date_str))

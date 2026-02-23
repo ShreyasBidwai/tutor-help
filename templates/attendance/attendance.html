@@ -119,6 +119,31 @@
 </div>
 {% endif %}
 
+<script>
+    window.updateAttendancePreview = function (studentId) {
+        var presentCb = document.getElementById('present-' + studentId);
+        var lateCb = document.getElementById('late-' + studentId);
+        if (!presentCb) return;
+        if (lateCb && !presentCb.checked) {
+            lateCb.checked = false;
+        }
+    };
+
+    window.markBatchAllPresent = function (batchName) {
+        document.querySelectorAll('input[id^="present-"]:not([disabled])').forEach(function (cb) {
+            cb.checked = true;
+            window.updateAttendancePreview(cb.id.replace('present-', ''));
+        });
+    };
+
+    window.markBatchAllAbsent = function (batchName) {
+        document.querySelectorAll('input[id^="present-"]:not([disabled])').forEach(function (cb) {
+            cb.checked = false;
+            window.updateAttendancePreview(cb.id.replace('present-', ''));
+        });
+    };
+</script>
+
 {% if is_future %}
 {# No cards shown #}
 {% elif batch_filter and students_by_batch %}
@@ -171,23 +196,7 @@
 {% endfor %}
 {% endif %}
 
-<script>
-    function markBatchAllPresent(batchName) {
-        // Find all checkboxes in this batch's card
-        // Note: Ideally we'd scope this better, but for now select all enabled present checkboxes
-        document.querySelectorAll('input[id^="present-"]:not([disabled])').forEach(cb => {
-            cb.checked = true;
-            updateAttendancePreview(cb.id.split('-')[1]);
-        });
-    }
 
-    function markBatchAllAbsent(name) {
-        document.querySelectorAll('input[id^="present-"]:not([disabled])').forEach(cb => {
-            cb.checked = false;
-            updateAttendancePreview(cb.id.split('-')[1]);
-        });
-    }
-</script>
 
 <style>
     .toggle-switch {

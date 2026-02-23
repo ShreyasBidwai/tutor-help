@@ -69,8 +69,8 @@ def export_attendance():
     query = '''
         SELECT s.name as student_name, b.name as batch_name, a.date,
                CASE 
-                   WHEN COALESCE(a.status, a.present, 0) = 1 THEN 'Present'
-                   WHEN COALESCE(a.status, a.present, 0) = 2 THEN 'Late'
+                   WHEN a.status = 1 THEN 'Present'
+                   WHEN a.status = 2 THEN 'Late'
                    ELSE 'Absent'
                END as status
         FROM attendance a
@@ -137,10 +137,10 @@ def export_batch_report(batch_id):
     cursor.execute('''
         SELECT s.name, s.phone,
                COUNT(a.id) as total_days,
-               SUM(CASE WHEN COALESCE(a.status, a.present, 0) = 1 THEN 1 ELSE 0 END) as present_days,
-               SUM(CASE WHEN COALESCE(a.status, a.present, 0) = 2 THEN 1 ELSE 0 END) as late_days,
-               SUM(CASE WHEN COALESCE(a.status, a.present, 0) = 0 THEN 1 ELSE 0 END) as absent_days,
-               ROUND(100.0 * SUM(CASE WHEN COALESCE(a.status, a.present, 0) IN (1, 2) THEN 1 ELSE 0 END) / NULLIF(COUNT(a.id), 0), 1) as attendance_percentage
+               SUM(CASE WHEN a.status = 1 THEN 1 ELSE 0 END) as present_days,
+               SUM(CASE WHEN a.status = 2 THEN 1 ELSE 0 END) as late_days,
+               SUM(CASE WHEN a.status = 0 THEN 1 ELSE 0 END) as absent_days,
+               ROUND(100.0 * SUM(CASE WHEN a.status IN (1, 2) THEN 1 ELSE 0 END) / NULLIF(COUNT(a.id), 0), 1) as attendance_percentage
         FROM students s
         LEFT JOIN attendance a ON s.id = a.student_id AND a.date >= ? AND a.date <= ? AND a.user_id = ?
         WHERE s.batch_id = ? AND s.user_id = ?

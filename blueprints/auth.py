@@ -134,6 +134,12 @@ def signup():
         
         if not tuition_name:
             return render_template('auth/signup.html', mobile=mobile, error='Please enter your tuition name')
+            
+        if len(tuition_name) < 2 or len(tuition_name) > 100:
+            return render_template('auth/signup.html', mobile=mobile, error='Tuition name must be between 2 and 100 characters')
+            
+        if not re.match(r"^[a-zA-Z0-9\s\&\'\.\-]+$", tuition_name):
+            return render_template('auth/signup.html', mobile=mobile, error='Tuition name contains invalid characters. Only letters, numbers, spaces, and & \'. - are allowed.')
         
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -179,28 +185,29 @@ def signup():
 
 @auth_bp.route('/student/login', methods=['GET', 'POST'])
 def student_login():
-    """OTP-based login for students"""
+    """Student login using mobile number"""
     if 'user_id' in session and session.get('role') == 'student':
         return redirect(url_for('student.dashboard'))
-    
+
     if request.method == 'POST':
         phone = request.form.get('phone', '').strip()
         password = request.form.get('password', '').strip()
         
-        if not phone or len(phone) != 10 or not phone.isdigit():
-            return render_template('auth/student_login.html', error='Please enter a valid 10-digit phone number')
+        if not phone or not password:
+            flash('Phone number and password are required', 'error')
+            return render_template('auth/student_login.html')
             
-        if not password:
-            return render_template('auth/student_login.html', error='Please enter your password')
-        
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Check if student exists
+        # In SQLite, phone is globally unique now
         cursor.execute('''
-            SELECT s.id, s.name, s.phone, s.batch_id, s.password_hash, b.name as batch_name
+            SELECT s.id, s.name, s.phone, s.batch_id, s.password_hash, s.user_id,
+                   b.name as batch_name,
+                   u.tuition_name, u.tutor_name
             FROM students s
             LEFT JOIN batches b ON s.batch_id = b.id
+            LEFT JOIN users u ON s.user_id = u.id
             WHERE s.phone = ?
             LIMIT 1
         ''', (phone,))
@@ -208,30 +215,31 @@ def student_login():
         
         if not student:
             conn.close()
-            return render_template('auth/student_login.html', error='Phone number not found. Please contact your tutor.')
-        
-        # Verify password
-        if not student['password_hash']:
-            conn.close()
-            return render_template('auth/student_login.html', error='No password set. Please contact your tutor.')
+            flash('Invalid phone number or password', 'error')
+            return render_template('auth/student_login.html')
             
+        # Verify password
         if not check_password_hash(student['password_hash'], password):
             conn.close()
-            return render_template('auth/student_login.html', error='Invalid phone number or password.')
-        
-        # Login success
+            flash('Invalid phone number or password', 'error')
+            return render_template('auth/student_login.html')
+            
+        session.clear()
         session['user_id'] = student['id']
-        session['mobile'] = phone
-        session['role'] = 'student'
-        session['student_name'] = student['name']
+        session['mobile'] = student['phone']
         session['student_id'] = student['id']
+        session['tutor_id'] = student['user_id']
         session['batch_id'] = student['batch_id']
-        if student['batch_name']:
-            session['batch_name'] = student['batch_name']
+        session['role'] = 'student'
+        session['name'] = student['name']
+        session['student_name'] = student['name']
+        session['batch_name'] = student['batch_name']
+        session['tuition_name'] = student['tuition_name'] or f"{student['tutor_name']}'s Tuition"
         
         conn.close()
+        flash('Login successful!', 'success')
         return redirect(url_for('student.dashboard'))
-    
+            
     return render_template('auth/student_login.html')
 
 @auth_bp.route('/enterprise/login')
@@ -305,6 +313,10 @@ def push_subscribe():
         conn = get_db_connection()
         cursor = conn.cursor()
         
+        # For students, session['user_id'] is the student ID, not a users table ID.
+        # Use tutor_id (the actual users table ID) for push subscriptions FK constraint.
+        push_user_id = session.get('tutor_id') if session.get('role') == 'student' else session['user_id']
+        
         # Check if subscription already exists
         cursor.execute('SELECT id FROM push_subscriptions WHERE endpoint = ?', (token,))
         existing = cursor.fetchone()
@@ -318,14 +330,14 @@ def push_subscribe():
                 UPDATE push_subscriptions
                 SET user_id = ?, user_agent = ?, created_at = CURRENT_TIMESTAMP
                 WHERE endpoint = ?
-            ''', (session['user_id'], user_agent, token))
+            ''', (push_user_id, user_agent, token))
         else:
             # Insert new subscription
             # Providing dummy values for p256dh and auth to satisfy NOT NULL constraints if migration hasn't run
             cursor.execute('''
                 INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth, user_agent)
                 VALUES (?, ?, ?, ?, ?)
-            ''', (session['user_id'], token, 'fcm', 'fcm', user_agent))
+            ''', (push_user_id, token, 'fcm', 'fcm', user_agent))
         
         conn.commit()
         conn.close()

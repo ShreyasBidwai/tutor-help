@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, redirect, url_for, session, reques
 from datetime import date, timedelta
 from calendar import monthrange
 from database import get_db_connection
-from utils import require_login, get_ist_today, cleanup_old_attendance
+from utils import require_login, get_ist_today
 
 # Map day abbreviations to weekday numbers (0=Monday, 6=Sunday)
 DAY_MAP = {
@@ -503,8 +503,6 @@ def batch_report_detail(batch_id):
 @require_login
 def student_report_detail(student_id):
     """Monthly attendance grid for a specific student (current month only)"""
-    # Clean up old attendance records before showing report
-    cleanup_old_attendance()
     
     conn = get_db_connection()
     cursor = conn.cursor()

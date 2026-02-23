@@ -36,6 +36,7 @@
             <div class="form-group">
                 <label class="form-label" for="tuition_name">Tuition Name *</label>
                 <input type="text" id="tuition_name" name="tuition_name" class="form-input"
+                    value="{{ request.form.get('tuition_name', '') }}"
                     placeholder="e.g., ABC Coaching Classes, XYZ Tuition" autofocus maxlength="100">
                 <p style="font-size: 0.75rem; color: #666; margin-top: 0.5rem;">
                     This name will be displayed at the top of all pages

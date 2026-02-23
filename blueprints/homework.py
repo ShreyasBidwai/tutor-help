@@ -282,7 +282,25 @@ def edit_homework(homework_id):
             existing = cursor.fetchone()
             
             if remove_file:
+                if existing and existing['file_path']:
+                    old_file_path = os.path.join(Config.UPLOAD_FOLDER, existing['file_path'])
+                    try:
+                        if os.path.exists(old_file_path):
+                            os.remove(old_file_path)
+                    except Exception as e:
+                        import logging
+                        logging.error(f"Error removing old homework file: {e}")
                 file_path = None
+            elif file_path:
+                # New file uploaded, delete old one if exists
+                if existing and existing['file_path']:
+                    old_file_path = os.path.join(Config.UPLOAD_FOLDER, existing['file_path'])
+                    try:
+                        if os.path.exists(old_file_path):
+                            os.remove(old_file_path)
+                    except Exception as e:
+                        import logging
+                        logging.error(f"Error removing old homework file: {e}")
             elif not file_path and existing:
                 file_path = existing['file_path']
             
@@ -325,8 +343,23 @@ def delete_homework(homework_id):
     """Delete homework (API endpoint)"""
     conn = get_db_connection()
     cursor = conn.cursor()
+    # Get the file path before deleting the record
+    cursor.execute('SELECT file_path FROM homework WHERE id = ? AND user_id = ?', (homework_id, session['user_id']))
+    homework = cursor.fetchone()
+    
     cursor.execute('DELETE FROM homework WHERE id = ? AND user_id = ?', (homework_id, session['user_id']))
     conn.commit()
     conn.close()
+    
+    # Delete the physical file if it exists
+    if homework and homework['file_path']:
+        file_path = os.path.join(Config.UPLOAD_FOLDER, homework['file_path'])
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        except Exception as e:
+            import logging
+            logging.error(f"Error deleting homework file: {e}")
+            
     return jsonify({'success': True})
 

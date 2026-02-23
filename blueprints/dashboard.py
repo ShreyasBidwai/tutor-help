@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, session, jsonify
 from datetime import date, datetime, timedelta
 from database import get_db_connection
-from utils import require_login, get_ist_now, get_ist_today, cleanup_expired_homework, cleanup_old_attendance
+from utils import require_login, get_ist_now, get_ist_today, cleanup_expired_homework
 
 dashboard_bp = Blueprint('dashboard', __name__, url_prefix='')
 
@@ -12,7 +12,7 @@ def dashboard():
     """Main dashboard"""
     # Clean up expired homework and old attendance before showing dashboard
     cleanup_expired_homework()
-    cleanup_old_attendance()
+
     
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -37,7 +37,7 @@ def dashboard():
         SELECT COUNT(DISTINCT student_id) as count 
         FROM attendance 
         WHERE user_id = ? AND date = ? 
-        AND COALESCE(status, present, 0) IN (1, 2)
+        AND status IN (1, 2)
     ''', (user_id, today))
     attendance_result = cursor.fetchone()
     attendance_count = attendance_result['count'] if attendance_result else 0

@@ -95,7 +95,8 @@ def init_db():
             notifications_enabled INTEGER DEFAULT 1,
             user_id INTEGER NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
+            FOREIGN KEY (user_id) REFERENCES users (id),
+            UNIQUE(user_id, name)
         )
     ''')
     
@@ -114,8 +115,8 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             password TEXT,
             password_hash TEXT,
-            FOREIGN KEY (batch_id) REFERENCES batches (id),
-            FOREIGN KEY (user_id) REFERENCES users (id),
+            FOREIGN KEY (batch_id) REFERENCES batches (id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
             UNIQUE(user_id, phone)
         )
     ''')
@@ -144,12 +145,11 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             student_id INTEGER NOT NULL,
             date DATE NOT NULL,
-            present INTEGER DEFAULT 1,
             status INTEGER DEFAULT 1,
             user_id INTEGER NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (student_id) REFERENCES students (id),
-            FOREIGN KEY (user_id) REFERENCES users (id),
+            FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
             UNIQUE(student_id, date)
         )
     ''')
@@ -168,9 +168,9 @@ def init_db():
             submission_date DATE,
             user_id INTEGER NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (batch_id) REFERENCES batches (id),
-            FOREIGN KEY (student_id) REFERENCES students (id),
-            FOREIGN KEY (user_id) REFERENCES users (id)
+            FOREIGN KEY (batch_id) REFERENCES batches (id) ON DELETE CASCADE,
+            FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
         )
     ''')
     

@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, request, session, jsonify, flash
 from datetime import date, datetime, timedelta
 from database import get_db_connection
-from utils import require_login, get_ist_now, get_ist_today, cleanup_old_attendance
+from utils import require_login, get_ist_now, get_ist_today
 from utils.push_notifications import send_notification_to_user
 
 attendance_bp = Blueprint('attendance', __name__, url_prefix='')
@@ -11,8 +11,6 @@ attendance_bp = Blueprint('attendance', __name__, url_prefix='')
 @require_login
 def attendance():
     """Attendance tracker page"""
-    # Clean up old attendance records (keep only current month)
-    cleanup_old_attendance()
     
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -109,49 +107,18 @@ def attendance():
             # Allow marking for today and yesterday
             can_mark_this_batch = is_today or is_yesterday
             
-            # Check if attendance is already saved for THIS batch only (not globally)
-            # Get ALL students in this batch from database (not just current view)
-            # Find batch_id from batch name
-            cursor.execute('''
-                SELECT id FROM batches 
-                WHERE name = ? AND user_id = ?
-            ''', (batch_name, session['user_id']))
-            batch_row = cursor.fetchone()
-            
-            if batch_row:
-                batch_id = batch_row['id']
-                # Get ALL students in this batch
-                cursor.execute('''
-                    SELECT id FROM students 
-                    WHERE batch_id = ? AND user_id = ?
-                ''', (batch_id, session['user_id']))
-                all_batch_students_db = cursor.fetchall()
-                all_batch_student_ids = [s['id'] for s in all_batch_students_db]
-                
-                if all_batch_student_ids and (is_today or is_yesterday):
-                    placeholders = ','.join(['?' for _ in all_batch_student_ids])
-                    # Count how many students in this batch have attendance marked for this date
-                    cursor.execute(f'''
-                        SELECT COUNT(DISTINCT student_id) as count
-                        FROM attendance
-                        WHERE student_id IN ({placeholders}) AND date = ?
-                    ''', all_batch_student_ids + [selected_date])
-                    result = cursor.fetchone()
-                    # Check if ALL students in this batch have attendance marked
-                    total_students_in_batch = len(all_batch_student_ids)
-                    if result and result['count'] > 0:
-                        # Only mark as "saved" if ALL students have attendance (prevents re-marking)
-                        if result['count'] >= total_students_in_batch:
-                            batch_attendance_saved[batch_name] = True
-                        else:
-                            batch_attendance_saved[batch_name] = False  # Partial attendance, can still mark
-                    else:
-                        batch_attendance_saved[batch_name] = False
-                else:
-                    batch_attendance_saved[batch_name] = False
+            # Check if attendance is already saved for THIS batch only
+            # We already fetched all students and their attendance status (-1 means no record)
+            all_marked = True
+            if not batch_students:
+                all_marked = False
             else:
-                # Batch not found or "No Batch"
-                batch_attendance_saved[batch_name] = False
+                for student in batch_students:
+                    if student['attendance_status'] == -1:
+                        all_marked = False
+                        break
+            
+            batch_attendance_saved[batch_name] = all_marked
             
             # If today, check if batch time has started
             if is_today and batch_students:

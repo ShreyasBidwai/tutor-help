@@ -201,12 +201,22 @@
     async function savePassword() {
         const password = document.getElementById('new-password').value.trim();
         if (!password) {
-            alert('Please enter a password');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Required',
+                text: 'Please enter a password',
+                confirmButtonColor: '#4F46E5'
+            });
             return;
         }
 
         if (password.length < 4) {
-            alert('Password must be at least 4 characters');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Too Short',
+                text: 'Password must be at least 4 characters',
+                confirmButtonColor: '#4F46E5'
+            });
             return;
         }
 
@@ -228,11 +238,21 @@
                 // Reload page to update WhatsApp link logic which is rendered server-side
                 window.location.reload();
             } else {
-                alert(data.error || 'Failed to update password');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.error || 'Failed to update password',
+                    confirmButtonColor: '#4F46E5'
+                });
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('An error occurred while updating the password');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred while updating the password',
+                confirmButtonColor: '#4F46E5'
+            });
         }
     }
 </script>

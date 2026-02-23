@@ -24,6 +24,15 @@ def allowed_file(filename):
     """Check if file extension is allowed"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
 
+def validate_name(name):
+    """Validate name: only letters and spaces, no numbers or special characters"""
+    import re
+    if not name or not name.strip():
+        return False
+    # Allow only letters (including accented characters) and spaces
+    name_pattern = re.compile(r'^[a-zA-Z\s\u00C0-\u017F\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]+$')
+    return bool(name_pattern.match(name.strip()))
+
 def require_login(f):
     """Decorator to require login and load user data"""
     @wraps(f)
@@ -133,30 +142,3 @@ def cleanup_expired_homework():
     conn.close()
     return deleted_count, deleted_files
 
-def cleanup_old_attendance():
-    """Delete attendance records from previous months (keep only current month)"""
-    from database import get_db_connection
-    
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    today = get_ist_today()
-    current_month = today.month
-    current_year = today.year
-    
-    # Calculate first day of current month
-    first_day_current_month = date(current_year, current_month, 1)
-    
-    # Delete all attendance records before the current month
-    cursor.execute('''
-        DELETE FROM attendance 
-        WHERE date < ?
-    ''', (first_day_current_month.isoformat(),))
-    
-    deleted_count = cursor.rowcount
-    
-    if deleted_count > 0:
-        conn.commit()
-    
-    conn.close()
-    return deleted_count
