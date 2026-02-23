@@ -52,15 +52,18 @@
                 <h3 class="card-title" style="font-size: 1rem;">📚 {{ report.batch_name }}</h3>
                 <div style="text-align: right;">
                     <div
-                        style="font-size: 1.5rem; font-weight: 700; color: {% if report.attendance_percentage >= 80 %}#10B981{% elif report.attendance_percentage >= 60 %}#F59E0B{% else %}#EF4444{% endif %};">
-                        {{ report.attendance_percentage }}%
+                        style="font-size: 0.65rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.15rem;">
+                        Today</div>
+                    <div
+                        style="font-size: 1.5rem; font-weight: 700; color: {% if report.today_percentage >= 80 %}#10B981{% elif report.today_percentage >= 60 %}#F59E0B{% else %}#EF4444{% endif %};">
+                        {{ report.today_percentage }}%
                     </div>
                 </div>
             </div>
             <div
                 style="display: flex; justify-content: space-between; font-size: 0.875rem; color: #666; margin-top: 0.5rem;">
                 <span>{{ report.student_count }} students</span>
-
+                <span>{{ report.present_today }}/{{ report.student_count }} present</span>
             </div>
         </div>
     </a>

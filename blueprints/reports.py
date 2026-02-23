@@ -175,6 +175,12 @@ def reports():
                     present_today = result['present_count'] if result['present_count'] is not None else 0
                     absent_today = result['absent_count'] if result['absent_count'] is not None else 0
         
+        # Calculate today's attendance percentage
+        today_percentage = 0
+        if len(student_ids) > 0:
+            today_percentage = round((present_today / len(student_ids)) * 100)
+            today_percentage = min(today_percentage, 100)
+        
         batch_reports.append({
             'batch_id': batch_id,
             'batch_name': batch['name'],
@@ -183,7 +189,8 @@ def reports():
             'attended_sessions': attended_sessions,
             'attendance_percentage': attendance_percentage,
             'present_today': present_today,
-            'absent_today': absent_today
+            'absent_today': absent_today,
+            'today_percentage': today_percentage
         })
     
     # Get all students for student reports with batch info
