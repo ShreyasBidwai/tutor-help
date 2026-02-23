@@ -535,6 +535,7 @@ PRAGMA foreign_keys=ON        # Referential integrity
 |--------|----------|-------------|---------------|
 | POST | `/api/push/subscribe` | Subscribe to push | Yes |
 | POST | `/api/push/unsubscribe` | Unsubscribe from push | Yes |
+| POST | `/api/webhooks/cron` | External cron trigger | Cron Secret |
 
 ### Help Bot (AI) Endpoints
 
@@ -740,10 +741,10 @@ PRAGMA foreign_keys=ON        # Referential integrity
 - **Multi-device**: Supports multiple devices per user
 
 #### Technical Implementation
-- **Service Worker**: Handles push events
-- **Subscription Management**: Store subscriptions in database
-- **Retry Logic**: Automatic retry on failure
-- **Error Handling**: Graceful degradation if push unavailable
+- **Service Worker**: Handles incoming push events in the background via `firebase-messaging-sw.js`
+- **Subscription Management**: Stores subscribed FCM endpoints securely in the database
+- **Serverless Triggering**: Background reminders are entirely serverless. An external cron service (e.g., cron-job.org) pings `POST /api/webhooks/cron` every 5 minutes.
+- **Webhook Security**: Webhook execution is protected via an injected `CRON_SECRET_KEY` environment variable.
 
 ### 11. AI Help Bot (Niya)
 

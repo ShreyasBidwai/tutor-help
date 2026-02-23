@@ -1660,8 +1660,29 @@
         let messaging = null;
         if (firebase.messaging.isSupported()) {
             messaging = firebase.messaging();
+
+            // Handle incoming notifications when the app is OPEN/Focused
+            messaging.onMessage((payload) => {
+                console.log('Foreground message received: ', payload);
+                const notificationTitle = payload.notification?.title || payload.data?.title || 'Notification';
+                const notificationBody = payload.notification?.body || payload.data?.body || '';
+
+                // Show an in-app popup so the user sees it immediately
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: notificationTitle,
+                        text: notificationBody,
+                        icon: 'info',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 5000,
+                        timerProgressBar: true,
+                    });
+                }
+            });
         } else {
-            console.warn("Firebase Messaging is not supported in this browser/context. Ensure you are using HTTPS or localhost.");
+            console.warn("Firebase Messaging is not supported in this browser/context.");
         }
 
         // Push notifications will be handled by push-notifications.js
