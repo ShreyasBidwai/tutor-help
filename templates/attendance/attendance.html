@@ -120,6 +120,24 @@
 {% endif %}
 
 <script>
+    function changeDate(value) {
+        var batchSelect = document.getElementById('batch-filter');
+        var batch = batchSelect ? batchSelect.value : '';
+        var url = '/attendance?date=' + value;
+        if (batch) url += '&batch=' + batch;
+        window.location.href = url;
+    }
+
+    function handleBatchFilter() {
+        var batchSelect = document.getElementById('batch-filter');
+        var dateInput = document.getElementById('date-select');
+        var batch = batchSelect ? batchSelect.value : '';
+        var date = dateInput ? dateInput.value : '';
+        var url = '/attendance?date=' + date;
+        if (batch) url += '&batch=' + batch;
+        window.location.href = url;
+    }
+
     window.updateAttendancePreview = function (studentId) {
         var presentCb = document.getElementById('present-' + studentId);
         var lateCb = document.getElementById('late-' + studentId);
@@ -152,15 +170,18 @@
     <div class="card-header"
         style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
         <h3 class="card-title" style="font-size: 1rem; margin: 0;">📚 {{ batch_name }}</h3>
-        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+        <div
+            style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; flex: 1; justify-content: flex-end;">
             <span style="font-size: 0.875rem; color: #666;">{{ batch_students|length }} students</span>
             {% if (is_today or is_yesterday) and not batch_attendance_saved.get(batch_name, False) and not is_future and
             (is_yesterday or batch_can_mark.get(batch_name, False)) %}
-            <div style="display: flex; gap: 0.25rem;">
-                <button onclick="markBatchAllPresent('{{ batch_name }}')" class="btn btn-secondary btn-sm"
-                    style="padding: 0.4rem 0.6rem; font-size: 0.75rem; white-space: nowrap;">✓ All</button>
-                <button onclick="markBatchAllAbsent('{{ batch_name }}')" class="btn btn-secondary btn-sm"
-                    style="padding: 0.4rem 0.6rem; font-size: 0.75rem; white-space: nowrap;">✗ All</button>
+            <div style="display: flex; gap: 0.3rem; margin-left: auto;">
+                <button onclick="markBatchAllPresent('{{ batch_name }}')" class="btn btn-sm"
+                    style="padding: 0.4rem 0.75rem; font-size: 0.75rem; white-space: nowrap; background: #D1FAE5; color: #065F46; border: 1px solid #6EE7B7; border-radius: 20px; font-weight: 600; transition: all 0.2s;">All
+                    Present</button>
+                <button onclick="markBatchAllAbsent('{{ batch_name }}')" class="btn btn-sm"
+                    style="padding: 0.4rem 0.75rem; font-size: 0.75rem; white-space: nowrap; background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; border-radius: 20px; font-weight: 600; transition: all 0.2s;">All
+                    Absent</button>
             </div>
             {% endif %}
         </div>
@@ -196,10 +217,108 @@
     </div>
     {% endfor %}
 </div>
+
+{% if (is_today or is_yesterday) and not batch_attendance_saved.get(batch_name, False) and not is_future and
+(is_yesterday or batch_can_mark.get(batch_name, False)) %}
+<div style="margin-top: 1rem; margin-bottom: 1rem;">
+    <button id="save-attendance-btn" onclick="saveAttendance()" class="btn btn-block"
+        style="padding: 0.875rem; font-size: 1rem; font-weight: 600; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: #10B981; color: white; border: none;">
+        Save Attendance
+    </button>
+</div>
+{% endif %}
+
 {% endfor %}
 {% endif %}
 
+<script>
+    window.saveAttendance = function () {
+        var btn = document.getElementById('save-attendance-btn');
+        if (!btn) return;
 
+        // Disable button and show loading state
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Saving...';
+
+        var date = document.getElementById('date-select').value;
+        var attendanceData = [];
+
+        // Collect all student attendance data
+        document.querySelectorAll('input[id^="present-"]').forEach(function (presentCb) {
+            var studentId = parseInt(presentCb.id.replace('present-', ''));
+            var lateCb = document.getElementById('late-' + studentId);
+            var status = 0; // Absent
+
+            if (presentCb.checked) {
+                if (lateCb && lateCb.checked) {
+                    status = 2; // Late
+                } else {
+                    status = 1; // Present
+                }
+            }
+
+            attendanceData.push({
+                student_id: studentId,
+                status: status
+            });
+        });
+
+        if (attendanceData.length === 0) {
+            btn.disabled = false;
+            btn.innerHTML = 'Save Attendance';
+            if (typeof Swal !== 'undefined') {
+                Swal.fire('No Students', 'No students found to save attendance for.', 'warning');
+            } else {
+                alert('No students found to save attendance for.');
+            }
+            return;
+        }
+
+        fetch('/api/attendance/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                date: date,
+                attendance: attendanceData
+            })
+        })
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Attendance Saved!',
+                            text: data.message || 'Attendance has been saved successfully.',
+                            confirmButtonColor: '#10B981'
+                        }).then(function () {
+                            window.location.reload();
+                        });
+                    } else {
+                        alert(data.message || 'Attendance saved successfully!');
+                        window.location.reload();
+                    }
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Save Attendance';
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('Error', data.error || 'Failed to save attendance.', 'error');
+                    } else {
+                        alert(data.error || 'Failed to save attendance.');
+                    }
+                }
+            })
+            .catch(function (error) {
+                btn.disabled = false;
+                btn.innerHTML = 'Save Attendance';
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Error', 'Network error. Please try again.', 'error');
+                } else {
+                    alert('Network error. Please try again.');
+                }
+            });
+    };
+</script>
 
 <style>
     .toggle-switch {
