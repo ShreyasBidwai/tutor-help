@@ -60,7 +60,8 @@ def check_batch_start_reminders():
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        now = datetime.now()
+        from utils import get_ist_now
+        now = get_ist_now()
         current_day = now.strftime('%a').lower()[0:2]
         
         # Monitor window: Now to Now + 5 mins
@@ -101,7 +102,8 @@ def check_attendance_reminders():
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        now = datetime.now()
+        from utils import get_ist_now
+        now = get_ist_now()
         current_day = now.strftime('%a').lower()[0:2]
         today_date = now.strftime('%Y-%m-%d')
         

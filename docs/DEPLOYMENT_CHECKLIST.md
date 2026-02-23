@@ -12,6 +12,7 @@ Use this checklist to ensure your application is ready for production deployment
 - [ ] Set `FLASK_DEBUG=False` in `.env`
 - [ ] Set `SESSION_COOKIE_SECURE=True` (if using HTTPS)
 - [ ] Set `VAPID_CLAIM_EMAIL` to your email address
+- [ ] Set `CRON_SECRET_KEY` (Generate with: `python3 -c "import secrets; print(secrets.token_hex(32))"`)
 
 ### 2. Dependencies ✅
 - [ ] Install all dependencies: `pip install -r requirements.txt`
@@ -92,6 +93,7 @@ Use this checklist to ensure your application is ready for production deployment
   - [ ] `GEMINI_API_KEY`
   - [ ] `FLASK_DEBUG=False`
   - [ ] `SESSION_COOKIE_SECURE=True`
+  - [ ] `CRON_SECRET_KEY` (Required for webhook notifications)
 - [ ] Build command configured (if needed)
 - [ ] Start command configured: `gunicorn -c gunicorn_config.py app:app`
 - [ ] Port configuration (usually auto-set by platform)
@@ -107,13 +109,20 @@ Use this checklist to ensure your application is ready for production deployment
 
 ## Monitoring & Maintenance
 
-### 13. Monitoring Setup ✅
+### 13. External Cron Service Setup (For Push Notifications) ✅
+- [ ] Create account on [cron-job.org](https://cron-job.org)
+- [ ] Create new Cronjob:
+  - [ ] **URL:** `https://your-app.com/api/webhooks/cron`
+  - [ ] **Schedule:** Every 5 minutes
+  - [ ] **Advanced > Headers:** Add `X-Cron-Secret` header with the value from your `CRON_SECRET_KEY` environment variable.
+
+### 14. Monitoring Setup ✅
 - [ ] Logging configured and working
 - [ ] Error tracking set up (optional)
 - [ ] Uptime monitoring configured (optional)
 - [ ] Health check endpoint monitored
 
-### 14. Backup Strategy ✅
+### 15. Backup Strategy ✅
 - [ ] Database backup plan in place
 - [ ] Uploaded files backup plan
 - [ ] RAG index backup (optional, can be regenerated)
