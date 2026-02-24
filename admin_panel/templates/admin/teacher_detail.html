@@ -1,0 +1,89 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ teacher.tuition_name or teacher.mobile }}{% endblock %}
+{% block content %}
+<p style="margin-bottom:0.5rem;"><a href="{{ url_for('admin.teachers') }}">← All Teachers</a></p>
+<h1 class="page-title">{{ teacher.tuition_name or 'Unnamed' }}</h1>
+
+<div class="stats-grid" style="margin-bottom:1.5rem;">
+    <div class="stat-card">
+        <div class="label">Mobile</div>
+        <div class="value" style="font-size:1.1rem;">{{ teacher.mobile }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Tutor Name</div>
+        <div class="value" style="font-size:1.1rem;">{{ teacher.tutor_name or '—' }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Students</div>
+        <div class="value">{{ students|length }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Batches</div>
+        <div class="value">{{ batches|length }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Attendance Today</div>
+        <div class="value">{{ today_attendance }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">This Month</div>
+        <div class="value">{{ month_attendance }}</div>
+    </div>
+</div>
+
+<div class="panel">
+    <h2 class="section-title">Batches ({{ batches|length }})</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Time</th>
+                <th>Days</th>
+                <th>Students</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for b in batches %}
+            <tr>
+                <td>{{ b.name }}</td>
+                <td>{{ b.start_time or '—' }} – {{ b.end_time or '—' }}</td>
+                <td>{{ b.days or '—' }}</td>
+                <td>{{ b.student_count }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" class="muted" style="text-align:center;">No batches</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="panel">
+    <h2 class="section-title">Students ({{ students|length }})</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Batch</th>
+                <th>Joined</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in students %}
+            <tr>
+                <td>{{ s.name }}</td>
+                <td>{{ s.phone }}</td>
+                <td>{{ s.batch_name or '—' }}</td>
+                <td>{{ s.created_at }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" class="muted" style="text-align:center;">No students</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -68,6 +68,7 @@ from blueprints.payments import payments_bp
 from blueprints.student import student_bp
 from blueprints.export import export_bp
 from blueprints.webhooks import webhooks_bp
+from admin_panel import admin_bp
 
 
 app.register_blueprint(auth_bp)
@@ -81,6 +82,7 @@ app.register_blueprint(payments_bp)
 app.register_blueprint(student_bp)
 app.register_blueprint(export_bp)
 app.register_blueprint(webhooks_bp)
+app.register_blueprint(admin_bp)
 
 
 # Make VAPID_PUBLIC_KEY available to all templates

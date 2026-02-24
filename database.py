@@ -368,6 +368,22 @@ def migrate_db():
         except sqlite3.OperationalError:
             pass
     
+    # Create admins table if it doesn't exist
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='admins'")
+    if not cursor.fetchone():
+        try:
+            cursor.execute('''
+                CREATE TABLE admins (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    name TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+        except sqlite3.OperationalError:
+            pass
+    
     # Add unique constraint for students (user_id, phone) if migrating
     try:
         # Check if index already exists
