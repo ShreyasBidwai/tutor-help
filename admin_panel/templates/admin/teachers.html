@@ -1,0 +1,43 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Teachers{% endblock %}
+{% block content %}
+<h1 class="page-title">All Teachers <span class="muted" style="font-size:0.85rem; font-weight:400;">({{ teachers|length
+        }})</span></h1>
+<div class="panel">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Mobile</th>
+                <th>Tutor Name</th>
+                <th>Tuition Name</th>
+                <th>Students</th>
+                <th>Batches</th>
+                <th>Last Active</th>
+                <th>Signed Up</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in teachers %}
+            <tr>
+                <td>{{ t.id }}</td>
+                <td>{{ t.mobile }}</td>
+                <td>{{ t.tutor_name or '—' }}</td>
+                <td>{{ t.tuition_name or '—' }}</td>
+                <td>{{ t.student_count }}</td>
+                <td>{{ t.batch_count }}</td>
+                <td>{% if t.last_active %}<span class="badge badge-green">{{ t.last_active }}</span>{% else %}<span
+                        class="badge badge-gray">Never</span>{% endif %}</td>
+                <td>{{ t.created_at }}</td>
+                <td><a href="{{ url_for('admin.teacher_detail', teacher_id=t.id) }}">View →</a></td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="9" class="muted" style="text-align:center;">No teachers found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

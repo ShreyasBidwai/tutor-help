@@ -91,15 +91,16 @@ def students():
                          total_count=total_count,
                          per_page=per_page)
 
-@students_bp.route('/api/students/<int:student_id>/update-password', methods=['POST'])
+@students_bp.route('/api/students/<int:student_id>/update-credentials', methods=['POST'])
 @require_login
-def update_student_password(student_id):
-    """Update student password"""
+def update_student_credentials(student_id):
+    """Update student phone and password"""
     data = request.get_json()
+    new_phone = data.get('phone')
     new_password = data.get('password')
     
-    if not new_password or len(new_password) < 4:
-        return jsonify({'error': 'Password must be at least 4 characters'}), 400
+    if not new_phone or len(new_phone) != 10 or not new_phone.isdigit():
+        return jsonify({'error': 'Please enter a valid 10-digit mobile number'}), 400
         
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -110,13 +111,30 @@ def update_student_password(student_id):
         conn.close()
         return jsonify({'error': 'Student not found'}), 404
         
+    # Check if new phone is already in use
+    cursor.execute('SELECT id FROM students WHERE phone = ? AND id != ?', (new_phone, student_id))
+    if cursor.fetchone():
+        conn.close()
+        return jsonify({'error': 'This mobile number is already registered for another student'}), 400
+
     try:
-        password_hash = generate_password_hash(new_password)
-        cursor.execute('''
-            UPDATE students 
-            SET password = ?, password_hash = ? 
-            WHERE id = ?
-        ''', (new_password, password_hash, student_id))
+        if new_password:
+            if len(new_password) < 4:
+                return jsonify({'error': 'Password must be at least 4 characters'}), 400
+            
+            password_hash = generate_password_hash(new_password)
+            cursor.execute('''
+                UPDATE students 
+                SET phone = ?, password = ?, password_hash = ? 
+                WHERE id = ?
+            ''', (new_phone, new_password, password_hash, student_id))
+        else:
+            cursor.execute('''
+                UPDATE students 
+                SET phone = ? 
+                WHERE id = ?
+            ''', (new_phone, student_id))
+            
         conn.commit()
         conn.close()
         return jsonify({'success': True})

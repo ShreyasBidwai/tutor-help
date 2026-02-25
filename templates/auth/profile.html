@@ -5,102 +5,256 @@
 {% block header_title %}My Profile{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header">
-        <h2 class="card-title">Tuition Information</h2>
-    </div>
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.9) 0%, rgba(124, 58, 237, 0.9) 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(79, 70, 229, 0.25);
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    {% for category, message in messages %}
-    <div class="alert {% if category == 'error' %}alert-error{% else %}alert-success{% endif %}"
-        style="margin-bottom: 1.5rem;">
-        {{ message }}
+    .profile-header::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 150px;
+        height: 150px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
+        border-radius: 50%;
+    }
+
+    .profile-header::after {
+        content: '';
+        position: absolute;
+        bottom: -50px;
+        left: -30px;
+        width: 120px;
+        height: 120px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+        border-radius: 50%;
+    }
+
+    .profile-top-row {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        position: relative;
+        z-index: 10;
+    }
+
+    .profile-avatar {
+        width: 72px;
+        height: 72px;
+        background: white;
+        color: #4F46E5;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.2rem;
+        font-weight: 800;
+        flex-shrink: 0;
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        background-clip: padding-box;
+    }
+
+    .profile-info {
+        flex: 1;
+        min-width: 0;
+        text-align: left;
+    }
+
+    .profile-name {
+        font-size: 1.4rem;
+        font-weight: 800;
+        margin-bottom: 0.25rem;
+        letter-spacing: -0.025em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .profile-role {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        font-weight: 500;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 0.2rem 0.75rem;
+        border-radius: 999px;
+        display: inline-block;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        border: 1px solid rgba(243, 244, 246, 1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .section-card:hover {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-label {
+        font-size: 0.8rem;
+        color: #6B7280;
+        font-weight: 500;
+        margin-bottom: 0.2rem;
+    }
+
+    .btn-logout {
+        background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+        color: white;
+        border: none;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0.85rem;
+        font-weight: 600;
+        font-size: 1rem;
+        text-decoration: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+        transition: all 0.2s ease;
+        gap: 0.5rem;
+    }
+
+    .btn-logout:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(239, 68, 68, 0.35);
+    }
+</style>
+
+<!-- Profile Header -->
+<div class="profile-header">
+    <div class="profile-top-row">
+        <div class="profile-avatar">
+            {{ (user.tutor_name or user.tuition_name or 'T')[:1] | upper }}
+        </div>
+        <div class="profile-info">
+            <div class="profile-name">{{ user.tutor_name or user.tuition_name or 'TuitionTrack User' }}</div>
+            <div class="profile-role">
+                <span style="opacity: 0.7; font-weight: normal; margin-right: 2px;">Role:</span> Tutor / Owner
+            </div>
+        </div>
     </div>
-    {% endfor %}
-    {% endif %}
-    {% endwith %}
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div
+    style="background: {% if category == 'error' %}#FEF2F2{% else %}#F0FDF4{% endif %}; 
+                color: {% if category == 'error' %}#991B1B{% else %}#166534{% endif %}; 
+                border: 1px solid {% if category == 'error' %}#FEE2E2{% else %}#DCFCE7{% endif %}; 
+                padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; font-weight: 500;">
+    <span>{% if category == 'error' %}⚠️{% else %}✅{% endif %}</span> {{ message }}
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<!-- Tuition Information Edit Section -->
+<div class="section-card">
+    <h2 class="section-title"><span>🏫</span> Tuition Information</h2>
 
     <form method="POST" action="{{ url_for('auth.profile') }}">
-        <div class="form-group">
-            <label class="form-label" for="mobile">Mobile Number</label>
-            <input type="tel" id="mobile" name="mobile" class="form-input" value="{{ user.mobile }}" disabled
-                style="background-color: #f5f5f5; cursor: not-allowed;">
-            <p style="font-size: 0.75rem; color: #666; margin-top: 0.5rem;">
-                Mobile number cannot be changed
-            </p>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label" for="tutor_name">Tutor/Owner Name</label>
-            <input type="text" id="tutor_name" name="tutor_name" class="form-input" value="{{ user.tutor_name or '' }}"
-                placeholder="Priya Patel" pattern="[a-zA-Z\s\u00C0-\u017F\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]+"
-                title="Name can only contain letters and spaces. No numbers or special characters allowed."
-                maxlength="100">
-            <p style="font-size: 0.75rem; color: #666; margin-top: 0.5rem;">
-                Your name as the tutor/owner (optional). Only letters and spaces allowed.
-            </p>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label" for="tuition_name">Tuition Name *</label>
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label class="info-label" for="tuition_name">Tuition Name <span style="color: #EF4444;">*</span></label>
             <input type="text" id="tuition_name" name="tuition_name" class="form-input"
                 value="{{ user.tuition_name or '' }}" placeholder="e.g., ABC Coaching Classes, XYZ Tuition" required
-                maxlength="100">
-            <p style="font-size: 0.75rem; color: #666; margin-top: 0.5rem;">
+                maxlength="100" style="border-radius: 8px; border-color: #E2E8F0;">
+            <p style="font-size: 0.75rem; color: #94A3B8; margin-top: 0.3rem;">
                 This name is displayed at the top of all pages
             </p>
         </div>
 
-        <div class="form-group">
-            <label class="form-label" for="address">Address</label>
-            <textarea id="address" name="address" class="form-textarea" placeholder="Enter your tuition address"
-                rows="4" maxlength="500"
-                style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">{{ user.address or '' }}</textarea>
-            <p style="font-size: 0.75rem; color: #666; margin-top: 0.5rem;">
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label class="info-label" for="tutor_name">Tutor/Owner Name</label>
+            <input type="text" id="tutor_name" name="tutor_name" class="form-input" value="{{ user.tutor_name or '' }}"
+                placeholder="e.g., Priya Patel"
+                pattern="[a-zA-Z\s\u00C0-\u017F\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]+"
+                title="Name can only contain letters and spaces. No numbers or special characters allowed."
+                maxlength="100" style="border-radius: 8px; border-color: #E2E8F0;">
+            <p style="font-size: 0.75rem; color: #94A3B8; margin-top: 0.3rem;">
+                Your name as the tutor/owner (optional)
+            </p>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="info-label" for="address">Address</label>
+            <textarea id="address" name="address" class="form-input" placeholder="Enter your tuition address" rows="3"
+                maxlength="500"
+                style="border-radius: 8px; border-color: #E2E8F0; resize: vertical; min-height: 80px;">{{ user.address or '' }}</textarea>
+            <p style="font-size: 0.75rem; color: #94A3B8; margin-top: 0.3rem;">
                 Your tuition center address (optional)
             </p>
         </div>
 
-        <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
-            <button type="submit" class="btn btn-primary" style="flex: 1;">
-                Save Changes
+        <div style="display: flex; gap: 0.75rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1; border-radius: 10px; font-weight: 600;">
+                Save
             </button>
             <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-secondary"
-                style="flex: 1; text-align: center;">
+                style="flex: 1; text-align: center; border-radius: 10px; font-weight: 600;">
                 Cancel
             </a>
         </div>
     </form>
 </div>
 
-<div class="card">
-    <div class="card-header">
-        <h2 class="card-title">Account Information</h2>
-    </div>
-    <div style="padding: 1rem;">
-        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <div
-                style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f0f0f0;">
-                <span style="color: #666; font-weight: 500;">Mobile Number:</span>
-                <span style="color: #333;">{{ user.mobile }}</span>
+<!-- Account Access Information -->
+<div class="section-card" style="margin-bottom: 2rem;">
+    <h2 class="section-title"><span>🔐</span> Account Access</h2>
+
+    <div style="background: #F8FAFC; border: 1px solid #F1F5F9; border-radius: 12px; overflow: hidden;">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; border-bottom: 1px solid #E2E8F0;">
+            <div class="info-label" style="margin: 0;">Registered Mobile / Username</div>
+            <div style="font-weight: 700; color: #0F172A; font-family: monospace; font-size: 1.1rem;">{{ user.mobile }}
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 0.75rem 0;">
-                <span style="color: #666; font-weight: 500;">User Role:</span>
-                <span style="color: #333; text-transform: capitalize;">Tutor</span>
-            </div>
+        </div>
+        <div style="padding: 0.75rem 1.25rem; background: #FFFBEB; border-bottom: 1px solid #FEF3C7;">
+            <p style="font-size: 0.8rem; color: #B45309; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                <span>ℹ️</span> Mobile number serves as your login ID and cannot be changed directly.
+            </p>
         </div>
     </div>
 </div>
-<div style="margin-top: 2rem; margin-bottom: 3rem;">
-    <a href="{{ url_for('auth.logout') }}" class="btn"
-        style="background-color: #EF4444; color: white; width: 100%; justify-content: center; padding: 0.75rem; font-weight: 600; text-decoration: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);">
-        <svg style="width: 20px; height: 20px; margin-right: 0.5rem;" fill="none" stroke="currentColor"
+
+<div style="margin-bottom: 3rem;">
+    <a href="{{ url_for('auth.logout') }}" class="btn-logout">
+        <svg style="width: 20px; height: 20px; text-align: center;" fill="none" stroke="currentColor"
             viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
         </svg>
-        Logout
+        Sign Out Securely
     </a>
 </div>
 {% endblock %}

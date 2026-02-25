@@ -5,181 +5,665 @@
 {% block header_title %}Student Details{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header">
-        <h2 class="card-title">{{ student.name }}</h2>
-        <div style="display: flex; gap: 0.5rem;">
-            <a href="{{ url_for('students.edit_student', student_id=student.id) }}" class="btn btn-secondary btn-sm">
-                Edit
-            </a>
-            <a href="{{ url_for('students.students') }}" class="btn btn-secondary btn-sm">
-                Back
-            </a>
+<style>
+    /* Styling enhancements */
+    .profile-header {
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.9) 0%, rgba(124, 58, 237, 0.9) 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(79, 70, 229, 0.25);
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .profile-header::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 150px;
+        height: 150px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
+        border-radius: 50%;
+    }
+
+    .profile-header::after {
+        content: '';
+        position: absolute;
+        bottom: -50px;
+        left: -30px;
+        width: 120px;
+        height: 120px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+        border-radius: 50%;
+    }
+
+    .profile-top-row {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        margin-bottom: 1.25rem;
+        position: relative;
+        z-index: 10;
+    }
+
+    .profile-avatar {
+        width: 72px;
+        height: 72px;
+        background: white;
+        color: #4F46E5;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.2rem;
+        font-weight: 800;
+        flex-shrink: 0;
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        background-clip: padding-box;
+    }
+
+    .profile-info {
+        flex: 1;
+        min-width: 0;
+        text-align: left;
+    }
+
+    .profile-name {
+        font-size: 1.4rem;
+        font-weight: 800;
+        margin-bottom: 0.25rem;
+        letter-spacing: -0.025em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .profile-batch {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        font-weight: 500;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 0.2rem 0.75rem;
+        border-radius: 999px;
+        display: inline-block;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .action-row {
+        display: flex;
+        justify-content: flex-start;
+        gap: 0.75rem;
+        position: relative;
+        z-index: 10;
+    }
+
+    .action-row .btn {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(8px);
+        min-height: 42px;
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        flex: 1;
+    }
+
+    .action-row .btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        border: 1px solid rgba(243, 244, 246, 1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .section-card:hover {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .info-icon {
+        width: 44px;
+        height: 44px;
+        background: #F3F4F6;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        color: #4B5563;
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+    }
+
+    .info-item:hover .info-icon {
+        background: #EEF2FF;
+        color: #4F46E5;
+        transform: scale(1.05);
+    }
+
+    .info-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .info-label {
+        font-size: 0.8rem;
+        color: #6B7280;
+        font-weight: 500;
+        margin-bottom: 0.2rem;
+    }
+
+    .info-value {
+        font-size: 1rem;
+        color: #1F2937;
+        font-weight: 600;
+        word-break: break-word;
+    }
+
+    .att-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .att-stat {
+        background: #F8FAFC;
+        border-radius: 16px;
+        padding: 1.25rem 1rem;
+        text-align: center;
+        border: 1px solid #F1F5F9;
+        transition: all 0.2s ease;
+    }
+
+    .att-stat:hover {
+        transform: translateY(-2px);
+    }
+
+    .att-val {
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin-bottom: 0.25rem;
+    }
+
+    .att-label {
+        font-size: 0.8rem;
+        color: #64748B;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .att-total .att-val {
+        color: #4F46E5;
+    }
+
+    .att-total:hover {
+        background: #EEF2FF;
+        border-color: #E0E7FF;
+    }
+
+    .att-present .att-val {
+        color: #10B981;
+    }
+
+    .att-present:hover {
+        background: #ECFDF5;
+        border-color: #D1FAE5;
+    }
+
+    .att-absent .att-val {
+        color: #EF4444;
+    }
+
+    .att-absent:hover {
+        background: #FEF2F2;
+        border-color: #FEE2E2;
+    }
+
+    .att-late .att-val {
+        color: #F59E0B;
+    }
+
+    .att-late:hover {
+        background: #FFFBEB;
+        border-color: #FEF3C7;
+    }
+
+    .attendance-bar-container {
+        height: 12px;
+        background: #F1F5F9;
+        border-radius: 999px;
+        margin-top: 1.5rem;
+        overflow: hidden;
+        display: flex;
+    }
+
+    .attendance-rate-badge {
+        display: inline-block;
+        margin-top: 1rem;
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        color: white;
+        padding: 0.4rem 1.4rem;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+
+    .recent-att-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .recent-att-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: #F8FAFC;
+        border-radius: 12px;
+        border: 1px solid #F1F5F9;
+        transition: all 0.2s ease;
+    }
+
+    .recent-att-item:hover {
+        background: white;
+        border-color: #E2E8F0;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        transform: scale(1.01);
+    }
+
+    .qa-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .qa-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.25rem 1rem;
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #E5E7EB;
+        color: #374151;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+        gap: 0.5rem;
+    }
+
+    .qa-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.05);
+        border-color: #D1D5DB;
+    }
+
+    .qa-btn.primary {
+        background: #EEF2FF;
+        border-color: #C7D2FE;
+        color: #4338CA;
+    }
+
+    .qa-btn.primary:hover {
+        background: #E0E7FF;
+        box-shadow: 0 8px 15px rgba(67, 56, 202, 0.1);
+    }
+
+    .qa-btn.whatsapp {
+        background: #F0FDF4;
+        border-color: #BBF7D0;
+        color: #15803D;
+    }
+
+    .qa-btn.whatsapp:hover {
+        background: #DCFCE7;
+        box-shadow: 0 8px 15px rgba(21, 128, 61, 0.1);
+    }
+
+    .qa-icon {
+        font-size: 1.75rem;
+    }
+
+    .status-badge {
+        padding: 0.35rem 1rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.025em;
+        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .status-badge.present {
+        background: #D1FAE5;
+        color: #065F46;
+    }
+
+    .status-badge.late {
+        background: #FEF3C7;
+        color: #92400E;
+    }
+
+    .status-badge.absent {
+        background: #FEE2E2;
+        color: #991B1B;
+    }
+
+    .credentials-box {
+        background: #F8FAFC;
+        border-radius: 12px;
+        border: 1px solid #F1F5F9;
+        margin-top: 1rem;
+        overflow: hidden;
+    }
+
+    .cred-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #E2E8F0;
+    }
+
+    .cred-row:last-child {
+        border-bottom: none;
+    }
+</style>
+
+<!-- Profile Header -->
+<div class="profile-header">
+    <div class="profile-top-row">
+        <div class="profile-avatar">
+            {{ student.name[:1] | upper }}
+        </div>
+        <div class="profile-info">
+            <div class="profile-name">{{ student.name }}</div>
+            <div class="profile-batch">
+                <span style="opacity: 0.7; font-weight: normal; margin-right: 2px;">Batch:</span> {{ student.batch_name
+                or
+                'Unassigned' }}
+            </div>
         </div>
     </div>
 
-    <div style="margin-top: 1rem;">
-        <div style="margin-bottom: 1rem;">
-            <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📱 Phone</div>
-            <div style="font-weight: 600;">{{ student.phone }}</div>
-        </div>
+    <div class="action-row">
+        <a href="{{ url_for('students.edit_student', student_id=student.id) }}" class="btn">
+            Edit Profile
+        </a>
+        <a href="{{ url_for('students.students') }}" class="btn">
+            ⬅️ Back
+        </a>
+    </div>
+</div>
 
-        <div style="margin-bottom: 1rem;">
-            <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📚 Batch</div>
-            <div style="font-weight: 600;">{{ student.batch_name or 'No Batch' }}</div>
+<!-- Personal Information -->
+<div class="section-card">
+    <h2 class="section-title"><span>👤</span> Personal Information</h2>
+    <div class="info-list">
+        <div class="info-item">
+            <div class="info-icon">📱</div>
+            <div class="info-content">
+                <div class="info-label">Mobile Number</div>
+                <div class="info-value">{{ student.phone }}</div>
+            </div>
+            <a href="tel:{{ student.phone }}" class="btn btn-secondary btn-sm"
+                style="padding: 0.4rem 0.75rem; border-radius: 8px;">Call</a>
         </div>
 
         {% if student.standard %}
-        <div style="margin-bottom: 1rem;">
-            <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">🎓 Standard/Class</div>
-            <div style="font-weight: 600;">{{ student.standard }}</div>
+        <div class="info-item">
+            <div class="info-icon">🎓</div>
+            <div class="info-content">
+                <div class="info-label">Standard/Class</div>
+                <div class="info-value">{{ student.standard }}</div>
+            </div>
         </div>
         {% endif %}
 
         {% if student.school_name %}
-        <div style="margin-bottom: 1rem;">
-            <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">🏫 School</div>
-            <div style="font-weight: 600;">{{ student.school_name }}</div>
+        <div class="info-item">
+            <div class="info-icon">🏫</div>
+            <div class="info-content">
+                <div class="info-label">School</div>
+                <div class="info-value">{{ student.school_name }}</div>
+            </div>
         </div>
         {% endif %}
 
         {% if student.address %}
-        <div style="margin-bottom: 1rem;">
-            <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📍 Address</div>
-            <div style="font-weight: 600;">{{ student.address }}</div>
+        <div class="info-item">
+            <div class="info-icon">📍</div>
+            <div class="info-content">
+                <div class="info-label">Address</div>
+                <div class="info-value">{{ student.address }}</div>
+            </div>
         </div>
         {% endif %}
+    </div>
+</div>
 
-        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
-            <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Login Credentials</h3>
-            <div style="background: #f9fafb; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
-                <div style="margin-bottom: 0.75rem;">
-                    <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.1rem;">Mobile Number</div>
-                    <div style="font-weight: 600; font-family: monospace; font-size: 1.1rem;">{{ student.phone }}</div>
-                </div>
-                <div style="margin-bottom: 1rem;">
-                    <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.1rem;">Password</div>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <span id="password-display"
-                            style="font-weight: 600; font-family: monospace; font-size: 1.1rem; letter-spacing: 1px;">
-                            {% if student.password %}
-                            {{ student.password }}
-                            {% else %}
-                            <span style="color: #999; font-weight: normal; font-size: 0.9rem;">(Not set yet)</span>
-                            {% endif %}
-                        </span>
-                        <button onclick="togglePasswordEdit()" class="btn btn-secondary btn-sm"
-                            style="padding: 0.2rem 0.5rem; font-size: 0.8rem;">
-                            ✏️ Edit
-                        </button>
-                    </div>
-                </div>
+<!-- Login Credentials -->
+<div class="section-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h2 class="section-title" style="margin: 0;"><span>🔐</span> Student Portal Access</h2>
+        <button onclick="toggleCredentialsEdit()" class="btn btn-secondary btn-sm"
+            style="padding: 0.35rem 0.75rem; font-size: 0.8rem; border-radius: 6px; font-weight: 600;">
+            Edit Details
+        </button>
+    </div>
 
-                <!-- Password Edit Form (Hidden by default) -->
-                <div id="password-edit-form"
-                    style="display: none; margin-bottom: 1rem; background: #fff; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 0.375rem;">
-                    <div style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Set New Password</div>
-                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                        <input type="text" id="new-password" class="form-input" placeholder="Enter new password"
-                            style="flex: 1; min-width: 150px; padding: 0.5rem;">
-                        <button onclick="savePassword()" class="btn btn-primary btn-sm">Save</button>
-                        <button onclick="togglePasswordEdit()" class="btn btn-secondary btn-sm">Cancel</button>
-                    </div>
-                </div>
-
-                {% if student.password %}
-                <div>
-                    {% set msg = "Welcome to TuitionTrack! Your login details are:\n\n📱 Mobile: " + student.phone +
-                    "\n🔑 Password: " + student.password + "\n\nLogin here: " + url_for('auth.student_login',
-                    _external=True) %}
-                    <a href="https://wa.me/91{{ student.phone }}?text={{ msg|urlencode }}" target="_blank"
-                        class="btn btn-success btn-sm" style="display: inline-flex; align-items: center; gap: 0.5rem;">
-                        <span>💬 Send Details via WhatsApp</span>
-                    </a>
-                </div>
-                {% endif %}
+    <div class="credentials-box">
+        <div class="cred-row">
+            <div class="info-label" style="margin: 0;">Mobile Number (Username)</div>
+            <div id="phone-display"
+                style="font-weight: 700; color: #0F172A; font-family: monospace; font-size: 1.1rem;">{{ student.phone }}
+            </div>
+        </div>
+        <div class="cred-row">
+            <div class="info-label" style="margin: 0;">Password</div>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span id="password-display"
+                    style="font-weight: 700; color: #0F172A; font-family: monospace; font-size: 1.1rem;">
+                    {% if student.password %}
+                    {{ student.password }}
+                    {% else %}
+                    <span style="color: #94A3B8; font-size: 0.9rem; font-weight: normal; font-family: system-ui;">Not
+                        set</span>
+                    {% endif %}
+                </span>
             </div>
         </div>
     </div>
-</div>
 
-{% if attendance_stats and attendance_stats.total_days > 0 %}
-<div class="card">
-    <div class="card-header">
-        <h2 class="card-title">Attendance Summary</h2>
+    <!-- Credentials Edit Form -->
+    <div id="credentials-edit-form"
+        style="display: none; margin-top: 1rem; padding: 1.25rem; background: #F8FAFC; border-radius: 12px; border: 1px dashed #CBD5E1;">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div>
+                <label class="info-label" style="display: block; margin-bottom: 0.5rem; color: #475569;">Mobile
+                    Number</label>
+                <input type="text" id="new-phone" class="form-input" value="{{ student.phone }}"
+                    placeholder="10-digit mobile number" style="width: 100%; border-color: #CBD5E1;">
+            </div>
+            <div>
+                <label class="info-label" style="display: block; margin-bottom: 0.5rem; color: #475569;">New
+                    Password</label>
+                <input type="text" id="new-password" class="form-input" placeholder="Leave blank to keep unchanged"
+                    style="width: 100%; border-color: #CBD5E1;">
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+            <button onclick="toggleCredentialsEdit()" class="btn btn-secondary">Cancel</button>
+            <button onclick="saveCredentials()" class="btn btn-primary"
+                style="padding-left: 1.5rem; padding-right: 1.5rem;">Save Details</button>
+        </div>
     </div>
-    <div style="display: flex; justify-content: space-around; padding: 1rem 0; flex-wrap: wrap;">
-        <div style="text-align: center; margin: 0.5rem;">
-            <div style="font-size: 1.5rem; font-weight: 700; color: #4F46E5;">{{ attendance_stats.total_days }}</div>
-            <div style="font-size: 0.875rem; color: #666;">Total Days</div>
-        </div>
-        <div style="text-align: center; margin: 0.5rem;">
-            <div style="font-size: 1.5rem; font-weight: 700; color: #10B981;">{{ attendance_stats.present_days }}</div>
-            <div style="font-size: 0.875rem; color: #666;">Present</div>
-        </div>
-        {% if attendance_stats.late_days %}
-        <div style="text-align: center; margin: 0.5rem;">
-            <div style="font-size: 1.5rem; font-weight: 700; color: #F59E0B;">{{ attendance_stats.late_days }}</div>
-            <div style="font-size: 0.875rem; color: #666;">Late</div>
-        </div>
-        {% endif %}
-        <div style="text-align: center; margin: 0.5rem;">
-            <div style="font-size: 1.5rem; font-weight: 700; color: #EF4444;">{{ attendance_stats.total_days -
-                attendance_stats.present_days - (attendance_stats.late_days or 0) }}</div>
-            <div style="font-size: 0.875rem; color: #666;">Absent</div>
-        </div>
-    </div>
-    {% if attendance_stats.total_days > 0 %}
-    <div style="text-align: center; margin-top: 1rem;">
-        <div style="font-size: 1.1rem; font-weight: 600;">
-            {{ ((attendance_stats.present_days / attendance_stats.total_days) * 100)|round|int }}% Present
-            {% if attendance_stats.late_days %}
-            | {{ ((attendance_stats.late_days / attendance_stats.total_days) * 100)|round|int }}% Late
-            {% endif %}
-        </div>
+
+    {% if student.password %}
+    <div style="margin-top: 1.25rem;">
+        {% set msg = "Welcome to TuitionTrack! Your login details are:\n\n📱 Mobile: " + student.phone + "\n🔑 Password:
+        " + student.password + "\n\nLogin here: " + url_for('auth.student_login', _external=True) %}
+        <a href="https://wa.me/91{{ student.phone }}?text={{ msg|urlencode }}" target="_blank"
+            class="btn btn-success btn-block"
+            style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; background: #22C55E; border-color: #22C55E; font-weight: 600;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z" />
+            </svg>
+            Send Details via WhatsApp
+        </a>
     </div>
     {% endif %}
 </div>
-{% endif %}
 
-{% if recent_attendance %}
-<div class="card">
-    <div class="card-header">
-        <h2 class="card-title">Recent Attendance</h2>
-        <a href="{{ url_for('attendance.attendance') }}"
-            style="font-size: 0.875rem; color: #4F46E5; text-decoration: none;">View All</a>
+<!-- Attendance Tracking -->
+<div class="section-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h2 class="section-title" style="margin: 0;"><span>📅</span> Attendance Overview</h2>
+        <a href="{{ url_for('attendance.attendance') }}?batch={{ student.batch_id }}" class="btn btn-secondary btn-sm"
+            style="font-weight: 600; border-radius: 8px;">Mark</a>
     </div>
-    {% for record in recent_attendance %}
-    <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f0f0f0;">
-        <span style="color: #666;">{{ record.date | ddmmyyyy }}</span>
-        {% if record.status == 1 %}
-        <span class="badge badge-success">Present</span>
-        {% elif record.status == 2 %}
-        <span class="badge" style="background: #FEF3C7; color: #92400E;">Late</span>
-        {% else %}
-        <span class="badge badge-danger">Absent</span>
+
+    {% if attendance_stats and attendance_stats.total_days > 0 %}
+    <div class="att-grid">
+        <div class="att-stat att-total">
+            <div class="att-val">{{ attendance_stats.total_days }}</div>
+            <div class="att-label">Total Classes</div>
+        </div>
+
+        {% set absent_days = attendance_stats.total_days - attendance_stats.present_days - (attendance_stats.late_days
+        or 0) %}
+
+        <div class="att-stat att-present">
+            <div class="att-val">{{ attendance_stats.present_days }}</div>
+            <div class="att-label">Present</div>
+        </div>
+
+        {% if attendance_stats.late_days and attendance_stats.late_days > 0 %}
+        <div class="att-stat att-late">
+            <div class="att-val">{{ attendance_stats.late_days }}</div>
+            <div class="att-label">Late</div>
+        </div>
         {% endif %}
-    </div>
-    {% endfor %}
-</div>
-{% endif %}
 
-<div class="card">
-    <div class="card-header">
-        <h2 class="card-title">Quick Actions</h2>
+        <div class="att-stat att-absent">
+            <div class="att-val">{{ absent_days }}</div>
+            <div class="att-label">Absent</div>
+        </div>
     </div>
-    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-        <a href="{{ url_for('attendance.attendance') }}?date={{ today }}" class="btn btn-primary">
+
+    {% set att_percentage = ((attendance_stats.present_days / attendance_stats.total_days) * 100)|round|int %}
+
+    <div style="text-align: center; margin-top: 1rem;">
+        <div class="attendance-bar-container">
+            <div style="background: #10B981; width: {{ att_percentage }}%; transition: width 1s ease-in-out;"></div>
+            {% if attendance_stats.late_days %}
+            <div
+                style="background: #F59E0B; width: {{ ((attendance_stats.late_days / attendance_stats.total_days) * 100)|round|int }}%; transition: width 1s ease-in-out;">
+            </div>
+            {% endif %}
+        </div>
+        <div class="attendance-rate-badge">
+            🎯 {{ att_percentage }}% Attendance Rate
+        </div>
+    </div>
+
+    {% if recent_attendance %}
+    <div style="margin-top: 1.5rem;">
+        <h3
+            style="font-size: 0.9rem; color: #64748B; font-weight: 600; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 0.05em;">
+            Recent Records</h3>
+        <div class="recent-att-list">
+            {% for record in recent_attendance[:5] %}
+            <div class="recent-att-item">
+                <span style="color: #334155; font-weight: 600; font-size: 0.95rem;">{{ record.date | ddmmyyyy }}</span>
+                {% if record.status == 1 %}
+                <span class="status-badge present">✓ Present</span>
+                {% elif record.status == 2 %}
+                <span class="status-badge late">⚠️ Late</span>
+                {% else %}
+                <span class="status-badge absent">✗ Absent</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div
+        style="background: #F8FAFC; border-radius: 12px; padding: 2rem; text-align: center; border: 1px dashed #CBD5E1;">
+        <div style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;">📉</div>
+        <h3 style="font-size: 1rem; color: #475569; margin-bottom: 0.25rem;">No Attendance Data</h3>
+        <p style="font-size: 0.85rem; color: #94A3B8;">Attendance hasn't been marked for this student yet.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Quick Actions -->
+<div class="section-card">
+    <h2 class="section-title"><span>⚡</span> Quick Actions</h2>
+
+    <div class="qa-grid">
+        <a href="{{ url_for('attendance.attendance') }}?batch={{ student.batch_id }}" class="qa-btn primary">
+            <span class="qa-icon">✅</span>
             Mark Attendance
         </a>
-        <a href="{{ url_for('reports.student_report_detail', student_id=student.id) }}" class="btn btn-secondary">
-            📊 Attendance Report
-        </a>
-        <a href="tel:{{ student.phone }}" class="btn btn-secondary">
-            📞 Call Parent
-        </a>
-        <a href="https://wa.me/91{{ student.phone }}" target="_blank" class="btn btn-success">
-            💬 WhatsApp Parent
+        <a href="{{ url_for('reports.student_report_detail', student_id=student.id) }}" class="qa-btn">
+            <span class="qa-icon">📊</span>
+            View Report
         </a>
     </div>
 </div>
@@ -187,61 +671,62 @@
 
 {% block scripts %}
 <script>
-    function togglePasswordEdit() {
-        const form = document.getElementById('password-edit-form');
+    function toggleCredentialsEdit() {
+        const form = document.getElementById('credentials-edit-form');
         if (form.style.display === 'none') {
             form.style.display = 'block';
-            document.getElementById('new-password').focus();
+            document.getElementById('new-phone').focus();
         } else {
             form.style.display = 'none';
+            document.getElementById('new-phone').value = '{{ student.phone }}';
             document.getElementById('new-password').value = '';
         }
     }
 
-    async function savePassword() {
+    async function saveCredentials() {
+        const phone = document.getElementById('new-phone').value.trim();
         const password = document.getElementById('new-password').value.trim();
-        if (!password) {
+
+        if (!phone || !/^\d{10}$/.test(phone)) {
             Swal.fire({
                 icon: 'warning',
-                title: 'Required',
-                text: 'Please enter a password',
+                title: 'Invalid Mobile Number',
+                text: 'Please enter a valid 10-digit mobile number',
                 confirmButtonColor: '#4F46E5'
             });
             return;
         }
 
-        if (password.length < 4) {
+        if (password && password.length < 4) {
             Swal.fire({
                 icon: 'warning',
-                title: 'Too Short',
-                text: 'Password must be at least 4 characters',
+                title: 'Password Too Short',
+                text: 'If changing the password, it must be at least 4 characters long',
                 confirmButtonColor: '#4F46E5'
             });
             return;
         }
 
         try {
-            const response = await fetch('/api/students/{{ student.id }}/update-password', {
+            const response = await fetch('/api/students/{{ student.id }}/update-credentials', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ password: password })
+                body: JSON.stringify({ phone: phone, password: password })
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                // Update display
-                document.getElementById('password-display').textContent = password;
-
-                // Reload page to update WhatsApp link logic which is rendered server-side
+                // Because we might have changed the mobile number, the WhatsApp link
+                // and other references need to be updated. A full reload is best here.
                 window.location.reload();
             } else {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Error',
-                    text: data.error || 'Failed to update password',
+                    title: 'Update Failed',
+                    text: data.error || 'Failed to update credentials',
                     confirmButtonColor: '#4F46E5'
                 });
             }
@@ -250,7 +735,7 @@
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'An error occurred while updating the password',
+                text: 'An error occurred while communicating with the server',
                 confirmButtonColor: '#4F46E5'
             });
         }

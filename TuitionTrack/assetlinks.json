@@ -1,8 +1,0 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "com.onrender.tuitiontrack.twa",
-        "sha256_cert_fingerprints": ["64:71:AE:9E:69:BC:4B:18:91:CD:A6:F5:08:8E:92:42:82:49:F8:1C:B9:70:51:F9:84:C3:F8:3D:3B:F9:7A:82"]
-      }
-    }]

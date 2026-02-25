@@ -5,117 +5,298 @@
 {% block header_title %}My Profile{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header" style="padding-bottom: 0.5rem;">
-        <h2 class="card-title" style="font-size: 1.5rem; margin: 0;">{{ student.name }}</h2>
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 2rem 1.5rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 10px 25px rgba(79, 70, 229, 0.2);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-header::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40" fill="rgba(255,255,255,0.05)"/></svg>') repeat;
+        opacity: 0.5;
+        pointer-events: none;
+    }
+
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        background: white;
+        color: #4F46E5;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0 auto 1rem auto;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 1;
+    }
+
+    .profile-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .profile-batch {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+    }
+
+    .details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .detail-item {
+        background: white;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        transition: transform 0.2s;
+    }
+
+    .detail-item:hover {
+        transform: translateY(-2px);
+    }
+
+    .detail-icon {
+        background: #EEF2FF;
+        color: #4F46E5;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .detail-content {
+        flex: 1;
+    }
+
+    .detail-label {
+        font-size: 0.75rem;
+        color: #6B7280;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .detail-value {
+        font-weight: 600;
+        color: #1F2937;
+        font-size: 0.95rem;
+        word-break: break-word;
+    }
+
+    .credentials-card {
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 1.25rem;
+    }
+
+    .credential-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #E2E8F0;
+    }
+
+    .credential-row:last-child {
+        border-bottom: none;
+    }
+
+    .credential-label {
+        font-size: 0.875rem;
+        color: #64748B;
+        font-weight: 500;
+    }
+
+    .credential-val {
+        font-weight: 600;
+        font-family: monospace;
+        font-size: 1.1rem;
+        color: #0F172A;
+    }
+
+    .tuition-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 1rem;
+    }
+</style>
+
+<!-- Profile Header -->
+<div class="profile-header">
+    <div class="profile-avatar">
+        {{ student.name[:1] | upper }}
     </div>
-    <div style="padding: 1rem; padding-top: 0;">
-        <div style="display: grid; gap: 1rem;">
-            <div>
-                <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📱 Phone Number</div>
-                <div style="font-weight: 600; color: #111827; font-size: 1rem;">{{ student.phone }}</div>
-            </div>
+    <div class="profile-name">{{ student.name }}</div>
+    <div class="profile-batch">
+        <span style="opacity: 0.8;">Batch:</span> {{ student.batch_name or 'Unassigned' }}
+    </div>
+    {% if student.batch_description %}
+    <div style="font-size: 0.8rem; opacity: 0.75; margin-top: 0.25rem; position: relative; z-index: 1;">
+        {{ student.batch_description }}
+    </div>
+    {% endif %}
+</div>
 
-            <div>
-                <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📚 Batch</div>
-                <div style="font-weight: 600; color: #111827; font-size: 1rem;">{{ student.batch_name or 'No Batch' }}
-                </div>
-                {% if student.batch_description %}
-                <div style="font-size: 0.875rem; color: #6B7280; margin-top: 0.25rem;">{{ student.batch_description }}
-                </div>
+<!-- Details Grid -->
+<div class="details-grid">
+    <div class="detail-item">
+        <div class="detail-icon">📱</div>
+        <div class="detail-content">
+            <div class="detail-label">Phone Profile</div>
+            <div class="detail-value">{{ student.phone }}</div>
+        </div>
+    </div>
+
+    {% if student.standard %}
+    <div class="detail-item">
+        <div class="detail-icon">📖</div>
+        <div class="detail-content">
+            <div class="detail-label">Class/Standard</div>
+            <div class="detail-value">{{ student.standard }}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if student.school_name %}
+    <div class="detail-item">
+        <div class="detail-icon">🏫</div>
+        <div class="detail-content">
+            <div class="detail-label">School Name</div>
+            <div class="detail-value">{{ student.school_name }}</div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if student.address %}
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+        <div class="detail-icon">📍</div>
+        <div class="detail-content">
+            <div class="detail-label">Address</div>
+            <div class="detail-value" style="font-weight: 500;">{{ student.address }}</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Login Credentials -->
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2 class="card-title" style="margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+        <span>🔑</span> Access Credentials
+    </h2>
+
+    <div class="credentials-card">
+        <div class="credential-row">
+            <div class="credential-label">Mobile Number</div>
+            <div class="credential-val">{{ student.phone }}</div>
+        </div>
+        <div class="credential-row">
+            <div class="credential-label">Password</div>
+            <div class="credential-val">
+                {% if student.password %}
+                {{ student.password }}
+                {% else %}
+                <span style="color: #94A3B8; font-size: 0.9rem; font-weight: normal;">Not set</span>
                 {% endif %}
-            </div>
-
-            {% if student.standard %}
-            <div>
-                <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📖 Class/Standard</div>
-                <div style="font-weight: 600; color: #111827; font-size: 1rem;">{{ student.standard }}</div>
-            </div>
-            {% endif %}
-
-            {% if student.school_name %}
-            <div>
-                <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">🏫 School Name</div>
-                <div style="font-weight: 600; color: #111827; font-size: 1rem;">{{ student.school_name }}</div>
-            </div>
-            {% endif %}
-
-            {% if student.address %}
-            <div>
-                <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📍 Address</div>
-                <div style="font-weight: 600; color: #111827; font-size: 1rem;">{{ student.address }}</div>
-            </div>
-            {% endif %}
-
-            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
-                <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.5rem;">🔑 Access Credentials</div>
-                <div style="background: #f3f4f6; padding: 0.75rem; border-radius: 0.5rem;">
-                    <div style="margin-bottom: 0.5rem;">
-                        <span style="font-size: 0.8rem; color: #666;">Mobile:</span>
-                        <span style="font-weight: 600; font-family: monospace;">{{ student.phone }}</span>
-                    </div>
-                    <div>
-                        <span style="font-size: 0.8rem; color: #666;">Password:</span>
-                        <span style="font-weight: 600; font-family: monospace;">{{ student.password or 'Not Set'
-                            }}</span>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-header">
-        <h2 class="card-title">About Tuition</h2>
-    </div>
-    <div style="padding: 1rem;">
-        <div style="display: grid; gap: 1rem;">
-            {% if student.tuition_name %}
-            <div>
-                <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">🏫 Tuition Name</div>
-                <div style="font-weight: 600; color: #111827; font-size: 1rem;">{{ student.tuition_name }}</div>
-            </div>
-            {% endif %}
+<!-- About Tuition -->
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2 class="card-title" style="margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+        <span>🏫</span> About Tuition
+    </h2>
 
-            {% if student.tutor_name %}
-            <div>
-                <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">👨‍🏫 Teacher Name</div>
-                <div style="font-weight: 600; color: #111827; font-size: 1rem;">{{ student.tutor_name }}</div>
+    <div class="tuition-info-grid">
+        {% if student.tuition_name %}
+        <div class="detail-item" style="box-shadow: none; border: 1px solid #E5E7EB; padding: 0.75rem;">
+            <div class="detail-content">
+                <div class="detail-label">Tuition Name</div>
+                <div class="detail-value">{{ student.tuition_name }}</div>
             </div>
-            {% endif %}
+        </div>
+        {% endif %}
 
-            {% if student.tuition_address %}
-            <div>
-                <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📍 Address</div>
-                <div style="font-weight: 600; color: #111827; font-size: 1rem; white-space: pre-line;">{{
-                    student.tuition_address }}</div>
+        {% if student.tutor_name %}
+        <div class="detail-item" style="box-shadow: none; border: 1px solid #E5E7EB; padding: 0.75rem;">
+            <div class="detail-content">
+                <div class="detail-label">Teacher Name</div>
+                <div class="detail-value">👨‍🏫 {{ student.tutor_name }}</div>
             </div>
-            {% endif %}
+        </div>
+        {% endif %}
 
-            {% if student.tutor_mobile %}
-            <div>
-                <div style="font-size: 0.875rem; color: #666; margin-bottom: 0.25rem;">📱 Teacher Phone Number</div>
-                <div style="font-weight: 600; color: #111827; font-size: 1rem;">
-                    <a href="tel:{{ student.tutor_mobile }}" style="color: #4F46E5; text-decoration: none;">{{
+        {% if student.tutor_mobile %}
+        <div class="detail-item" style="box-shadow: none; border: 1px solid #E5E7EB; padding: 0.75rem;">
+            <div class="detail-content">
+                <div class="detail-label">Teacher Phone</div>
+                <div class="detail-value">
+                    <a href="tel:{{ student.tutor_mobile }}" style="color: #4F46E5; text-decoration: none;">📱 {{
                         student.tutor_mobile }}</a>
                 </div>
             </div>
-            {% endif %}
         </div>
+        {% endif %}
+    </div>
 
-        <div
-            style="margin-top: 1.5rem; padding: 1rem; background: #FEF3C7; border-left: 4px solid #F59E0B; border-radius: 6px;">
-            <div style="font-size: 0.875rem; color: #92400E; line-height: 1.5;">
-                <strong>ℹ️ Note:</strong> If any information is incorrect or needs to be changed, please contact your
-                teacher.
-            </div>
+    {% if student.tuition_address %}
+    <div style="margin-top: 1rem; padding: 0.75rem; border: 1px solid #E5E7EB; border-radius: 8px;">
+        <div class="detail-label">📍 Tuition Address</div>
+        <div class="detail-value" style="font-weight: 500; white-space: pre-line;">{{ student.tuition_address }}</div>
+    </div>
+    {% endif %}
+
+    <div
+        style="margin-top: 1.5rem; padding: 1rem; background: #FEF3C7; border-left: 4px solid #F59E0B; border-radius: 6px;">
+        <div style="font-size: 0.875rem; color: #92400E; line-height: 1.5; display: flex; gap: 0.5rem;">
+            <span>ℹ️</span>
+            <div><strong>Note:</strong> If any information is incorrect or needs to be changed, please contact your
+                teacher.</div>
         </div>
     </div>
 </div>
+
 <div style="margin-top: 2rem; margin-bottom: 3rem;">
     <a href="{{ url_for('auth.logout') }}" class="btn"
-        style="background-color: #EF4444; color: white; width: 100%; justify-content: center; padding: 0.75rem; font-weight: 600; text-decoration: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);">
+        style="background-color: #EF4444; color: white; width: 100%; justify-content: center; padding: 0.75rem; font-weight: 600; text-decoration: none; border-radius: 12px; box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);">
         <svg style="width: 20px; height: 20px; margin-right: 0.5rem;" fill="none" stroke="currentColor"
             viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
