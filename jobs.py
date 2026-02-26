@@ -148,3 +148,151 @@ def check_attendance_reminders():
         conn.close()
     except Exception as e:
         logger.error(f"Error in check_attendance_reminders: {e}")
+
+
+def generate_monthly_fees():
+    """
+    Idempotent: generate fee records for ALL active students for the current month.
+    Run on 1st of every month. Safe to call multiple times — uses INSERT OR IGNORE.
+    """
+    logger.info("Running generate_monthly_fees")
+    try:
+        from utils import get_ist_now
+        now = get_ist_now()
+        month = now.strftime('%Y-%m')
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Get all tutors who have a fee config set up
+        cursor.execute('''
+            SELECT pc.user_id, pc.monthly_fee
+            FROM tutor_payment_config pc
+            WHERE pc.monthly_fee > 0
+        ''')
+        configs = cursor.fetchall()
+
+        created = 0
+        for cfg in configs:
+            cursor.execute(
+                'SELECT id FROM students WHERE user_id = ?', (cfg['user_id'],)
+            )
+            students = cursor.fetchall()
+            for s in students:
+                try:
+                    cursor.execute('''
+                        INSERT OR IGNORE INTO student_fee_records
+                            (student_id, user_id, month, amount, status)
+                        VALUES (?, ?, ?, ?, 'pending')
+                    ''', (s['id'], cfg['user_id'], month, cfg['monthly_fee']))
+                    if cursor.rowcount:
+                        created += 1
+                except Exception:
+                    pass
+
+        conn.commit()
+        conn.close()
+        logger.info(f"generate_monthly_fees: created {created} records for {month}")
+
+    except Exception as e:
+        logger.error(f"Error in generate_monthly_fees: {e}")
+
+
+def send_fee_reminders():
+    """
+    Daily job: send push notifications to students with pending/overdue fees.
+    Only fires on a tutor's configured due_day.
+    Updates reminder_sent_at to prevent duplicate sends on the same day.
+    """
+    logger.info("Running send_fee_reminders")
+    try:
+        from utils import get_ist_now
+        now = get_ist_now()
+        today_day = now.day
+        month = now.strftime('%Y-%m')
+        today_str = now.strftime('%Y-%m-%d')
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Fetch tutors whose due_day matches today
+        cursor.execute('''
+            SELECT pc.user_id, pc.due_day
+            FROM tutor_payment_config pc
+            WHERE pc.reminders_enabled = 1 AND pc.due_day = ?
+        ''', (today_day,))
+        configs = cursor.fetchall()
+
+        for cfg in configs:
+            # Find pending students where reminder not yet sent today
+            cursor.execute('''
+                SELECT sfr.id, sfr.student_id
+                FROM student_fee_records sfr
+                WHERE sfr.user_id = ? AND sfr.month = ?
+                  AND sfr.status IN ('pending', 'overdue')
+                  AND (sfr.reminder_sent_at IS NULL
+                       OR date(sfr.reminder_sent_at) < ?)
+            ''', (cfg['user_id'], month, today_str))
+            records = cursor.fetchall()
+
+            for rec in records:
+                # Notify the student (student's user session record via push_subscriptions)
+                # For now, notify the tutor as well so they can follow up
+                send_fcm_notification(
+                    cfg['user_id'],
+                    "Fee Reminder",
+                    f"Some students have unpaid fees for {month}.",
+                    {'type': 'fees', 'url': '/payments?tab=pending'}
+                )
+                cursor.execute('''
+                    UPDATE student_fee_records
+                    SET reminder_sent_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                ''', (rec['id'],))
+                break  # One notification per tutor per day is enough
+
+        conn.commit()
+        conn.close()
+
+    except Exception as e:
+        logger.error(f"Error in send_fee_reminders: {e}")
+
+
+def mark_overdue_fees():
+    """
+    Mark fees as overdue if past due_day + 3 days and still pending.
+    Run daily.
+    """
+    logger.info("Running mark_overdue_fees")
+    try:
+        from utils import get_ist_now
+        now = get_ist_now()
+        month = now.strftime('%Y-%m')
+        year, mon = now.year, now.month
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT user_id, due_day FROM tutor_payment_config WHERE monthly_fee > 0')
+        configs = cursor.fetchall()
+
+        for cfg in configs:
+            due_date = f"{year}-{mon:02d}-{cfg['due_day']:02d}"
+            # Overdue = 3 days after due date
+            from datetime import datetime, timedelta
+            overdue_from = (datetime.strptime(due_date, '%Y-%m-%d') + timedelta(days=3)).strftime('%Y-%m-%d')
+            today_str = now.strftime('%Y-%m-%d')
+
+            if today_str >= overdue_from:
+                cursor.execute('''
+                    UPDATE student_fee_records
+                    SET status = 'overdue', updated_at = CURRENT_TIMESTAMP
+                    WHERE user_id = ? AND month = ? AND status = 'pending'
+                ''', (cfg['user_id'], month))
+
+        conn.commit()
+        conn.close()
+
+    except Exception as e:
+        logger.error(f"Error in mark_overdue_fees: {e}")
+

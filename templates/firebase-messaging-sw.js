@@ -1,13 +1,11 @@
-// Service Worker for TuitionTrack PWA
-const CACHE_NAME = 'tuitiontrack-v2';
-const STATIC_CACHE = 'static-v2';
-const DYNAMIC_CACHE = 'dynamic-v2';
+// Service Worker for TuitionTrack PWA — Firebase Background Messaging
+// Uses Firebase 9.x compat SDK (matching base.html)
 
-// Import Firebase scripts
-importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
-importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
+// IMPORTANT: Must use the same SDK version as base.html
+importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
 
-// Initialize Firebase (config injected from server-side env vars)
+// Initialize Firebase with injected config from Flask/Jinja
 const firebaseConfig = {
     apiKey: "{{ config.FIREBASE_API_KEY }}",
     authDomain: "{{ config.FIREBASE_AUTH_DOMAIN }}",
@@ -20,18 +18,23 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
-// Handle background messages
-messaging.setBackgroundMessageHandler(function (payload) {
-    console.log('[firebase-messaging-sw.js] Received background message ', payload);
-    // Customize notification here
-    const notificationTitle = payload.data.title || 'TuitionTrack';
-    const notificationOptions = {
-        body: payload.data.body,
-        icon: payload.data.icon || '/static/TutionTrack_appIcon_192x192.png',
-        data: payload.data
-    };
+// Handle background messages (when app is CLOSED or in background tab)
+messaging.onBackgroundMessage(function (payload) {
+    console.log('[SW] Background push received:', payload);
 
-    return self.registration.showNotification(notificationTitle, notificationOptions);
+    const title = payload.notification?.title || payload.data?.title || 'TuitionTrack';
+    const body = payload.notification?.body || payload.data?.body || '';
+    const icon = '/static/TutionTrack_appIcon_192x192.png';
+    const data = payload.data || {};
+    const url = data.url || '/';
+
+    self.registration.showNotification(title, {
+        body,
+        icon,
+        badge: '/static/TutionTrack_appIcon_48x48.png',
+        data: { ...data, url },
+        requireInteraction: false,
+    });
 });
 
 // Assets to cache on install

@@ -612,3 +612,210 @@ def profile():
     
     return render_template('student/profile.html', student=student)
 
+
+# ── Fee routes ─────────────────────────────────────────────────────────────────
+
+@student_bp.route('/student/fees')
+@require_login
+def student_fees():
+    """Student fee status page."""
+    if session.get('role') != 'student':
+        return redirect(url_for('dashboard.dashboard'))
+
+    student_id = session.get('student_id')
+    if not student_id:
+        return redirect(url_for('auth.student_login'))
+
+    from utils import get_ist_now
+    now = get_ist_now()
+    month = now.strftime('%Y-%m')
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Get student's tutor user_id
+    cursor.execute('SELECT user_id FROM students WHERE id = ?', (student_id,))
+    student_row = cursor.fetchone()
+    if not student_row:
+        conn.close()
+        return redirect(url_for('auth.student_login'))
+
+    tutor_id = student_row['user_id']
+
+    # Get tutor payment config (UPI, etc.)
+    cursor.execute('SELECT * FROM tutor_payment_config WHERE user_id = ?', (tutor_id,))
+    cfg = cursor.fetchone()
+
+    # Get this month's fee record for this student
+    cursor.execute('''
+        SELECT * FROM student_fee_records
+        WHERE student_id = ? AND month = ?
+    ''', (student_id, month))
+    fee_record = cursor.fetchone()
+
+    # Get last 5 months history
+    cursor.execute('''
+        SELECT month, amount, status, confirmed_at
+        FROM student_fee_records
+        WHERE student_id = ?
+        ORDER BY month DESC
+        LIMIT 5
+    ''', (student_id,))
+    fee_history = cursor.fetchall()
+
+    # If no record for current month but there is a recent record, show that instead
+    if not fee_record and fee_history:
+        month = fee_history[0]['month']
+        cursor.execute('''
+            SELECT * FROM student_fee_records
+            WHERE student_id = ? AND month = ?
+        ''', (student_id, month))
+        fee_record = cursor.fetchone()
+
+    conn.close()
+
+    # Build UPI deep link
+    upi_link = None
+    if cfg and cfg['upi_id'] and fee_record:
+        import urllib.parse
+        tuition_name = session.get('tuition_name', 'Tuition')
+        params = {
+            'pa': cfg['upi_id'],
+            'pn': tuition_name,
+            'am': str(int(fee_record['amount'])),
+            'cu': 'INR',
+            'tn': f'Tuition fee {month}'
+        }
+        upi_link = 'upi://pay?' + urllib.parse.urlencode(params)
+
+    month_display = datetime.strptime(month, '%Y-%m').strftime('%B %Y')
+
+    return render_template(
+        'student/fees.html',
+        fee_record=fee_record,
+        cfg=cfg,
+        upi_link=upi_link,
+        month=month,
+        month_display=month_display,
+        fee_history=fee_history,
+    )
+
+
+@student_bp.route('/api/student/fees/<month>/mark-paid', methods=['POST'])
+@require_login
+def mark_fee_paid(month):
+    """Student marks their fee as paid — sets to awaiting_confirmation."""
+    if session.get('role') != 'student':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    student_id = session.get('student_id')
+    if not student_id:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    # Validate month format
+    try:
+        datetime.strptime(month, '%Y-%m')
+    except ValueError:
+        return jsonify({'error': 'Invalid month'}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # CRITICAL: student can only touch their own record
+    cursor.execute('''
+        SELECT id, status FROM student_fee_records
+        WHERE student_id = ? AND month = ?
+    ''', (student_id, month))
+    rec = cursor.fetchone()
+
+    if not rec:
+        conn.close()
+        return jsonify({'error': 'No fee record found for this month'}), 404
+
+    if rec['status'] == 'paid':
+        conn.close()
+        return jsonify({'error': 'This fee is already confirmed as paid'}), 400
+
+    if rec['status'] == 'awaiting_confirmation':
+        conn.close()
+        return jsonify({'error': 'Already submitted — waiting for tutor confirmation'}), 400
+
+    now = get_ist_now().strftime('%Y-%m-%d %H:%M:%S')
+    cursor.execute('''
+        UPDATE student_fee_records
+        SET status = 'awaiting_confirmation', paid_at = ?, updated_at = ?
+        WHERE id = ?
+    ''', (now, now, rec['id']))
+    conn.commit()
+
+    # Push notification → tutor — student has marked fee as paid
+    try:
+        cursor.execute('''
+            SELECT sfr.month, sfr.amount, s.name as student_name, sfr.user_id
+            FROM student_fee_records sfr
+            JOIN students s ON sfr.student_id = s.id
+            WHERE sfr.id = ?
+        ''', (rec['id'],))
+        row = cursor.fetchone()
+        if row:
+            from jobs import send_fcm_notification
+            from datetime import datetime as _dt
+            m_display = _dt.strptime(row['month'], '%Y-%m').strftime('%B %Y')
+            send_fcm_notification(
+                row['user_id'],
+                '💰 Payment Submitted',
+                f"{row['student_name']} has marked their fee of ₹{int(row['amount'])} "
+                f"for {m_display} as paid. Please confirm.",
+                {'type': 'fees', 'url': '/payments?tab=awaiting'}
+            )
+    except Exception:
+        pass  # Never let notification failure break the API
+
+    conn.close()
+    return jsonify({'success': True})
+
+
+@student_bp.route('/api/student/fees/poll')
+@require_login
+def poll_student_fees():
+    """Lightweight polling endpoint for the student fees page.
+    Returns the current fee status for the logged-in student so the UI
+    can auto-refresh without a full page reload.
+    """
+    if session.get('role') != 'student':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    student_id = session.get('student_id')
+    if not student_id:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    month = request.args.get('month', '')
+    # Validate month
+    try:
+        datetime.strptime(month, '%Y-%m')
+    except ValueError:
+        month = get_ist_now().strftime('%Y-%m')
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT id, amount, status, paid_at, confirmed_at, notes
+        FROM student_fee_records
+        WHERE student_id = ? AND month = ?
+    ''', (student_id, month))
+    rec = cursor.fetchone()
+    conn.close()
+
+    if not rec:
+        return jsonify({'exists': False, 'month': month})
+
+    return jsonify({
+        'exists':       True,
+        'month':        month,
+        'id':           rec['id'],
+        'amount':       rec['amount'],
+        'status':       rec['status'],
+        'paid_at':      rec['paid_at'],
+        'confirmed_at': rec['confirmed_at'],
+        'notes':        rec['notes'],
+    })

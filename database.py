@@ -188,6 +188,43 @@ def init_db():
         )
     ''')
     
+    # Payment config table (one row per tutor)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS tutor_payment_config (
+            id                INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id           INTEGER NOT NULL UNIQUE,
+            monthly_fee       REAL    NOT NULL DEFAULT 0,
+            due_day           INTEGER NOT NULL DEFAULT 10,
+            upi_id            TEXT,
+            payment_link      TEXT,
+            qr_image_path     TEXT,
+            reminders_enabled INTEGER DEFAULT 1,
+            updated_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    ''')
+
+    # Per-student monthly fee records
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS student_fee_records (
+            id               INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id       INTEGER NOT NULL,
+            user_id          INTEGER NOT NULL,
+            month            TEXT    NOT NULL,
+            amount           REAL    NOT NULL,
+            status           TEXT    NOT NULL DEFAULT 'pending',
+            paid_at          TIMESTAMP,
+            confirmed_at     TIMESTAMP,
+            notes            TEXT,
+            reminder_sent_at TIMESTAMP,
+            created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE RESTRICT,
+            FOREIGN KEY (user_id)    REFERENCES users(id)    ON DELETE RESTRICT,
+            UNIQUE(student_id, month)
+        )
+    ''')
+
     conn.commit()
     conn.close()
 
@@ -405,6 +442,52 @@ def migrate_db():
         # Index might already exist, ignore
         pass
     
+    # Payment tables migration
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='tutor_payment_config'")
+    if not cursor.fetchone():
+        try:
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS tutor_payment_config (
+                    id                INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id           INTEGER NOT NULL UNIQUE,
+                    monthly_fee       REAL    NOT NULL DEFAULT 0,
+                    due_day           INTEGER NOT NULL DEFAULT 10,
+                    upi_id            TEXT,
+                    payment_link      TEXT,
+                    qr_image_path     TEXT,
+                    reminders_enabled INTEGER DEFAULT 1,
+                    updated_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                )
+            ''')
+        except sqlite3.OperationalError:
+            pass
+
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='student_fee_records'")
+    if not cursor.fetchone():
+        try:
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS student_fee_records (
+                    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+                    student_id       INTEGER NOT NULL,
+                    user_id          INTEGER NOT NULL,
+                    month            TEXT    NOT NULL,
+                    amount           REAL    NOT NULL,
+                    status           TEXT    NOT NULL DEFAULT 'pending',
+                    paid_at          TIMESTAMP,
+                    confirmed_at     TIMESTAMP,
+                    notes            TEXT,
+                    reminder_sent_at TIMESTAMP,
+                    created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE RESTRICT,
+                    FOREIGN KEY (user_id)    REFERENCES users(id)    ON DELETE RESTRICT,
+                    UNIQUE(student_id, month)
+                )
+            ''')
+        except sqlite3.OperationalError:
+            pass
+
     conn.commit()
     conn.close()
 
@@ -436,6 +519,11 @@ def add_indexes():
         
         # Users table indexes
         "CREATE INDEX IF NOT EXISTS idx_users_mobile ON users(mobile)",
+
+        # Payment indexes
+        "CREATE INDEX IF NOT EXISTS idx_fee_user_month  ON student_fee_records(user_id, month)",
+        "CREATE INDEX IF NOT EXISTS idx_fee_student     ON student_fee_records(student_id)",
+        "CREATE INDEX IF NOT EXISTS idx_fee_status      ON student_fee_records(user_id, status)",
     ]
     
     for index_sql in indexes:

@@ -17,9 +17,9 @@
     <!-- Intro.js for onboarding tours -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intro.js@7.2.0/minified/introjs.min.css">
     <script src="https://cdn.jsdelivr.net/npm/intro.js@7.2.0/minified/intro.min.js"></script>
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
+    <!-- Firebase SDKs - v9 compat (matches firebase-messaging-sw.js) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
 
     <script>
         // Store VAPID Key globally if needed for other libs, though we use Firebase now
@@ -1195,6 +1195,15 @@
             </svg>
             <span>Homework</span>
         </a>
+        <a href="{{ url_for('student.student_fees') }}"
+            class="nav-item {% if request.endpoint == 'student.student_fees' %}active{% endif %}">
+            <svg fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd"
+                    d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"
+                    clip-rule="evenodd" />
+            </svg>
+            <span>Fees</span>
+        </a>
     </div>
     {% else %}
     <div class="nav-bar">
@@ -1233,8 +1242,8 @@
             </svg>
             <span>Homework</span>
         </a>
-        <a href="{{ url_for('payments.payments_locked') }}"
-            class="nav-item {% if request.endpoint == 'payments.payments_locked' %}active{% endif %}">
+        <a href="{{ url_for('payments.payments') }}"
+            class="nav-item {% if request.endpoint and request.endpoint.startswith('payments.') %}active{% endif %}">
             <svg fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd"
                     d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"

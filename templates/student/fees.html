@@ -1,0 +1,513 @@
+{% extends "base.html" %}
+{% block title %}My Fees — TuitionTrack{% endblock %}
+{% block header_title %}My Fees{% endblock %}
+
+{% block content %}
+<style>
+    /* -- FEE HERO (matches brand gradient in profile.html) --- */
+    .fee-hero {
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.9) 0%, rgba(124, 58, 237, 0.9) 100%);
+        border-radius: 20px;
+        padding: 1.5rem;
+        color: white;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 10px 30px rgba(79, 70, 229, 0.25);
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .fee-hero::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 150px;
+        height: 150px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+
+    .fee-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -50px;
+        left: -30px;
+        width: 120px;
+        height: 120px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+
+    .fee-month {
+        font-size: 0.78rem;
+        opacity: 0.85;
+        font-weight: 500;
+        margin-bottom: 0.2rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .fee-amount-big {
+        font-size: 2.5rem;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        margin-bottom: 0.2rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .fee-due {
+        font-size: 0.8rem;
+        opacity: 0.8;
+        position: relative;
+        z-index: 1;
+    }
+
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.3rem 0.9rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        margin-top: 0.75rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .status-pending {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .status-awaiting {
+        background: rgba(255, 255, 200, 0.25);
+        color: #FEFCE8;
+    }
+
+    .status-paid {
+        background: rgba(52, 211, 153, 0.3);
+        color: #D1FAE5;
+    }
+
+    .status-overdue {
+        background: rgba(248, 113, 113, 0.3);
+        color: #FEE2E2;
+    }
+
+    /* -- WHITE SECTION CARD (matches profile.html .section-card) */
+    .section-card {
+        background: white;
+        border-radius: 20px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        border: 1px solid #F3F4F6;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    }
+
+    .section-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 1rem;
+    }
+
+    /* -- UPI PAY BUTTON ------------------------------------- */
+    .upi-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        background: linear-gradient(135deg, #4F46E5, #7C3AED);
+        color: white;
+        border-radius: 12px;
+        padding: 0.85rem;
+        font-weight: 700;
+        font-size: 1rem;
+        text-decoration: none;
+        box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
+        transition: all 0.2s;
+        width: 100%;
+        margin-bottom: 0.75rem;
+        border: none;
+        cursor: pointer;
+    }
+
+    .upi-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(79, 70, 229, 0.35);
+        color: white;
+    }
+
+    /* -- QR CODE -------------------------------------------- */
+    .qr-wrap {
+        display: flex;
+        justify-content: center;
+        margin: 0.75rem 0;
+    }
+
+    .qr-wrap img {
+        width: 180px;
+        height: 180px;
+        border-radius: 12px;
+        border: 2px solid #E5E7EB;
+        object-fit: contain;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    /* -- I HAVE PAID BUTTON --------------------------------- */
+    .paid-btn {
+        width: 100%;
+        background: linear-gradient(135deg, #059669, #10B981);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 1rem;
+        font-size: 1rem;
+        font-weight: 800;
+        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .paid-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+    }
+
+    .paid-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* -- HISTORY TABLE -------------------------------------- */
+    .hist-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #F3F4F6;
+    }
+
+    .hist-row:last-child {
+        border-bottom: none;
+    }
+
+    .hist-month {
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+    }
+
+    /* -- STATUS BADGES -------------------------------------- */
+    .s-badge {
+        padding: 0.2rem 0.6rem;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        display: inline-block;
+    }
+
+    .s-pending {
+        background: #FEF3C7;
+        color: #92400E;
+    }
+
+    .s-overdue {
+        background: #FEE2E2;
+        color: #991B1B;
+    }
+
+    .s-awaiting {
+        background: #E0E7FF;
+        color: #3730A3;
+    }
+
+    .s-paid {
+        background: #D1FAE5;
+        color: #065F46;
+    }
+
+    /* ── State toggling for fee-action-wrapper ─────────────────────── */
+    .fee-state {
+        display: none;
+        opacity: 0;
+        transition: opacity 0.35s ease;
+    }
+
+    /* Show the right section based on data-state on the wrapper */
+    #fee-action-wrapper[data-state="pending"] [data-for~="pending"],
+    #fee-action-wrapper[data-state="overdue"] [data-for~="overdue"],
+    #fee-action-wrapper[data-state="awaiting_confirmation"] [data-for~="awaiting_confirmation"],
+    #fee-action-wrapper[data-state="paid"] [data-for~="paid"],
+    #fee-action-wrapper[data-state="none"] [data-for~="none"] {
+        display: block;
+        opacity: 1;
+    }
+</style>
+
+<!-- Hero card -->
+<div class="fee-hero">
+    <div class="fee-month">📅 {{ month_display }}</div>
+    {% if fee_record %}
+    <div class="fee-amount-big">₹{{ "%.0f"|format(fee_record.amount) }}</div>
+    {% else %}
+    <div class="fee-amount-big">—</div>
+    {% endif %}
+
+    {% if fee_record %}
+    <div class="fee-due">
+        {% if cfg and cfg.due_day %}Due by {{ cfg.due_day }} {{ month_display }}{% endif %}
+    </div>
+    <div id="poll-status-pill">
+        {% if fee_record.status == 'paid' %}
+        <span class="status-pill status-paid">✅ Paid &amp; Confirmed</span>
+        {% elif fee_record.status == 'awaiting_confirmation' %}
+        <span class="status-pill status-awaiting">⏳ Awaiting Tutor Confirmation</span>
+        {% elif fee_record.status == 'overdue' %}
+        <span class="status-pill status-overdue">🔴 Overdue</span>
+        {% else %}
+        <span class="status-pill status-pending">🟡 Due</span>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="fee-due">Fee not generated yet. Contact your tutor.</div>
+    {% endif %}
+</div>
+
+<!-- ── All fee-action states always rendered; JS toggles via data-state ── -->
+<div id="fee-action-wrapper" data-state="{{ fee_record.status if fee_record else 'none' }}">
+
+    <!-- STATE: pending / overdue → show Pay Now + I Have Paid -->
+    <div class="fee-state" data-for="pending overdue">
+
+        {% if fee_record and (upi_link or cfg) %}
+        <div class="section-card">
+            <div class="section-title">💳 Pay Now</div>
+
+            {% if upi_link %}
+            <a href="{{ upi_link }}" class="upi-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                    <path d="M2 17l10 5 10-5" />
+                    <path d="M2 12l10 5 10-5" />
+                </svg>
+                Open UPI App to Pay
+            </a>
+            {% endif %}
+
+            {% if cfg and cfg.payment_link %}
+            <a href="{{ cfg.payment_link }}" target="_blank" class="upi-btn"
+                style="background: linear-gradient(135deg, #1E293B, #334155);">
+                🔗 Pay via Link
+            </a>
+            {% endif %}
+
+            {% if cfg and cfg.qr_image_path %}
+            <div class="qr-wrap">
+                <img src="{{ url_for('static', filename='qr_codes/' + cfg.qr_image_path.split('/')[-1]) }}"
+                    alt="QR Code">
+            </div>
+            <div style="text-align: center; font-size: 0.78rem; color: #9CA3AF; margin-bottom: 0.75rem;">Scan QR to pay
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="section-card" style="text-align: center;">
+            <p style="font-size: 0.82rem; color: #6B7280; margin-bottom: 1rem;">
+                After paying, tap below to notify your tutor. They will confirm your payment.
+            </p>
+            <button class="paid-btn" id="pay-btn" onclick="markPaid()">✅ I Have Paid</button>
+        </div>
+    </div>
+
+    <!-- STATE: awaiting_confirmation -->
+    <div class="fee-state" data-for="awaiting_confirmation">
+        <div class="section-card" style="text-align: center; padding: 2rem;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⏳</div>
+            <div style="font-weight: 700; color: #3730A3; font-size: 1rem;">Payment Submitted</div>
+            <p style="font-size: 0.82rem; color: #6B7280; margin-top: 0.5rem;" id="awaiting-msg">
+                Your payment is awaiting confirmation from your tutor. You'll be notified once confirmed.
+            </p>
+        </div>
+    </div>
+
+    <!-- STATE: paid -->
+    <div class="fee-state" data-for="paid">
+        <div class="section-card" style="text-align: center; padding: 2rem;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎉</div>
+            <div style="font-weight: 700; color: #065F46; font-size: 1rem;">All Clear for {{ month_display }}!</div>
+            <p style="font-size: 0.82rem; color: #6B7280; margin-top: 0.5rem;" id="confirmed-msg">
+                {% if fee_record and fee_record.confirmed_at %}Confirmed on {{ fee_record.confirmed_at[:10] }}{% endif
+                %}
+            </p>
+        </div>
+    </div>
+
+    <!-- STATE: none / no fee record -->
+    <div class="fee-state" data-for="none">
+        <div class="section-card" style="text-align: center; padding: 2rem;">
+            <div style="font-size: 2rem; opacity: 0.4; margin-bottom: 0.5rem;">📭</div>
+            <div style="font-weight: 700; color: #6B7280;">No fee record for this month</div>
+            <p style="font-size: 0.8rem; color: #9CA3AF; margin-top: 0.35rem;">Contact your tutor to generate your fee
+                record.</p>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- Payment history -->
+{% if fee_history %}
+<div class="section-card">
+    <div class="section-title">📋 Payment History</div>
+    {% for h in fee_history %}
+    <div class="hist-row">
+        <span class="hist-month">{{ h.month }}</span>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span style="font-weight: 700; color: #111827;">₹{{ "%.0f"|format(h.amount) }}</span>
+            <span class="s-badge s-{{ h.status }}">{{ h.status|title }}</span>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<script>
+    async function markPaid() {
+        const btn = document.getElementById('pay-btn');
+        const result = await Swal.fire({
+            title: 'Mark as Paid?',
+            html: 'Your tutor will be notified to confirm your payment.<br><small style="color:#6B7280;">Only do this if you have already transferred the money.</small>',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, I Have Paid',
+            confirmButtonColor: '#10B981',
+            cancelButtonText: 'Cancel'
+        });
+        if (!result.isConfirmed) return;
+
+        btn.disabled = true;
+        btn.textContent = 'Submitting...';
+
+        Swal.fire({ title: 'Submitting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        try {
+            const res = await fetch('/api/student/fees/{{ month }}/mark-paid', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await res.json();
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Submitted! 🎉',
+                    html: 'Your tutor has been notified and will confirm shortly.',
+                    confirmButtonColor: '#4F46E5'
+                }).then(() => location.reload());
+            } else {
+                Swal.fire({ icon: 'warning', title: 'Notice', text: data.error, confirmButtonColor: '#4F46E5' });
+                btn.disabled = false;
+                btn.textContent = '✅ I Have Paid';
+            }
+        } catch (e) {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Could not connect. Please try again.', confirmButtonColor: '#4F46E5' });
+            btn.disabled = false;
+            btn.textContent = '✅ I Have Paid';
+        }
+    }
+
+    /* ══════════════════════════════════════════════════════════════════
+       LIVE POLLING — status changes swap sections without any reload.
+       ══════════════════════════════════════════════════════════════════ */
+    (function startStudentPolling() {
+        const MONTH = '{{ month }}';
+        let currentStatus = '{{ fee_record.status if fee_record else "none" }}';
+
+        const STATUS_LABELS = {
+            'pending': '🟡 Due',
+            'overdue': '🔴 Overdue',
+            'awaiting_confirmation': '⏳ Awaiting Tutor Confirmation',
+            'paid': '✅ Paid & Confirmed',
+            'none': '—',
+        };
+        const STATUS_CLASSES = {
+            'pending': 'status-pending',
+            'overdue': 'status-overdue',
+            'awaiting_confirmation': 'status-awaiting',
+            'paid': 'status-paid',
+        };
+
+        /* ── Switch the visible section + pill without reloading ── */
+        function setFeeState(newStatus, confirmedAt) {
+            const wrapper = document.getElementById('fee-action-wrapper');
+            if (wrapper) wrapper.dataset.state = newStatus;
+
+            /* Update the status pill */
+            const pill = document.querySelector('#poll-status-pill .status-pill');
+            if (pill) {
+                pill.className = 'status-pill ' + (STATUS_CLASSES[newStatus] || '');
+                pill.textContent = STATUS_LABELS[newStatus] || newStatus;
+            }
+
+            /* Update confirmation date on the paid card */
+            if (newStatus === 'paid' && confirmedAt) {
+                const msg = document.getElementById('confirmed-msg');
+                if (msg) msg.textContent = 'Confirmed on ' + confirmedAt.slice(0, 10);
+            }
+        }
+
+        async function pollOnce() {
+            if (document.hidden || document.querySelector('.swal2-container')) return;
+            try {
+                const res = await fetch('/api/student/fees/poll?month=' + MONTH);
+                if (!res.ok) return;
+                const d = await res.json();
+                if (!d.exists || !d.status) return;
+
+                if (d.status !== currentStatus) {
+                    const oldStatus = currentStatus;
+                    currentStatus = d.status;
+
+                    /* Swap the visible section immediately */
+                    setFeeState(d.status, d.confirmed_at);
+
+                    /* Show a relevant toast */
+                    if (d.status === 'paid') {
+                        Swal.fire({
+                            toast: true, position: 'top-end', icon: 'success',
+                            title: '✅ Payment Confirmed!',
+                            text: 'Your tutor has confirmed your payment.',
+                            showConfirmButton: false, timer: 5000, timerProgressBar: true,
+                        });
+                    } else if (d.status === 'pending' && oldStatus === 'awaiting_confirmation') {
+                        Swal.fire({
+                            toast: true, position: 'top-end', icon: 'warning',
+                            title: '❌ Payment Rejected',
+                            text: 'Your tutor rejected your submission. Please re-submit after paying.',
+                            showConfirmButton: false, timer: 5000, timerProgressBar: true,
+                        });
+                    } else if (d.status === 'overdue' && oldStatus === 'pending') {
+                        Swal.fire({
+                            toast: true, position: 'top-end', icon: 'warning',
+                            title: '⏰ Fee is Overdue',
+                            text: 'Please pay as soon as possible.',
+                            showConfirmButton: false, timer: 5000, timerProgressBar: true,
+                        });
+                    }
+                }
+            } catch (_) { /* silently ignore network errors */ }
+        }
+
+        setTimeout(pollOnce, 3000);
+        setInterval(pollOnce, 10000);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) pollOnce(); });
+    })();
+</script>
+
+{% endblock %}

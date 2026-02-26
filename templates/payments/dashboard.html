@@ -1,0 +1,1256 @@
+{% extends "base.html" %}
+{% block title %}Payments — TuitionTrack{% endblock %}
+{% block header_title %}Payments{% endblock %}
+
+{% block content %}
+<style>
+    /* -- TAB BAR -------------------------------------------- */
+    .pay-tabs {
+        display: flex;
+        gap: 0.4rem;
+        overflow-x: auto;
+        padding-bottom: 0.25rem;
+        margin-bottom: 1.5rem;
+        scrollbar-width: none;
+    }
+
+    .pay-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .pay-tab {
+        flex-shrink: 0;
+        padding: 0.45rem 1rem;
+        border-radius: 999px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        border: 1.5px solid #E5E7EB;
+        background: white;
+        color: #6B7280;
+        text-decoration: none;
+        transition: all 0.15s ease;
+        white-space: nowrap;
+    }
+
+    .pay-tab.active {
+        background: linear-gradient(135deg, #4F46E5, #7C3AED);
+        border-color: transparent;
+        color: white;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    }
+
+    .pay-tab .badge {
+        display: inline-block;
+        background: rgba(239, 68, 68, 0.12);
+        color: #DC2626;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        padding: 0 0.4rem;
+        margin-left: 0.2rem;
+        font-weight: 700;
+    }
+
+    .pay-tab.active .badge {
+        background: rgba(255, 255, 255, 0.25);
+        color: white;
+    }
+
+    /* -- MONTH NAVIGATOR ------------------------------------ */
+    .month-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: white;
+        border: 1px solid #E5E7EB;
+        border-radius: 16px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    .month-nav a {
+        padding: 0.4rem 0.85rem;
+        border-radius: 10px;
+        background: #F3F4F6;
+        color: #374151;
+        text-decoration: none;
+        font-size: 1rem;
+        font-weight: 700;
+        transition: background 0.15s;
+        border: 1px solid #E5E7EB;
+    }
+
+    .month-nav a:hover {
+        background: #E5E7EB;
+    }
+
+    .month-nav .month-label {
+        font-weight: 700;
+        font-size: 1rem;
+        color: #111827;
+    }
+
+    /* -- HERO BANNER (brand gradient, matches profile/student headers) */
+    .pay-hero {
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.9) 0%, rgba(124, 58, 237, 0.9) 100%);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.25rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(79, 70, 229, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .pay-hero::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 150px;
+        height: 150px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+
+    .pay-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -50px;
+        left: -30px;
+        width: 120px;
+        height: 120px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+
+    .hero-month-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        opacity: 0.8;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        margin-bottom: 0.2rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-amount {
+        font-size: 2.4rem;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        margin-bottom: 0.85rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-chips {
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-chip {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        padding: 0.45rem 0.75rem;
+        min-width: 70px;
+    }
+
+    .chip-val {
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: white;
+        display: block;
+    }
+
+    .chip-label {
+        font-size: 0.62rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.7);
+        margin-top: 0.05rem;
+        display: block;
+    }
+
+    /* -- WHITE SECTION CARD (matches .section-card in profile.html) */
+    .pay-card {
+        background: white;
+        border-radius: 20px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        border: 1px solid #F3F4F6;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    }
+
+    .pay-card:hover {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+    }
+
+    .card-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    /* -- OVERVIEW STAT CHIPS -------------------------------- */
+    .ov-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.65rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .ov-stat {
+        border-radius: 14px;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        border: 1px solid transparent;
+    }
+
+    .ov-stat.expected {
+        background: #EEF2FF;
+        border-color: #C7D2FE;
+    }
+
+    .ov-stat.collected {
+        background: #D1FAE5;
+        border-color: #A7F3D0;
+    }
+
+    .ov-stat.pending {
+        background: #FEF3C7;
+        border-color: #FDE68A;
+    }
+
+    .ov-stat.overdue {
+        background: #FEE2E2;
+        border-color: #FECACA;
+    }
+
+    .ov-val {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .ov-label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #6B7280;
+    }
+
+    /* -- PROGRESS BAR --------------------------------------- */
+    .prog-bar-wrap {
+        background: #F3F4F6;
+        border-radius: 999px;
+        height: 8px;
+        overflow: hidden;
+        margin-bottom: 0.4rem;
+    }
+
+    .prog-bar-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #4F46E5, #7C3AED);
+        transition: width 1s ease;
+    }
+
+    /* -- FEE LIST ROW --------------------------------------- */
+    .fee-item {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        padding: 0.85rem 0;
+        border-bottom: 1px solid #F3F4F6;
+    }
+
+    .fee-item:last-child {
+        border-bottom: none;
+    }
+
+    .fee-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #4F46E5, #7C3AED);
+        color: white;
+        font-weight: 700;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+    }
+
+    .fee-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .fee-name {
+        font-weight: 700;
+        color: #111827;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .fee-sub {
+        font-size: 0.73rem;
+        color: #6B7280;
+        margin-top: 0.05rem;
+    }
+
+    .fee-amount {
+        font-weight: 800;
+        font-size: 1rem;
+        color: #111827;
+    }
+
+    /* -- STATUS BADGES -------------------------------------- */
+    .s-badge {
+        padding: 0.2rem 0.6rem;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        display: inline-block;
+    }
+
+    .s-pending {
+        background: #FEF3C7;
+        color: #92400E;
+    }
+
+    .s-overdue {
+        background: #FEE2E2;
+        color: #991B1B;
+    }
+
+    .s-awaiting {
+        background: #E0E7FF;
+        color: #3730A3;
+    }
+
+    .s-paid {
+        background: #D1FAE5;
+        color: #065F46;
+    }
+
+    /* -- ACTION BUTTONS ------------------------------------- */
+    .btn-confirm {
+        background: linear-gradient(135deg, #059669, #10B981);
+        border: none;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 9px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+        transition: all 0.15s;
+    }
+
+    .btn-confirm:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+    }
+
+    .btn-reject {
+        background: #FEF2F2;
+        border: 1px solid #FECACA;
+        color: #DC2626;
+        padding: 0.5rem 1rem;
+        border-radius: 9px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .btn-reject:hover {
+        background: #FEE2E2;
+    }
+
+    .btn-manual {
+        background: #F9FAFB;
+        border: 1px solid #E5E7EB;
+        color: #374151;
+        padding: 0.45rem 0.85rem;
+        border-radius: 9px;
+        font-weight: 600;
+        font-size: 0.78rem;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .btn-manual:hover {
+        background: #F3F4F6;
+    }
+
+    .btn-generate {
+        width: 100%;
+        background: #EEF2FF;
+        border: 1px solid #C7D2FE;
+        color: #4F46E5;
+        border-radius: 12px;
+        padding: 0.75rem;
+        font-size: 0.88rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s;
+        margin-top: 0.5rem;
+    }
+
+    .btn-generate:hover {
+        background: #E0E7FF;
+    }
+
+    /* -- SETTINGS FORM -------------------------------------- */
+    .settings-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #6B7280;
+        margin-bottom: 0.35rem;
+        display: block;
+    }
+
+    .settings-input {
+        width: 100%;
+        border: 1.5px solid #E5E7EB;
+        border-radius: 10px;
+        padding: 0.65rem 0.85rem;
+        font-size: 0.9rem;
+        color: #111827;
+        background: #F9FAFB;
+        outline: none;
+        margin-bottom: 1rem;
+        transition: all 0.15s;
+    }
+
+    .settings-input:focus {
+        border-color: #4F46E5;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    .btn-save {
+        width: 100%;
+        background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 0.85rem;
+        font-size: 1rem;
+        font-weight: 700;
+        box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-bottom: 1.5rem;
+    }
+
+    .btn-save:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(79, 70, 229, 0.4);
+    }
+
+    /* -- HISTORY ROWS --------------------------------------- */
+    .hist-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.85rem 0;
+        border-bottom: 1px solid #F3F4F6;
+    }
+
+    .hist-row:last-child {
+        border-bottom: none;
+    }
+
+    .hist-month {
+        font-weight: 700;
+        color: #111827;
+        font-size: 0.9rem;
+    }
+
+    .hist-sub {
+        font-size: 0.73rem;
+        color: #6B7280;
+    }
+
+    .hist-amt {
+        font-weight: 800;
+        color: #059669;
+        font-size: 0.9rem;
+    }
+
+    /* -- TOGGLE -------------------------------------------- */
+    .toggle-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .toggle {
+        position: relative;
+        display: inline-block;
+        width: 46px;
+        height: 26px;
+    }
+
+    .toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        inset: 0;
+        background: #D1D5DB;
+        border-radius: 999px;
+        transition: 0.2s;
+    }
+
+    .slider:before {
+        content: '';
+        position: absolute;
+        width: 19px;
+        height: 19px;
+        border-radius: 50%;
+        background: white;
+        left: 3px;
+        top: 3px;
+        transition: 0.2s;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    input:checked+.slider {
+        background: linear-gradient(135deg, #4F46E5, #7C3AED);
+    }
+
+    input:checked+.slider:before {
+        transform: translateX(20px);
+    }
+
+    /* -- EMPTY STATE ---------------------------------------- */
+    .empty-state {
+        text-align: center;
+        padding: 2.5rem 1rem;
+        color: #9CA3AF;
+    }
+
+    .empty-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-title {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: #6B7280;
+    }
+
+    .empty-sub {
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+        color: #9CA3AF;
+    }
+
+    /* -- FLASH MESSAGES ------------------------------------- */
+    .flash-success {
+        background: #F0FDF4;
+        color: #166534;
+        border: 1px solid #DCFCE7;
+        padding: 0.85rem 1rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .flash-error {
+        background: #FEF2F2;
+        color: #991B1B;
+        border: 1px solid #FEE2E2;
+        padding: 0.85rem 1rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+</style>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="{% if category == 'error' %}flash-error{% else %}flash-success{% endif %}">
+    {% if category == 'error' %}⚠️{% else %}✅{% endif %} {{ message }}
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<!-- Tab bar -->
+<div class="pay-tabs">
+    <a href="?tab=overview&month={{ month }}" class="pay-tab {% if tab == 'overview' %}active{% endif %}">Overview</a>
+    <a href="?tab=pending&month={{ month }}" class="pay-tab {% if tab == 'pending'  %}active{% endif %}">
+        Pending
+        <span class="badge" id="tab-badge-pending"
+            style="display:{{ 'inline-flex' if (overview and overview.count_pending) else 'none' }}">
+            {{ overview.count_pending or 0 }}
+        </span>
+    </a>
+    <a href="?tab=awaiting&month={{ month }}" class="pay-tab {% if tab == 'awaiting' %}active{% endif %}">
+        Awaiting
+        <span class="badge" id="tab-badge-awaiting"
+            style="display:{{ 'inline-flex' if (overview and overview.count_awaiting) else 'none' }}">
+            {{ overview.count_awaiting or 0 }}
+        </span>
+    </a>
+    <a href="?tab=paid&month={{ month }}" class="pay-tab {% if tab == 'paid'    %}active{% endif %}">
+        Paid
+        <span class="badge" id="tab-badge-paid"
+            style="display:{{ 'inline-flex' if (overview and overview.count_paid) else 'none' }}">
+            {{ overview.count_paid or 0 }}
+        </span>
+    </a>
+    <a href="?tab=history&month={{ month }}" class="pay-tab {% if tab == 'history'  %}active{% endif %}">History</a>
+    <a href="?tab=settings&month={{ month }}" class="pay-tab {% if tab == 'settings' %}active{% endif %}">⚙️
+        Settings</a>
+</div>
+
+
+<!-- Month navigator (not shown on Settings / History) -->
+{% if tab not in ['settings', 'history'] %}
+<div class="month-nav">
+    <a href="?tab={{ tab }}&month={{ prev_month }}">◀</a>
+    <span class="month-label">{{ month_display }}</span>
+    <a href="?tab={{ tab }}&month={{ next_month }}">▶</a>
+</div>
+{% endif %}
+
+
+<!-- ====================================================== OVERVIEW -->
+{% if tab == 'overview' %}
+
+<div class="pay-hero">
+    <div class="hero-month-label">{{ month_display }} · Collection</div>
+    <div class="hero-amount" id="poll-hero-collected">₹{{ "%.0f"|format(overview.total_collected or 0) }}</div>
+    <div class="hero-chips">
+        <div class="hero-chip">
+            <span class="chip-val" id="poll-hero-expected">₹{{ "%.0f"|format(overview.total_expected or 0) }}</span>
+            <span class="chip-label">Expected</span>
+        </div>
+        <div class="hero-chip">
+            <span class="chip-val" id="poll-hero-pending">₹{{ "%.0f"|format(overview.total_pending or 0) }}</span>
+            <span class="chip-label">Pending</span>
+        </div>
+        <div class="hero-chip">
+            <span class="chip-val" id="poll-hero-overdue">₹{{ "%.0f"|format(overview.total_overdue or 0) }}</span>
+            <span class="chip-label">Overdue</span>
+        </div>
+    </div>
+</div>
+
+<div class="pay-card">
+    <div class="ov-grid">
+        <div class="ov-stat expected">
+            <span class="ov-val" id="poll-ov-expected">₹{{ "%.0f"|format(overview.total_expected or 0) }}</span>
+            <span class="ov-label">Expected</span>
+        </div>
+        <div class="ov-stat collected">
+            <span class="ov-val" id="poll-ov-collected">₹{{ "%.0f"|format(overview.total_collected or 0) }}</span>
+            <span class="ov-label">Collected</span>
+        </div>
+        <div class="ov-stat pending">
+            <span class="ov-val" id="poll-ov-pending">₹{{ "%.0f"|format(overview.total_pending or 0) }}</span>
+            <span class="ov-label">Pending</span>
+        </div>
+        <div class="ov-stat overdue">
+            <span class="ov-val" id="poll-ov-overdue">₹{{ "%.0f"|format(overview.total_overdue or 0) }}</span>
+            <span class="ov-label">Overdue</span>
+        </div>
+    </div>
+
+    <div class="prog-bar-wrap">
+        <div class="prog-bar-fill" id="poll-prog-bar" style="width: {{ collection_pct }}%;"></div>
+    </div>
+    <div
+        style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #6B7280; font-weight: 600; margin-bottom: 1rem;">
+        <span>Collection rate</span>
+        <span id="poll-pct">{{ collection_pct }}%</span>
+    </div>
+
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <span style="font-size: 0.8rem; color: #065F46; font-weight: 600;">✅ <span id="poll-count-paid">{{
+                overview.count_paid or 0 }}</span> Paid</span>
+        <span style="font-size: 0.8rem; color: #92400E; font-weight: 600;">⏳ <span id="poll-count-pending">{{
+                overview.count_pending or 0 }}</span>
+            Pending</span>
+        <span style="font-size: 0.8rem; color: #991B1B; font-weight: 600;">🔴 <span id="poll-count-overdue">{{
+                overview.count_overdue or 0 }}</span>
+            Overdue</span>
+    </div>
+</div>
+
+{% if not overview or not overview.total_students %}
+<div class="empty-state">
+    <div class="empty-icon">📭</div>
+    <div class="empty-title">No fee records for {{ month_display }}</div>
+    <div class="empty-sub">Go to Settings, set your monthly fee, then click Generate.</div>
+    <button onclick="generateFees()" class="btn-generate" style="margin-top: 1rem;">
+        ⚡ Generate {{ month_display }} Fees
+    </button>
+</div>
+{% else %}
+<button onclick="generateFees()" class="btn-generate">↻ Regenerate Missing Records</button>
+{% endif %}
+
+
+<!-- ====================================================== PENDING -->
+{% elif tab == 'pending' %}
+<div class="pay-card" data-list="pending">
+    {% if pending %}
+    {% for s in pending %}
+    <div class="fee-item" id="row-{{ s.id }}">
+        <div class="fee-avatar">{{ s.student_name[:1]|upper }}</div>
+        <div class="fee-info">
+            <div class="fee-name">{{ s.student_name }}</div>
+            <div class="fee-sub"><span class="s-badge s-{{ s.status }}">{{ s.status|title }}</span></div>
+        </div>
+        <div style="text-align: right;">
+            <div class="fee-amount">₹{{ "%.0f"|format(s.amount) }}</div>
+            <button class="btn-manual" style="margin-top: 0.35rem;"
+                onclick="markManual({{ s.id }}, '{{ s.student_name|escape }}')">Cash ✓</button>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🎉</div>
+        <div class="empty-title">No pending fees!</div>
+        <div class="empty-sub">All students are up to date for {{ month_display }}.</div>
+    </div>
+    {% endif %}
+</div>
+
+
+<!-- ====================================================== AWAITING -->
+{% elif tab == 'awaiting' %}
+<div class="pay-card" data-list="awaiting">
+    {% if awaiting %}
+    {% for s in awaiting %}
+    <div class="fee-item" id="row-{{ s.id }}">
+        <div class="fee-avatar">{{ s.student_name[:1]|upper }}</div>
+        <div class="fee-info">
+            <div class="fee-name">{{ s.student_name }}</div>
+            <div class="fee-sub">Marked paid {% if s.paid_at %}· {{ s.paid_at[:10] }}{% endif %}</div>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-direction: column; align-items: flex-end;">
+            <span class="fee-amount">₹{{ "%.0f"|format(s.amount) }}</span>
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="btn-reject" onclick="rejectPayment({{ s.id }}, '{{ s.student_name|escape }}')">✗</button>
+                <button class="btn-confirm" onclick="confirmPayment({{ s.id }}, '{{ s.student_name|escape }}')">✓
+                    Confirm</button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📬</div>
+        <div class="empty-title">Nothing awaiting confirmation</div>
+        <div class="empty-sub">Students who tap "I Have Paid" will appear here.</div>
+    </div>
+    {% endif %}
+</div>
+
+
+<!-- ====================================================== PAID -->
+{% elif tab == 'paid' %}
+<div class="pay-card" data-list="paid">
+    {% if paid %}
+    {% for p in paid %}
+    <div class="fee-item">
+        <div class="fee-avatar">{{ p.student_name[:1]|upper }}</div>
+        <div class="fee-info">
+            <div class="fee-name">{{ p.student_name }}</div>
+            <div class="fee-sub">Confirmed {% if p.confirmed_at %}{{ p.confirmed_at[:10] }}{% endif %}{% if p.notes %} ·
+                {{ p.notes }}{% endif %}</div>
+        </div>
+        <div style="text-align: right;">
+            <div class="fee-amount" style="color: #059669;">₹{{ "%.0f"|format(p.amount) }}</div>
+            <span class="s-badge s-paid">Paid</span>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">💰</div>
+        <div class="empty-title">No confirmed payments yet</div>
+        <div class="empty-sub">Confirm payments from the Awaiting tab.</div>
+    </div>
+    {% endif %}
+</div>
+
+
+<!-- ====================================================== HISTORY -->
+{% elif tab == 'history' %}
+<div class="pay-card">
+    <div class="card-title">📊 Last 12 Months</div>
+    {% if history %}
+    {% for h in history %}
+    <div class="hist-row">
+        <div>
+            <div class="hist-month">{{ h.month_display }}</div>
+            <div class="hist-sub">{{ h.paid_count or 0 }} / {{ h.total }} students paid</div>
+        </div>
+        <div style="text-align: right;">
+            <div class="hist-amt">₹{{ "%.0f"|format(h.collected or 0) }}</div>
+            <div style="font-size: 0.72rem; color: #9CA3AF;">of ₹{{ "%.0f"|format(h.expected or 0) }}</div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📅</div>
+        <div class="empty-title">No history yet</div>
+        <div class="empty-sub">Generate fee records to start tracking.</div>
+    </div>
+    {% endif %}
+</div>
+
+
+<!-- ====================================================== SETTINGS -->
+{% elif tab == 'settings' %}
+<form method="POST" action="{{ url_for('payments.payment_settings') }}">
+    <div class="pay-card">
+        <div class="card-title">🏫 Fee Configuration</div>
+
+        <label class="settings-label" for="monthly_fee">Monthly Fee (₹)</label>
+        <input class="settings-input" type="number" id="monthly_fee" name="monthly_fee" min="0" step="0.01"
+            placeholder="e.g. 2000" value="{{ cfg.monthly_fee if cfg and cfg.monthly_fee else '' }}" required>
+
+        <label class="settings-label" for="due_day">Due Day of Month</label>
+        <select class="settings-input" id="due_day" name="due_day">
+            {% for d in range(1, 29) %}
+            <option value="{{ d }}" {% if cfg and cfg.due_day==d %}selected{% endif %}>{{ d }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="pay-card">
+        <div class="card-title">📲 Payment Details</div>
+
+        <label class="settings-label" for="upi_id">UPI ID</label>
+        <input class="settings-input" type="text" id="upi_id" name="upi_id" placeholder="yourname@upi"
+            value="{{ cfg.upi_id if cfg and cfg.upi_id else '' }}">
+
+        <label class="settings-label" for="payment_link">Payment Link (optional)</label>
+        <input class="settings-input" type="url" id="payment_link" name="payment_link" placeholder="https://..."
+            value="{{ cfg.payment_link if cfg and cfg.payment_link else '' }}">
+    </div>
+
+    <div class="pay-card">
+        <div class="toggle-wrap">
+            <div>
+                <div style="font-weight: 700; color: #111827; font-size: 0.9rem;">🔔 Fee Reminders</div>
+                <div style="font-size: 0.78rem; color: #6B7280; margin-top: 0.1rem;">Send push notifications on due date
+                </div>
+            </div>
+            <label class="toggle">
+                <input type="checkbox" name="reminders_enabled" {% if not cfg or cfg.reminders_enabled %}checked{% endif
+                    %}>
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <button type="submit" class="btn-save">Save Settings</button>
+</form>
+{% endif %}
+
+<script>
+    /* ── helper: show a toast notification ───────────────────────────────── */
+    function toast(icon, title, text) {
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon,
+            title,
+            text: text || undefined,
+            showConfirmButton: false,
+            timer: 3500,
+            timerProgressBar: true,
+        });
+    }
+
+    /* ── helper: POST JSON, return parsed response ───────────────────────── */
+    async function apiPost(url, body = null) {
+        const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' } };
+        if (body) opts.body = JSON.stringify(body);
+        const res = await fetch(url, opts);
+        return res.json();
+    }
+
+    /* ── helper: disable/re-enable a button row ─────────────────────────── */
+    function setRowLoading(id, loading) {
+        const row = document.getElementById(`row-${id}`);
+        if (!row) return;
+        row.querySelectorAll('button').forEach(b => b.disabled = loading);
+    }
+
+    /* ── CONFIRM PAYMENT ───────────────────────────────────────────────── */
+    async function confirmPayment(id, studentName) {
+        const result = await Swal.fire({
+            title: 'Confirm Payment?',
+            html: `Mark <strong>${studentName || 'this student'}</strong>'s fee as paid?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '✓ Yes, Confirm',
+            confirmButtonColor: '#10B981',
+            cancelButtonText: 'Cancel',
+        });
+        if (!result.isConfirmed) return;
+
+        setRowLoading(id, true);
+        const data = await apiPost(`/api/payments/${id}/confirm`);
+        if (data.success) {
+            toast('success', 'Payment Confirmed ✅', 'Student notified.');
+            setTimeout(() => document.getElementById(`row-${id}`)?.remove(), 1800);
+        } else {
+            setRowLoading(id, false);
+            toast('error', 'Error', data.error || 'Could not confirm payment');
+        }
+    }
+
+    /* ── REJECT PAYMENT ────────────────────────────────────────────────── */
+    async function rejectPayment(id, studentName) {
+        const result = await Swal.fire({
+            title: 'Reject Payment?',
+            html: `Move <strong>${studentName || 'this student'}</strong> back to Pending?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '✗ Yes, Reject',
+            confirmButtonColor: '#EF4444',
+            cancelButtonText: 'Cancel',
+        });
+        if (!result.isConfirmed) return;
+
+        setRowLoading(id, true);
+        const data = await apiPost(`/api/payments/${id}/reject`);
+        if (data.success) {
+            toast('info', 'Rejected', 'Moved back to Pending. Student notified.');
+            setTimeout(() => document.getElementById(`row-${id}`)?.remove(), 1800);
+        } else {
+            setRowLoading(id, false);
+            toast('error', 'Error', data.error);
+        }
+    }
+
+    /* ── MARK CASH PAYMENT ─────────────────────────────────────────────── */
+    async function markManual(id, studentName) {
+        const result = await Swal.fire({
+            title: '💵 Cash Payment',
+            html: `Mark <strong>${studentName || 'this student'}</strong> as paid in cash?`,
+            input: 'text',
+            inputPlaceholder: 'Optional note (e.g. Cash received)',
+            showCancelButton: true,
+            confirmButtonText: 'Mark Paid',
+            confirmButtonColor: '#10B981',
+        });
+        if (!result.isConfirmed) return;
+
+        setRowLoading(id, true);
+        const res = await fetch(`/api/payments/${id}/mark-manual`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ note: result.value || 'Cash payment' })
+        });
+        const data = await res.json();
+        if (data.success) {
+            toast('success', 'Marked as Paid! 💵');
+            setTimeout(() => document.getElementById(`row-${id}`)?.remove(), 1800);
+        } else {
+            setRowLoading(id, false);
+            toast('error', 'Error', data.error);
+        }
+    }
+
+    /* ── GENERATE FEES ─────────────────────────────────────────────────── */
+    async function generateFees() {
+        const month = '{{ month }}';
+        const result = await Swal.fire({
+            title: '⚡ Generate Fees?',
+            text: `This will create pending fee records for all your students for ${month}. Already-existing records won't be changed.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Generate',
+            confirmButtonColor: '#4F46E5',
+            cancelButtonText: 'Cancel',
+        });
+        if (!result.isConfirmed) return;
+
+        Swal.fire({ title: 'Generating...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        const data = await apiPost('/api/payments/generate', { month });
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Done! 🎉',
+                html: `<b>${data.created}</b> new fee record${data.created !== 1 ? 's' : ''} created for <b>${month}</b>.<br><small>Students have been notified.</small>`,
+                confirmButtonColor: '#4F46E5'
+            }).then(() => location.reload());
+        } else {
+            Swal.fire({ icon: 'error', title: 'Error', text: data.error, confirmButtonColor: '#4F46E5' });
+        }
+    }
+
+    /* ── SAVE SETTINGS (AJAX) ──────────────────────────────────────────── */
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.querySelector('form[action*="payment_settings"]');
+        if (!form) return;
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = form.querySelector('button[type="submit"]');
+            const orig = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Saving…';
+
+            const fd = new FormData(form);
+            const res = await fetch(form.action, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json' },
+                body: fd,
+            });
+            const data = await res.json();
+            btn.disabled = false;
+            btn.textContent = orig;
+
+            if (data.success) {
+                toast('success', 'Settings Saved ✅', 'Your payment configuration is updated.');
+            } else {
+                toast('error', 'Error', data.error || 'Could not save settings');
+            }
+        });
+    });
+
+    /* ══════════════════════════════════════════════════════════════════
+       LIVE POLLING — auto-refresh payment data every 10 seconds.
+       Overview stats + all card lists (Pending, Awaiting, Paid)
+       are re-rendered from JSON without any page reload.
+       ══════════════════════════════════════════════════════════════════ */
+    (function startPolling() {
+        const MONTH = '{{ month }}';
+        const CUR_TAB = '{{ tab }}';
+        let lastAwaitingCount = {{ (overview.count_awaiting or 0) if overview else 0
+    }};
+
+    /* ── DOM helpers ── */
+    function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+    function setWidth(id, pct) { const el = document.getElementById(id); if (el) el.style.width = pct + '%'; }
+    function esc(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+    function fmt(n) { return '₹' + Math.round(n || 0); }
+
+    /* ── Card renderers — generate HTML matching the Jinja templates ── */
+
+    function pendingRowHTML(r) {
+        const initial = esc(r.student_name.charAt(0).toUpperCase());
+        const name = esc(r.student_name);
+        const badge = r.status.charAt(0).toUpperCase() + r.status.slice(1);
+        return `
+            <div class="fee-item" id="row-${r.id}">
+                <div class="fee-avatar">${initial}</div>
+                <div class="fee-info">
+                    <div class="fee-name">${name}</div>
+                    <div class="fee-sub"><span class="s-badge s-${r.status}">${badge}</span></div>
+                </div>
+                <div style="text-align:right;">
+                    <div class="fee-amount">${fmt(r.amount)}</div>
+                    <button class="btn-manual" style="margin-top:0.35rem;"
+                        onclick="markManual(${r.id}, '${name}')">Cash ✓</button>
+                </div>
+            </div>`;
+    }
+
+    function awaitingRowHTML(r) {
+        const initial = esc(r.student_name.charAt(0).toUpperCase());
+        const name = esc(r.student_name);
+        const dateStr = r.paid_at ? '· ' + r.paid_at.slice(0, 10) : '';
+        return `
+            <div class="fee-item" id="row-${r.id}">
+                <div class="fee-avatar">${initial}</div>
+                <div class="fee-info">
+                    <div class="fee-name">${name}</div>
+                    <div class="fee-sub">Marked paid ${dateStr}</div>
+                </div>
+                <div style="display:flex;gap:0.5rem;flex-direction:column;align-items:flex-end;">
+                    <span class="fee-amount">${fmt(r.amount)}</span>
+                    <div style="display:flex;gap:0.5rem;">
+                        <button class="btn-reject"  onclick="rejectPayment(${r.id}, '${name}')">✗</button>
+                        <button class="btn-confirm" onclick="confirmPayment(${r.id}, '${name}')">✓ Confirm</button>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    function paidRowHTML(r) {
+        const initial = esc(r.student_name.charAt(0).toUpperCase());
+        const name = esc(r.student_name);
+        const date = r.confirmed_at ? r.confirmed_at.slice(0, 10) : '';
+        const note = r.notes ? ' · ' + esc(r.notes) : '';
+        return `
+            <div class="fee-item">
+                <div class="fee-avatar">${initial}</div>
+                <div class="fee-info">
+                    <div class="fee-name">${name}</div>
+                    <div class="fee-sub">Confirmed ${date}${note}</div>
+                </div>
+                <div style="text-align:right;">
+                    <div class="fee-amount" style="color:#059669;">${fmt(r.amount)}</div>
+                    <span class="s-badge s-paid">Paid</span>
+                </div>
+            </div>`;
+    }
+
+    /* ── Generic list re-renderer ── */
+    function renderList(listName, rows, rowFn, emptyHTML) {
+        const container = document.querySelector('[data-list="' + listName + '"]');
+        if (!container) return;
+
+        if (!rows || rows.length === 0) {
+            container.innerHTML = emptyHTML;
+            return;
+        }
+
+        /* Build a set of incoming IDs for quick lookup */
+        const incomingIds = new Set(rows.map(r => 'row-' + r.id));
+
+        /* Remove rows that are no longer in the response (confirmed/rejected) */
+        container.querySelectorAll('.fee-item[id]').forEach(el => {
+            if (!incomingIds.has(el.id)) {
+                el.style.transition = 'opacity 0.4s';
+                el.style.opacity = '0';
+                setTimeout(() => el.remove(), 420);
+            }
+        });
+
+        /* Add or update rows */
+        rows.forEach(r => {
+            const existing = document.getElementById('row-' + r.id);
+            if (existing) {
+                /* Update status badge in-place for pending rows */
+                const badge = existing.querySelector('.s-badge');
+                if (badge && badge.className !== 's-badge s-' + r.status) {
+                    badge.className = 's-badge s-' + r.status;
+                    badge.textContent = r.status.charAt(0).toUpperCase() + r.status.slice(1);
+                }
+            } else {
+                /* New row — append it with a fade-in */
+                const tmp = document.createElement('div');
+                tmp.innerHTML = rowFn(r);
+                const newEl = tmp.firstElementChild;
+                newEl.style.opacity = '0';
+                newEl.style.transition = 'opacity 0.4s';
+                container.appendChild(newEl);
+                requestAnimationFrame(() => { newEl.style.opacity = '1'; });
+            }
+        });
+    }
+
+    /* ── Main poll function ── */
+    async function pollOnce() {
+        if (document.hidden || document.querySelector('.swal2-container')) return;
+
+        try {
+            const res = await fetch('/api/payments/poll?month=' + MONTH);
+            if (!res.ok) return;
+            const d = await res.json();
+            if (d.error) return;
+
+            const ov = d.overview;
+
+            /* Overview stat elements */
+            setText('poll-hero-collected', fmt(ov.total_collected));
+            setText('poll-hero-expected', fmt(ov.total_expected));
+            setText('poll-hero-pending', fmt(ov.total_pending));
+            setText('poll-hero-overdue', fmt(ov.total_overdue));
+            setText('poll-ov-expected', fmt(ov.total_expected));
+            setText('poll-ov-collected', fmt(ov.total_collected));
+            setText('poll-ov-pending', fmt(ov.total_pending));
+            setText('poll-ov-overdue', fmt(ov.total_overdue));
+            setText('poll-pct', (ov.collection_pct || 0) + '%');
+            setText('poll-count-paid', ov.count_paid);
+            setText('poll-count-pending', ov.count_pending);
+            setText('poll-count-overdue', ov.count_overdue);
+            setWidth('poll-prog-bar', ov.collection_pct || 0);
+
+            /* Tab badge counts — update text & show/hide based on count */
+            function updateBadge(id, count) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.textContent = count;
+                el.style.display = count > 0 ? 'inline-flex' : 'none';
+            }
+            updateBadge('tab-badge-pending', ov.count_pending || 0);
+            updateBadge('tab-badge-awaiting', ov.count_awaiting || 0);
+            updateBadge('tab-badge-paid', ov.count_paid || 0);
+
+            /* Notify tutor of new incoming payments */
+            if (ov.count_awaiting > lastAwaitingCount) {
+                const diff = ov.count_awaiting - lastAwaitingCount;
+                toast('info',
+                    `${diff} new payment${diff > 1 ? 's' : ''} to confirm`,
+                    'Check the Awaiting tab to confirm or reject.');
+            }
+            lastAwaitingCount = ov.count_awaiting;
+
+            /* Re-render card lists for the current tab */
+            if (CUR_TAB === 'pending') {
+                renderList('pending', d.pending, pendingRowHTML,
+                    `<div class="empty-state">
+                            <div class="empty-icon">🎉</div>
+                            <div class="empty-title">No pending fees!</div>
+                            <div class="empty-sub">All students are up to date.</div>
+                        </div>`);
+            }
+            if (CUR_TAB === 'awaiting') {
+                renderList('awaiting', d.awaiting, awaitingRowHTML,
+                    `<div class="empty-state">
+                            <div class="empty-icon">📬</div>
+                            <div class="empty-title">Nothing awaiting confirmation</div>
+                            <div class="empty-sub">Students who tap "I Have Paid" will appear here.</div>
+                        </div>`);
+            }
+            if (CUR_TAB === 'paid') {
+                renderList('paid', d.paid, paidRowHTML,
+                    `<div class="empty-state">
+                            <div class="empty-icon">💰</div>
+                            <div class="empty-title">No confirmed payments yet</div>
+                            <div class="empty-sub">Confirm payments from the Awaiting tab.</div>
+                        </div>`);
+            }
+
+        } catch (_) { /* silently ignore network errors */ }
+    }
+
+    setTimeout(pollOnce, 3000);
+    setInterval(pollOnce, 10000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) pollOnce(); });
+    }) ();
+</script>
+
+{% endblock %}

@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app
 import logging
-from jobs import check_batch_start_reminders, check_attendance_reminders
+from jobs import check_batch_start_reminders, check_attendance_reminders, \
+    generate_monthly_fees, send_fee_reminders, mark_overdue_fees
 import os
 from functools import wraps
 
@@ -43,17 +44,21 @@ def require_cron_secret(f):
 @require_cron_secret
 def trigger_cron_jobs():
     """
-    Endpoint intended to be hit by an external cron service (like cron-job.org)
-    every 5 minutes.
+    Endpoint hit by an external cron service every 5 minutes.
+    Batch/attendance reminders, plus daily fee jobs (self-guarded by date).
     """
     logger.info("External Cron Webhook Triggered")
 
     try:
-        # Run batch start reminders
+        # Batch notifications
         check_batch_start_reminders()
-        
-        # Run attendance reminders
         check_attendance_reminders()
+
+        # Payment jobs — each function is self-guarded:
+        # send_fee_reminders only acts on tutor due_days matching today
+        # mark_overdue_fees only marks overdue if past due_day + 3
+        send_fee_reminders()
+        mark_overdue_fees()
 
         return jsonify({
             'status': 'success',
@@ -63,6 +68,32 @@ def trigger_cron_jobs():
 
     except Exception as e:
         logger.error(f"Error executing cron jobs via webhook: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@webhooks_bp.route('/api/webhooks/cron/monthly', methods=['POST', 'GET'])
+@require_cron_secret
+def trigger_monthly_jobs():
+    """
+    Endpoint hit once on the 1st of each month to generate fee records.
+    Schedule this on cron-job.org as: 0 8 1 * * (8 AM IST on 1st of month).
+    """
+    logger.info("Monthly Cron Webhook Triggered")
+
+    try:
+        generate_monthly_fees()
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Monthly fee records generated',
+            'timestamp': request.args.get('time', 'unknown')
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error in monthly cron: {e}")
         return jsonify({
             'status': 'error',
             'message': str(e)
