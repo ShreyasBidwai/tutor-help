@@ -837,51 +837,876 @@
 
 <!-- ====================================================== SETTINGS -->
 {% elif tab == 'settings' %}
-<form method="POST" action="{{ url_for('payments.payment_settings') }}">
-    <div class="pay-card">
-        <div class="card-title">🏫 Fee Configuration</div>
 
-        <label class="settings-label" for="monthly_fee">Monthly Fee (₹)</label>
-        <input class="settings-input" type="number" id="monthly_fee" name="monthly_fee" min="0" step="0.01"
-            placeholder="e.g. 2000" value="{{ cfg.monthly_fee if cfg and cfg.monthly_fee else '' }}" required>
+<style>
+    .s-hdr {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        font-size: .95rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: .25rem
+    }
 
-        <label class="settings-label" for="due_day">Due Day of Month</label>
-        <select class="settings-input" id="due_day" name="due_day">
-            {% for d in range(1, 29) %}
-            <option value="{{ d }}" {% if cfg and cfg.due_day==d %}selected{% endif %}>{{ d }}</option>
-            {% endfor %}
-        </select>
-    </div>
+    .s-sub {
+        font-size: .78rem;
+        color: #6B7280;
+        margin: 0 0 1rem
+    }
 
-    <div class="pay-card">
-        <div class="card-title">📲 Payment Details</div>
+    .fee-mode-select {
+        width: 100%;
+        appearance: none;
+        -webkit-appearance: none;
+        background: linear-gradient(135deg, #F5F3FF, #EDE9FE) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%237C3AED' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") no-repeat right 1rem center;
+        border: 1.5px solid #C4B5FD;
+        border-radius: 12px;
+        padding: .75rem 2.5rem .75rem 1rem;
+        font-size: .92rem;
+        font-weight: 700;
+        color: #4338CA;
+        cursor: pointer;
+        outline: none;
+        transition: border-color .2s, box-shadow .2s
+    }
 
-        <label class="settings-label" for="upi_id">UPI ID</label>
-        <input class="settings-input" type="text" id="upi_id" name="upi_id" placeholder="yourname@upi"
-            value="{{ cfg.upi_id if cfg and cfg.upi_id else '' }}">
+    .fee-mode-select:focus {
+        border-color: #7C3AED;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, .15)
+    }
 
-        <label class="settings-label" for="payment_link">Payment Link (optional)</label>
-        <input class="settings-input" type="url" id="payment_link" name="payment_link" placeholder="https://..."
-            value="{{ cfg.payment_link if cfg and cfg.payment_link else '' }}">
-    </div>
+    .fee-mode-desc {
+        font-size: .75rem;
+        color: #6B7280;
+        margin-top: .5rem;
+        padding: .45rem .7rem;
+        background: #F9FAFB;
+        border-radius: 8px;
+        border-left: 3px solid #C4B5FD
+    }
 
-    <div class="pay-card">
-        <div class="toggle-wrap">
-            <div>
-                <div style="font-weight: 700; color: #111827; font-size: 0.9rem;">🔔 Fee Reminders</div>
-                <div style="font-size: 0.78rem; color: #6B7280; margin-top: 0.1rem;">Send push notifications on due date
+    .fee-panel {
+        animation: panelIn .22s ease
+    }
+
+    @keyframes panelIn {
+        from {
+            opacity: 0;
+            transform: translateY(6px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    .global-fee-card {
+        background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+        border: 1.5px solid #BFDBFE;
+        border-radius: 14px;
+        padding: 1.2rem
+    }
+
+    .global-fee-row {
+        display: flex;
+        align-items: center;
+        gap: .75rem
+    }
+
+    .global-fee-symbol {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: #3B82F6
+    }
+
+    .global-fee-input {
+        flex: 1;
+        border: 2px solid #93C5FD;
+        border-radius: 10px;
+        padding: .65rem .9rem;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #1E40AF;
+        background: white;
+        outline: none;
+        transition: border-color .2s;
+        max-width: 200px
+    }
+
+    .global-fee-input:focus {
+        border-color: #3B82F6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, .15)
+    }
+
+    .global-fee-hint {
+        font-size: .75rem;
+        color: #6B7280;
+        margin-top: .6rem
+    }
+
+    .batch-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: .85rem;
+        margin-top: .5rem
+    }
+
+    .batch-card {
+        background: linear-gradient(135deg, #F5F3FF, #EDE9FE);
+        border: 1.5px solid #DDD6FE;
+        border-radius: 14px;
+        padding: 1rem;
+        transition: box-shadow .2s, transform .15s
+    }
+
+    .batch-card:hover {
+        box-shadow: 0 6px 20px rgba(79, 70, 229, .15);
+        transform: translateY(-1px)
+    }
+
+    .batch-card-name {
+        font-weight: 700;
+        font-size: .88rem;
+        color: #4338CA;
+        margin-bottom: .55rem;
+        display: flex;
+        align-items: center;
+        gap: .35rem
+    }
+
+    .batch-fee-row {
+        display: flex;
+        align-items: center;
+        gap: .45rem
+    }
+
+    .batch-fee-input {
+        flex: 1;
+        border: 1.5px solid #C4B5FD;
+        border-radius: 8px;
+        padding: .42rem .6rem;
+        font-size: .9rem;
+        font-weight: 600;
+        color: #1F2937;
+        background: white;
+        outline: none;
+        transition: border-color .2s
+    }
+
+    .batch-fee-input:focus {
+        border-color: #7C3AED;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, .12)
+    }
+
+    .batch-fee-input::placeholder {
+        color: #A78BFA;
+        font-weight: 400
+    }
+
+    .badge-inherit {
+        font-size: .66rem;
+        font-weight: 600;
+        padding: .18rem .45rem;
+        border-radius: 20px;
+        background: #E0E7FF;
+        color: #4338CA;
+        white-space: nowrap;
+        flex-shrink: 0
+    }
+
+    .badge-override {
+        font-size: .66rem;
+        font-weight: 600;
+        padding: .18rem .45rem;
+        border-radius: 20px;
+        background: #D1FAE5;
+        color: #065F46;
+        white-space: nowrap;
+        flex-shrink: 0
+    }
+
+    .clear-override {
+        background: none;
+        border: none;
+        color: #D1D5DB;
+        cursor: pointer;
+        font-size: .9rem;
+        padding: .2rem;
+        border-radius: 50%;
+        transition: color .15s, background .15s;
+        line-height: 1;
+        display: flex;
+        align-items: center
+    }
+
+    .clear-override:hover {
+        color: #EF4444;
+        background: #FEF2F2
+    }
+
+    .stu-search {
+        width: 100%;
+        border: 1.5px solid #E5E7EB;
+        border-radius: 10px;
+        padding: .52rem .8rem .52rem 2.1rem;
+        font-size: .87rem;
+        outline: none;
+        transition: border-color .2s;
+        background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%239CA3AF' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zM5.9 11.4a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z'/%3E%3C/svg%3E") no-repeat .7rem center
+    }
+
+    .stu-search:focus {
+        border-color: #7C3AED;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, .12)
+    }
+
+    .stu-list {
+        display: flex;
+        flex-direction: column;
+        margin-top: .65rem
+    }
+
+    .stu-row {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        align-items: center;
+        gap: .6rem;
+        padding: .65rem 0;
+        border-bottom: 1px solid #F3F4F6
+    }
+
+    .stu-row:last-child {
+        border-bottom: none
+    }
+
+    .stu-name {
+        font-weight: 600;
+        font-size: .87rem;
+        color: #111827
+    }
+
+    .stu-batch {
+        font-size: .71rem;
+        color: #6B7280
+    }
+
+    .stu-fee-input {
+        width: 84px;
+        border: 1.5px solid #E5E7EB;
+        border-radius: 8px;
+        padding: .35rem .45rem;
+        font-size: .87rem;
+        font-weight: 600;
+        color: #1F2937;
+        text-align: right;
+        outline: none;
+        transition: border-color .2s
+    }
+
+    .stu-fee-input:focus {
+        border-color: #7C3AED;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, .12)
+    }
+
+    .stu-fee-input::placeholder {
+        color: #D1D5DB;
+        font-weight: 400;
+        font-size: .78rem
+    }
+
+    .stu-src {
+        font-size: .69rem;
+        text-align: right;
+        margin-top: .12rem;
+        color: #9CA3AF
+    }
+
+    .stu-src.is-student {
+        color: #065F46;
+        font-weight: 700
+    }
+
+    .stu-src.is-batch {
+        color: #4338CA;
+        font-weight: 700
+    }
+
+    .fee-save-bar {
+        position: sticky;
+        bottom: .75rem;
+        background: white;
+        border-radius: 14px;
+        box-shadow: 0 -2px 20px rgba(0, 0, 0, .12);
+        padding: .8rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .5rem;
+        margin-top: 1rem;
+        border: 1px solid #E5E7EB
+    }
+
+    .fee-save-hint {
+        font-size: .76rem;
+        color: #6B7280
+    }
+
+    .btn-save-overrides {
+        background: linear-gradient(135deg, #7C3AED, #4F46E5);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: .58rem 1.3rem;
+        font-size: .87rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: opacity .2s, transform .1s;
+        white-space: nowrap
+    }
+
+    .btn-save-overrides:hover {
+        opacity: .9;
+        transform: translateY(-1px)
+    }
+
+    .btn-save-overrides:disabled {
+        opacity: .5;
+        cursor: not-allowed
+    }
+</style>
+
+<!-- ══ PAYMENT DETAILS MODAL STYLES ══════════════════════════════════════ -->
+<style>
+    .pd-btn-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem
+    }
+
+    .btn-pd {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        background: linear-gradient(135deg, #7C3AED, #4F46E5);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: .65rem 1.2rem;
+        font-size: .88rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: opacity .2s, transform .12s, box-shadow .2s;
+        box-shadow: 0 4px 14px rgba(124, 58, 237, .35)
+    }
+
+    .btn-pd:hover {
+        opacity: .92;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(124, 58, 237, .45)
+    }
+
+    .btn-pd:active {
+        transform: scale(.97)
+    }
+
+    .pd-status {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        font-size: .75rem;
+        font-weight: 600;
+        padding: .28rem .65rem;
+        border-radius: 20px
+    }
+
+    .pd-status.is-set {
+        background: #D1FAE5;
+        color: #065F46
+    }
+
+    .pd-status.is-missing {
+        background: #FEF3C7;
+        color: #92400E
+    }
+
+    /* Modal overlay */
+    .pd-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(17, 24, 39, .55);
+        backdrop-filter: blur(4px);
+        z-index: 9000;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .25s
+    }
+
+    .pd-modal-overlay.open {
+        opacity: 1;
+        pointer-events: all
+    }
+
+    .pd-modal {
+        width: 100%;
+        max-width: 520px;
+        background: white;
+        border-radius: 22px 22px 0 0;
+        padding: 1.5rem 1.5rem 2rem;
+        box-shadow: 0 -8px 40px rgba(0, 0, 0, .18);
+        transform: translateY(100%);
+        transition: transform .3s cubic-bezier(.32, 1.1, .55, .98)
+    }
+
+    .pd-modal-overlay.open .pd-modal {
+        transform: translateY(0)
+    }
+
+    @media(min-width:600px) {
+        .pd-modal-overlay {
+            align-items: center
+        }
+
+        .pd-modal {
+            border-radius: 22px;
+            max-height: 90vh;
+            overflow-y: auto
+        }
+    }
+
+    .pd-modal-handle {
+        width: 36px;
+        height: 4px;
+        background: #E5E7EB;
+        border-radius: 4px;
+        margin: 0 auto 1.25rem
+    }
+
+    .pd-modal-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: .2rem
+    }
+
+    .pd-modal-sub {
+        font-size: .78rem;
+        color: #6B7280;
+        margin-bottom: 1.2rem
+    }
+
+    .pd-modal-close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: #F3F4F6;
+        border: none;
+        border-radius: 50%;
+        width: 2rem;
+        height: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1rem;
+        color: #6B7280;
+        transition: background .15s
+    }
+
+    .pd-modal-close:hover {
+        background: #E5E7EB;
+        color: #111827
+    }
+
+    .pd-modal-body {
+        position: relative
+    }
+
+    /* Quick preview strip */
+    .pd-preview {
+        display: flex;
+        gap: .5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.1rem
+    }
+
+    .pd-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        background: #F3F4F6;
+        padding: .3rem .7rem;
+        border-radius: 20px;
+        font-size: .74rem;
+        color: #374151;
+        font-weight: 500
+    }
+
+    .pd-chip.has-val {
+        background: #EDE9FE;
+        color: #5B21B6
+    }
+</style>
+
+<!-- ══ SECTION 0 — Payment Details Card ══════════════════════════════════ -->
+<div class="pay-card" style="margin-bottom:1rem">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem">
+        <div style="flex:1;min-width:0">
+            <div class="s-hdr" style="margin-bottom:.4rem">📲 Payment Details</div>
+            <div style="display:flex;flex-direction:column;gap:.35rem;margin-top:.55rem">
+                <div style="display:flex;align-items:center;gap:.5rem;font-size:.82rem">
+                    <span style="color:#6B7280">UPI ID:</span>
+                    {% if cfg and cfg.upi_id %}
+                    <strong style="color:#5B21B6;font-size:.85rem">{{ cfg.upi_id }}</strong>
+                    {% else %}
+                    <span style="color:#9CA3AF;font-style:italSic">Not set</span>
+                    {% endif %}
+                </div>
+                <div style="display:flex;align-items:center;gap:.5rem;font-size:.82rem">
+                    <span style="color:#6B7280">UPI Link:</span>
+                    {% if cfg and cfg.payment_link %}
+                    <strong
+                        style="color:#5B21B6;font-size:.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px">{{
+                        cfg.payment_link }}</strong>
+                    {% else %}
+                    <span style="color:#9CA3AF;font-style:italic">Not set</span>
+                    {% endif %}
+                </div>
+                <div style="margin-top:.2rem">
+                    {% if cfg and (cfg.upi_id or cfg.payment_link) %}
+                    <span class="pd-status is-set">✓ UPI configured</span>
+                    {% else %}
+                    <span class="pd-status is-missing">⚠ Not configured</span>
+                    {% endif %}
                 </div>
             </div>
-            <label class="toggle">
-                <input type="checkbox" name="reminders_enabled" {% if not cfg or cfg.reminders_enabled %}checked{% endif
-                    %}>
-                <span class="slider"></span>
-            </label>
         </div>
+        <button class="btn-pd" id="btn-open-pd" onclick="openPdModal()"
+            style="flex-shrink:0;margin-top:.1rem;padding:.7rem 1.25rem;font-size:.85rem">
+            Edit
+        </button>
     </div>
+</div>
 
-    <button type="submit" class="btn-save">Save Settings</button>
-</form>
+
+<!-- ══ Payment Details Modal ═════════════════════════════════════════════ -->
+<div class="pd-modal-overlay" id="pd-modal-overlay" onclick="outsideClickPd(event)">
+    <div class="pd-modal pd-modal-body" id="pd-modal">
+        <div class="pd-modal-handle"></div>
+        <button class="pd-modal-close" onclick="closePdModal()" type="button" aria-label="Close">✕</button>
+
+        <div class="pd-modal-title">📲 Payment Details</div>
+        <div class="pd-modal-sub">Shown to students on their fee payment screen.</div>
+
+        <!-- Quick preview of current values -->
+        <div class="pd-preview" id="pd-preview">
+            {% if cfg and cfg.upi_id %}
+            <span class="pd-chip has-val">🔗 {{ cfg.upi_id }}</span>
+            {% else %}
+            <span class="pd-chip">UPI: not set</span>
+            {% endif %}
+            {% if cfg and cfg.payment_link %}
+            <span class="pd-chip has-val">🌐 Payment link set</span>
+            {% else %}
+            <span class="pd-chip">Payment link: not set</span>
+            {% endif %}
+        </div>
+
+        <form id="pd-form" method="POST" action="{{ url_for('payments.payment_settings') }}" novalidate>
+            <!-- carry fee/due_day so they're never reset -->
+            <input type="hidden" name="monthly_fee" value="{{ cfg.monthly_fee if cfg and cfg.monthly_fee else 0 }}">
+            <input type="hidden" name="due_day" value="{{ cfg.due_day if cfg and cfg.due_day else 10 }}">
+
+            <label class="settings-label" for="pd-upi">UPI ID</label>
+            <input class="settings-input" type="text" id="pd-upi" name="upi_id" placeholder="yourname@upi"
+                value="{{ cfg.upi_id if cfg and cfg.upi_id else '' }}" autocomplete="off" inputmode="email">
+
+            <label class="settings-label" for="pd-link">Payment Link <span
+                    style="color:#9CA3AF;font-weight:400">(optional)</span></label>
+            <input class="settings-input" type="url" id="pd-link" name="payment_link"
+                placeholder="https://razorpay.me/..."
+                value="{{ cfg.payment_link if cfg and cfg.payment_link else '' }}">
+
+            <div
+                style="display:flex;align-items:center;justify-content:space-between;margin-top:1rem;padding:.75rem 0;border-top:1px solid #F3F4F6">
+                <div>
+                    <div style="font-weight:700;color:#111827;font-size:.88rem">🔔 Fee Reminders</div>
+                    <div style="font-size:.74rem;color:#6B7280;margin-top:.1rem">Push notification on due date</div>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="pd-reminders" name="reminders_enabled" {% if not cfg or
+                        cfg.reminders_enabled %}checked{% endif %}>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <button type="submit" class="btn-save" style="margin-top:1.1rem;width:100%">
+                💾 Save Payment Details
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openPdModal() {
+        document.getElementById('pd-modal-overlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => document.getElementById('pd-upi').focus(), 320);
+    }
+    function closePdModal() {
+        document.getElementById('pd-modal-overlay').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+    function outsideClickPd(e) {
+        if (e.target === document.getElementById('pd-modal-overlay')) closePdModal();
+    }
+    // ESC key closes modal
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closePdModal();
+    });
+</script>
+
+
+<!-- ══ SECTION 2 — Fee Mode Selector ════════════════════════════════════ -->
+<div class="pay-card" style="margin-top:1rem">
+    <div class="s-hdr">💰 Fee Structure</div>
+    <p class="s-sub" style="margin-bottom:.75rem">Choose how monthly fees are set for your students.</p>
+    <select class="fee-mode-select" id="fee-mode-select" onchange="switchFeeMode(this.value)">
+        <option value="global">🌐 Global Fees</option>
+        <option value="batch">🗂️ Batch-wise Fees</option>
+        <option value="student">👤 Student-wise Fees</option>
+    </select>
+    <div class="fee-mode-desc" id="fee-mode-desc">One monthly fee that applies to every student.</div>
+</div>
+
+<!-- ══ SECTION 3a — Global fee panel ════════════════════════════════════ -->
+<div class="pay-card fee-panel" id="panel-global" style="margin-top:1rem">
+    <div class="s-hdr">🌐 Monthly Fee Amount</div>
+    <p class="s-sub">Applies to every student who has no batch or personal fee set.</p>
+    <form id="global-fee-form" method="POST" action="{{ url_for('payments.payment_settings') }}" novalidate>
+        <!-- carry upi/link/toggle so save doesn't wipe them -->
+        <input type="hidden" name="upi_id" value="{{ cfg.upi_id or '' }}">
+        <input type="hidden" name="payment_link" value="{{ cfg.payment_link or '' }}">
+        <input type="hidden" name="reminders_enabled" value="{{ '1' if (not cfg or cfg.reminders_enabled) else '' }}">
+        <div class="global-fee-card">
+            <div class="global-fee-row">
+                <span class="global-fee-symbol">₹</span>
+                <input class="global-fee-input" type="number" name="monthly_fee" id="monthly_fee" min="0" step="1"
+                    placeholder="0" value="{{ cfg.monthly_fee|int if cfg and cfg.monthly_fee else '' }}">
+            </div>
+            <p class="global-fee-hint">Due on the
+                <strong>{{ cfg.due_day if cfg and cfg.due_day else 10 }}{% if (cfg.due_day if cfg and cfg.due_day else
+                    10)==1 %}st{% elif (cfg.due_day if cfg and cfg.due_day else 10)==2 %}nd{% elif (cfg.due_day if cfg
+                    and cfg.due_day else 10)==3 %}rd{% else %}th{% endif %}</strong>
+                of every month.
+                <a href="#" onclick="showDueDayPicker(event)" style="color:#7C3AED;font-weight:600">Change date</a>
+            </p>
+        </div>
+        <div id="due-day-picker" style="display:none;margin-top:.75rem">
+            <label class="settings-label" for="due_day_pick">Due Day of Month</label>
+            <select class="settings-input" id="due_day_pick" name="due_day" onchange="syncDueDay(this.value)">
+                {% for d in range(1,29) %}
+                <option value="{{ d }}" {% if cfg and cfg.due_day==d %}selected{% endif %}>
+                    {{ d }}{% if d==1 %}st{% elif d==2 %}nd{% elif d==3 %}rd{% else %}th{% endif %} of every month
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn-save" style="margin-top:1rem">💾 Save Fee</button>
+    </form>
+</div>
+
+<!-- ══ SECTION 3b — Batch-wise panel ════════════════════════════════════ -->
+<div class="pay-card fee-panel" id="panel-batch" style="margin-top:1rem;display:none">
+    <div class="s-hdr">🗂️ Batch Fee Overrides</div>
+    <p class="s-sub">Set a custom fee per batch. Overrides the global fee for all students in that batch.</p>
+    <div
+        style="display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;margin-bottom:.85rem;padding:.6rem .85rem;background:#FFF7ED;border-radius:10px;border:1px solid #FED7AA">
+        <span style="font-size:.82rem;color:#92400E">🌐 Global fallback:</span>
+        <strong style="font-size:.88rem;color:#78350F">₹{{ cfg.monthly_fee|int if cfg and cfg.monthly_fee else 0
+            }}/month</strong>
+        <span style="font-size:.72rem;color:#9CA3AF;margin-left:auto">Used when no batch override is set</span>
+    </div>
+    {% if batches_cfg %}
+    <div class="batch-grid">
+        {% for b in batches_cfg %}
+        <div class="batch-card">
+            <div class="batch-card-name"><span>📚</span>{{ b.name }}</div>
+            <div class="batch-fee-row">
+                <span style="font-size:.82rem;color:#6B7280;font-weight:600">₹</span>
+                <input class="batch-fee-input" type="number" min="0" step="1" id="batch-{{ b.id }}"
+                    data-batch-id="{{ b.id }}" placeholder="{{ cfg.monthly_fee|int if cfg and cfg.monthly_fee else 0 }}"
+                    value="{{ b.fee_override|int if b.fee_override is not none else '' }}" oninput="markDirty()">
+                <span class="badge-inherit" id="badge-batch-{{ b.id }}"
+                    style="display:{{ 'none' if b.fee_override is not none else 'inline-flex' }}">Global</span>
+                <span class="badge-override" id="badgeset-batch-{{ b.id }}"
+                    style="display:{{ 'inline-flex' if b.fee_override is not none else 'none' }}">Custom ✓</span>
+                <button class="clear-override" title="Revert to global" type="button"
+                    onclick="clearBatch({{ b.id }})">✕</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:2rem 0;color:#9CA3AF;font-size:.87rem">
+        No batches yet. <a href="{{ url_for('batches.add_batch') }}" style="color:#7C3AED;font-weight:600">Add a batch
+            →</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ══ SECTION 3c — Student-wise panel ══════════════════════════════════ -->
+<div class="pay-card fee-panel" id="panel-student" style="margin-top:1rem;display:none;margin-bottom:5rem">
+    <div class="s-hdr">👤 Student Fee Overrides</div>
+    <p class="s-sub">Highest priority — overrides both batch and global fees for a specific student.</p>
+    {% if students_cfg %}
+    <input class="stu-search" id="stu-search" type="search" placeholder="Search students…"
+        oninput="filterStudents(this.value)">
+    <div class="stu-list" id="stu-list">
+        {% for st in students_cfg %}
+        {% set eff_fee = st.fee_override if st.fee_override is not none else
+        (st.batch_override if st.batch_override is not none else
+        (cfg.monthly_fee if cfg and cfg.monthly_fee else 0)) %}
+        {% set src = 'student' if st.fee_override is not none else
+        ('batch' if st.batch_override is not none else 'global') %}
+        <div class="stu-row" data-name="{{ st.name|lower }}">
+            <div>
+                <div class="stu-name">{{ st.name }}</div>
+                <div class="stu-batch">{{ st.batch_name or 'No batch' }}</div>
+            </div>
+            <div style="text-align:right">
+                <input class="stu-fee-input" type="number" min="0" step="1" id="stu-{{ st.id }}"
+                    data-stu-id="{{ st.id }}" data-batch-name="{{ st.batch_name or '' }}"
+                    data-batch-override="{{ st.batch_override if st.batch_override is not none else '' }}"
+                    placeholder="₹{{ eff_fee|int }}"
+                    value="{{ st.fee_override|int if st.fee_override is not none else '' }}" oninput="onStuInput(this)">
+                <div class="stu-src is-{{ src }}" id="src-{{ st.id }}">
+                    {% if src=='student' %}✎ custom
+                    {% elif src=='batch' %}📚 {{ st.batch_name }}
+                    {% else %}🌐 global{% endif %}
+                </div>
+            </div>
+            <button class="clear-override" title="Clear override" type="button"
+                onclick="clearStudent({{ st.id }})">✕</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:2rem 0;color:#9CA3AF;font-size:.87rem">
+        No students yet. <a href="{{ url_for('students.add_student') }}" style="color:#7C3AED;font-weight:600">Add a
+            student →</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ─ Sticky save bar (batch/student only) ─ -->
+<div class="fee-save-bar" id="override-save-bar" style="display:none">
+    <div class="fee-save-hint">💡 Unsaved fee changes</div>
+    <button class="btn-save-overrides" id="btn-save-overrides" onclick="saveOverrides()">Save Fee Overrides</button>
+</div>
+
+<script>
+    const MODE_DESC = {
+        global: 'One monthly fee that applies to every student.',
+        batch: 'Different fee per batch. Students without a batch override use the global fee.',
+        student: 'Unique fee per student. Highest priority — overrides batch and global fees.',
+    };
+
+    /* Restore last selected mode */
+    (function () {
+        const saved = localStorage.getItem('tt_fee_mode') || 'global';
+        const sel = document.getElementById('fee-mode-select');
+        if (sel) { sel.value = saved; switchFeeMode(saved, true); }
+    })();
+
+    function switchFeeMode(mode, initial) {
+        ['global', 'batch', 'student'].forEach(m =>
+            document.getElementById('panel-' + m).style.display = m === mode ? '' : 'none'
+        );
+        document.getElementById('fee-mode-desc').textContent = MODE_DESC[mode] || '';
+        localStorage.setItem('tt_fee_mode', mode);
+        if (mode === 'global' && !initial)
+            document.getElementById('override-save-bar').style.display = 'none';
+        if (!initial) {
+            const p = document.getElementById('panel-' + mode);
+            p.style.animation = 'none'; p.offsetHeight; p.style.animation = '';
+        }
+    }
+
+    function showDueDayPicker(e) {
+        e.preventDefault();
+        const el = document.getElementById('due-day-picker');
+        el.style.display = el.style.display === 'none' ? '' : 'none';
+    }
+    function syncDueDay(val) {
+        document.getElementById('due_day_hidden').value = val;
+    }
+
+    let _dirty = false;
+    function markDirty() {
+        _dirty = true;
+        document.getElementById('override-save-bar').style.display = 'flex';
+        document.querySelectorAll('.batch-fee-input').forEach(inp => {
+            const bid = inp.dataset.batchId, has = inp.value.trim() !== '';
+            document.getElementById('badge-batch-' + bid).style.display = has ? 'none' : 'inline-flex';
+            document.getElementById('badgeset-batch-' + bid).style.display = has ? 'inline-flex' : 'none';
+        });
+    }
+
+    function onStuInput(inp) {
+        markDirty();
+        const sid = inp.dataset.stuId, srcEl = document.getElementById('src-' + sid);
+        if (inp.value.trim() !== '') {
+            srcEl.className = 'stu-src is-student'; srcEl.textContent = '✎ custom';
+        } else {
+            const bov = inp.dataset.batchOverride, bnam = inp.dataset.batchName;
+            if (bov !== '') { srcEl.className = 'stu-src is-batch'; srcEl.textContent = '📚 ' + (bnam || 'batch'); }
+            else { srcEl.className = 'stu-src'; srcEl.textContent = '🌐 global'; }
+        }
+    }
+
+    function clearBatch(bid) { document.getElementById('batch-' + bid).value = ''; markDirty(); }
+    function clearStudent(sid) { const i = document.getElementById('stu-' + sid); i.value = ''; onStuInput(i); }
+    function filterStudents(q) {
+        q = q.toLowerCase().trim();
+        document.querySelectorAll('#stu-list .stu-row').forEach(r => {
+            r.style.display = (!q || r.dataset.name.includes(q)) ? '' : 'none';
+        });
+    }
+
+    async function saveOverrides() {
+        const btn = document.getElementById('btn-save-overrides');
+        btn.disabled = true; btn.textContent = '⏳ Saving…';
+        const batches = [], students = [];
+        document.querySelectorAll('.batch-fee-input').forEach(i => batches.push({
+            id: parseInt(i.dataset.batchId), fee_override: i.value.trim() !== '' ? parseFloat(i.value) : null
+        }));
+        document.querySelectorAll('.stu-fee-input').forEach(i => students.push({
+            id: parseInt(i.dataset.stuId), fee_override: i.value.trim() !== '' ? parseFloat(i.value) : null
+        }));
+        try {
+            const res = await fetch('/api/payments/fee-overrides', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ batches, students })
+            });
+            const data = await res.json();
+            if (data.success) {
+                _dirty = false;
+                document.getElementById('override-save-bar').style.display = 'none';
+                toast('success', 'Fee overrides saved! 🎉', 'Will apply on next "Generate Fees".');
+            } else toast('error', 'Save failed', data.error || 'Please try again.');
+        } catch { toast('error', 'Network error', 'Could not reach the server.'); }
+        finally { btn.disabled = false; btn.textContent = 'Save Fee Overrides'; }
+    }
+
+    window.addEventListener('beforeunload', e => { if (_dirty) { e.preventDefault(); e.returnValue = ''; } });
+</script>
+
 {% endif %}
 
 <script>

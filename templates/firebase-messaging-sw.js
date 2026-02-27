@@ -5,6 +5,15 @@
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
 
+// ─── Cache version constants ──────────────────────────────────────────────────
+// Bump the version suffix whenever you deploy significant asset changes
+// so old caches are automatically cleaned up by the activate handler.
+const CACHE_VERSION = 'v2';
+const CACHE_NAME = `tuitiontrack-cache-${CACHE_VERSION}`;
+const STATIC_CACHE = `tuitiontrack-static-${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `tuitiontrack-dynamic-${CACHE_VERSION}`;
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Initialize Firebase with injected config from Flask/Jinja
 const firebaseConfig = {
     apiKey: "{{ config.FIREBASE_API_KEY }}",
@@ -37,9 +46,9 @@ messaging.onBackgroundMessage(function (payload) {
     });
 });
 
-// Assets to cache on install
+// Assets to pre-cache on install
 const STATIC_ASSETS = [
-    '/static/manifest.json',
+    '/manifest.json',
     '/static/TutionTrack_appIcon_192x192.png',
     '/static/TutionTrack_headerLogo.png',
     '/static/TutionTrack_logoNoBG.png',

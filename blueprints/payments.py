@@ -172,6 +172,26 @@ def payments():
     history = [dict(r, month_display=_format_month_display(r['month'])) for r in history_raw]
 
     conn.commit()
+
+    # ── Data for the settings tab (batch/student fee overrides) ──
+    cursor2 = conn.cursor() if not conn else None
+    conn2   = get_db_connection()
+    c2      = conn2.cursor()
+    c2.execute('''
+        SELECT id, name, fee_override
+        FROM batches WHERE user_id = ? ORDER BY name
+    ''', (user_id,))
+    batches_cfg = [dict(r) for r in c2.fetchall()]
+
+    c2.execute('''
+        SELECT s.id, s.name, s.fee_override,
+               b.name AS batch_name, b.fee_override AS batch_override
+        FROM students s
+        LEFT JOIN batches b ON s.batch_id = b.id
+        WHERE s.user_id = ? ORDER BY s.name
+    ''', (user_id,))
+    students_cfg = [dict(r) for r in c2.fetchall()]
+    conn2.close()
     conn.close()
 
     # Compute collection percentage
@@ -193,6 +213,8 @@ def payments():
         paid=paid,
         history=history,
         collection_pct=pct,
+        batches_cfg=batches_cfg,
+        students_cfg=students_cfg,
     )
 
 
@@ -354,38 +376,103 @@ def reject_payment(record_id):
 @payments_bp.route('/api/payments/<int:record_id>/mark-manual', methods=['POST'])
 @require_login
 def mark_manual_payment(record_id):
+    """Tutor manually records cash / offline payment.
+
+    Edge-cases handled:
+    • Partial payment  — `paid_amount` < total_due: record remains pending,
+      outstanding balance is visible in the dashboard.
+    • Full payment     — marks status = 'paid'.
+    • Overpayment      — excess stored as `advance_credit`; automatically
+      applied to next month when generate_fees runs.
+    """
     user_id = _require_tutor()
     if not user_id:
         return jsonify({'error': 'Unauthorized'}), 403
 
-    data = request.get_json() or {}
-    note = (data.get('note') or 'Cash payment').strip()[:200]
+    data   = request.get_json() or {}
+    note   = (data.get('note') or 'Cash payment').strip()[:200]
+    paid   = data.get('paid_amount')  # optional — defaults to full amount
 
-    conn = get_db_connection()
+    conn   = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
-        'SELECT id FROM student_fee_records WHERE id = ? AND user_id = ?',
+        'SELECT id, amount, arrears, paid_amount FROM student_fee_records WHERE id = ? AND user_id = ?',
         (record_id, user_id)
     )
-    if not cursor.fetchone():
+    rec = cursor.fetchone()
+    if not rec:
         conn.close()
         return jsonify({'error': 'Record not found'}), 404
 
-    now = get_ist_now().strftime('%Y-%m-%d %H:%M:%S')
-    cursor.execute('''
-        UPDATE student_fee_records
-        SET status = 'paid', confirmed_at = ?, paid_at = ?, notes = ?, updated_at = ?
-        WHERE id = ?
-    ''', (now, now, note, now, record_id))
+    total_due     = round(float(rec['amount']) + float(rec['arrears']), 2)
+    already_paid  = round(float(rec['paid_amount'] or 0), 2)
+    remaining_due = round(total_due - already_paid, 2)
+
+    # Parse the payment amount (default = settle in full)
+    try:
+        paid_now = round(float(paid), 2) if paid is not None else remaining_due
+    except (TypeError, ValueError):
+        conn.close()
+        return jsonify({'error': 'paid_amount must be a number'}), 400
+
+    if paid_now <= 0:
+        conn.close()
+        return jsonify({'error': 'paid_amount must be greater than 0'}), 400
+
+    new_paid_total   = round(already_paid + paid_now, 2)
+    advance_credit_  = round(max(new_paid_total - total_due, 0), 2)
+    now              = get_ist_now().strftime('%Y-%m-%d %H:%M:%S')
+
+    if new_paid_total >= total_due:
+        # Fully settled (or overpaid)
+        cursor.execute('''
+            UPDATE student_fee_records
+            SET status = 'paid',
+                paid_amount    = ?,
+                advance_credit = ?,
+                confirmed_at   = ?,
+                paid_at        = ?,
+                notes          = ?,
+                updated_at     = ?
+            WHERE id = ?
+        ''', (new_paid_total, advance_credit_, now, now, note, now, record_id))
+        result_status = 'paid'
+    else:
+        # Partial payment — keep pending
+        cursor.execute('''
+            UPDATE student_fee_records
+            SET paid_amount  = ?,
+                paid_at      = ?,
+                notes        = ?,
+                updated_at   = ?
+            WHERE id = ?
+        ''', (new_paid_total, now, note, now, record_id))
+        result_status = 'partial'
+
     conn.commit()
     conn.close()
-    return jsonify({'success': True})
+    return jsonify({
+        'success'        : True,
+        'status'         : result_status,
+        'paid_total'     : new_paid_total,
+        'advance_credit' : advance_credit_,
+        'remaining_due'  : round(max(total_due - new_paid_total, 0), 2),
+    })
 
 
 @payments_bp.route('/api/payments/generate', methods=['POST'])
 @require_login
 def generate_fees():
-    """Manually trigger fee generation for a given month (idempotent)."""
+    """Idempotent fee generation for a given month.
+
+    Fee priority chain per student:
+      student.fee_override  >  batch.fee_override  >  global monthly_fee
+
+    Additional edge-cases:
+    ① Arrears carry-forward  — any prior months still unpaid are summed.
+    ② Advance credit         — overpayment auto-deducted from next month.
+    ③ Advance month          — future months marked pending, no special treatment.
+    """
     user_id = _require_tutor()
     if not user_id:
         return jsonify({'error': 'Unauthorized'}), 403
@@ -401,38 +488,186 @@ def generate_fees():
         conn.close()
         return jsonify({'error': 'Please set a monthly fee in Settings first.'}), 400
 
-    cursor.execute('SELECT id FROM students WHERE user_id = ?', (user_id,))
+    global_fee = float(cfg['monthly_fee'])
+
+    # Fetch all students with their batch overrides in one query
+    cursor.execute('''
+        SELECT s.id, s.fee_override AS student_override,
+               b.fee_override       AS batch_override
+        FROM students s
+        LEFT JOIN batches b ON s.batch_id = b.id
+        WHERE s.user_id = ?
+    ''', (user_id,))
     students = cursor.fetchall()
     created = 0
+    now_str = get_ist_now().strftime('%Y-%m-%d %H:%M:%S')
+
     for s in students:
+        sid = s['id']
+
+        # ── Resolve effective base fee (priority chain) ────────────────────
+        if s['student_override'] is not None:
+            base_fee = float(s['student_override'])
+        elif s['batch_override'] is not None:
+            base_fee = float(s['batch_override'])
+        else:
+            base_fee = global_fee
+
+        # ── ① Arrears from prior unpaid months ────────────────────────
+        cursor.execute('''
+            SELECT COALESCE(SUM(amount + arrears - paid_amount), 0) AS due
+            FROM student_fee_records
+            WHERE student_id = ? AND user_id = ?
+              AND month < ?
+              AND status IN ('pending', 'overdue')
+        ''', (sid, user_id, month))
+        total_arrears = round(float(cursor.fetchone()['due'] or 0), 2)
+
+        # ── ② Advance credit from prior over-paid months ──────────────
+        cursor.execute('''
+            SELECT COALESCE(SUM(advance_credit), 0) AS credit
+            FROM student_fee_records
+            WHERE student_id = ? AND user_id = ?
+              AND month < ? AND advance_credit > 0
+        ''', (sid, user_id, month))
+        prior_credit = round(float(cursor.fetchone()['credit'] or 0), 2)
+
+        net_amount    = round(max(base_fee + total_arrears - prior_credit, 0), 2)
+        paid_amount_  = 0.0
+        new_status    = 'pending'
+        confirmed_at_ = None
+        leftover      = 0.0
+
+        if prior_credit >= base_fee + total_arrears:
+            paid_amount_  = net_amount
+            new_status    = 'paid'
+            confirmed_at_ = now_str
+            leftover      = round(prior_credit - base_fee - total_arrears, 2)
+
         try:
             cursor.execute('''
                 INSERT OR IGNORE INTO student_fee_records
-                    (student_id, user_id, month, amount, status)
-                VALUES (?, ?, ?, ?, 'pending')
-            ''', (s['id'], user_id, month, cfg['monthly_fee']))
+                    (student_id, user_id, month, amount, paid_amount,
+                     arrears, advance_credit, status, confirmed_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (sid, user_id, month,
+                  net_amount, paid_amount_,
+                  total_arrears, leftover, new_status, confirmed_at_))
             if cursor.rowcount:
                 created += 1
+                if prior_credit > 0:
+                    cursor.execute('''
+                        UPDATE student_fee_records
+                        SET advance_credit = 0, updated_at = ?
+                        WHERE student_id = ? AND user_id = ?
+                          AND month < ? AND advance_credit > 0
+                    ''', (now_str, sid, user_id, month))
         except sqlite3.IntegrityError:
             pass
 
     conn.commit()
 
-    # Push notifications → all students for this tutor (fee generated)
     if created > 0:
-        cursor.execute('SELECT id FROM students WHERE user_id = ?', (user_id,))
-        student_ids = [r['id'] for r in cursor.fetchall()]
         month_display = _format_month_display(month)
-        # Students receive notifications under the tutor's push subscription
         send_fcm_notification(
-            user_id,
-            '📋 Fee Generated',
-            f'Your fee of ₹{int(cfg["monthly_fee"])} for {month_display} is ready. Tap to pay.',
+            user_id, '📋 Fee Generated',
+            f'Fee ready for {month_display}. Tap to view.',
             {'type': 'fees', 'url': '/student/fees'}
         )
 
     conn.close()
     return jsonify({'success': True, 'created': created, 'month': month})
+
+
+# ── Fee override CRUD ──────────────────────────────────────────────────────────
+
+@payments_bp.route('/api/payments/fee-overrides', methods=['GET'])
+@require_login
+def get_fee_overrides():
+    """Return current batch and student fee overrides."""
+    user_id = _require_tutor()
+    if not user_id:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    conn   = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        'SELECT id, name, fee_override FROM batches WHERE user_id = ? ORDER BY name',
+        (user_id,)
+    )
+    batches = [dict(r) for r in cursor.fetchall()]
+
+    cursor.execute('''
+        SELECT s.id, s.name, s.fee_override,
+               b.name AS batch_name, b.fee_override AS batch_override
+        FROM students s
+        LEFT JOIN batches b ON s.batch_id = b.id
+        WHERE s.user_id = ? ORDER BY s.name
+    ''', (user_id,))
+    students = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+
+    return jsonify({'batches': batches, 'students': students})
+
+
+@payments_bp.route('/api/payments/fee-overrides', methods=['POST'])
+@require_login
+def save_fee_overrides():
+    """Save batch and/or student fee overrides.
+
+    Body: { batches: [{id, fee_override}], students: [{id, fee_override}] }
+    fee_override = null clears the override (falls back to parent).
+    """
+    user_id = _require_tutor()
+    if not user_id:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    data     = request.get_json(silent=True) or {}
+    batches  = data.get('batches', [])
+    students = data.get('students', [])
+
+    conn   = get_db_connection()
+    cursor = conn.cursor()
+
+    for item in batches:
+        bid = item.get('id')
+        fee = item.get('fee_override')  # None or float
+        if bid is None:
+            continue
+        try:
+            fee_val = float(fee) if fee is not None and fee != '' else None
+            if fee_val is not None and fee_val < 0:
+                fee_val = None
+        except (TypeError, ValueError):
+            fee_val = None
+
+        cursor.execute(
+            'UPDATE batches SET fee_override = ? WHERE id = ? AND user_id = ?',
+            (fee_val, bid, user_id)
+        )
+
+    for item in students:
+        sid = item.get('id')
+        fee = item.get('fee_override')
+        if sid is None:
+            continue
+        try:
+            fee_val = float(fee) if fee is not None and fee != '' else None
+            if fee_val is not None and fee_val < 0:
+                fee_val = None
+        except (TypeError, ValueError):
+            fee_val = None
+
+        cursor.execute(
+            'UPDATE students SET fee_override = ? WHERE id = ? AND user_id = ?',
+            (fee_val, sid, user_id)
+        )
+
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
 
 
 @payments_bp.route('/api/payments/poll')

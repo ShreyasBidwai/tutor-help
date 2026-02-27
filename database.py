@@ -473,6 +473,9 @@ def migrate_db():
                     user_id          INTEGER NOT NULL,
                     month            TEXT    NOT NULL,
                     amount           REAL    NOT NULL,
+                    paid_amount      REAL    NOT NULL DEFAULT 0,
+                    arrears          REAL    NOT NULL DEFAULT 0,
+                    advance_credit   REAL    NOT NULL DEFAULT 0,
                     status           TEXT    NOT NULL DEFAULT 'pending',
                     paid_at          TIMESTAMP,
                     confirmed_at     TIMESTAMP,
@@ -487,6 +490,29 @@ def migrate_db():
             ''')
         except sqlite3.OperationalError:
             pass
+
+    # ── Per-batch and per-student fee overrides ──────────────────────────────
+    # NULL = inherit from parent (batch inherits global, student inherits batch)
+    for _tbl, _col in [('batches', 'fee_override'), ('students', 'fee_override')]:
+        try:
+            cursor.execute(f'ALTER TABLE {_tbl} ADD COLUMN {_col} REAL')
+        except sqlite3.OperationalError:
+            pass  # already exists
+
+    # ── Payment edge-case columns (advance payment / arrears / partial pay) ──
+    # These may already exist on fresh DBs created with the updated init_db schema;
+    # the try/except makes the migration safe to re-run.
+    for _col, _def in [
+        ('paid_amount',    'REAL NOT NULL DEFAULT 0'),
+        ('arrears',        'REAL NOT NULL DEFAULT 0'),
+        ('advance_credit', 'REAL NOT NULL DEFAULT 0'),
+    ]:
+        try:
+            cursor.execute(
+                f'ALTER TABLE student_fee_records ADD COLUMN {_col} {_def}'
+            )
+        except sqlite3.OperationalError:
+            pass  # column already exists
 
     conn.commit()
     conn.close()
