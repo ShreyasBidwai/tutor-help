@@ -1,5 +1,5 @@
 """Main Flask application - TuitionTrack PWA"""
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from config import Config
 from database import init_db, migrate_db, add_indexes
 from datetime import datetime, date
@@ -21,9 +21,19 @@ except AttributeError:
 app = Flask(__name__)
 app.config.from_object(Config)
 
-# Prevent caching of dynamic pages (Wait, this is aggressive but necessary for session issues)
+# Prevent caching of dynamic pages only — static assets (images, JS, CSS) should be cached
 @app.after_request
 def add_header(response):
+    # Skip cache control for static files so that images, JS,
+    # and CSS are cached by the browser (avoids logo / asset flicker)
+    if request.path.startswith('/static/'):
+        # Cache static assets for 1 hour; use ETag for revalidation
+        response.headers['Cache-Control'] = 'public, max-age=3600, stale-while-revalidate=60'
+        response.headers.pop('Pragma', None)
+        response.headers.pop('Expires', None)
+        return response
+
+    # Dynamic pages: prevent caching so session changes are always fresh
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"

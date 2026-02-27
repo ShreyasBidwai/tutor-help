@@ -48,7 +48,7 @@ function showFieldError(field, message) {
             input.parentNode.appendChild(error);
         }
     }
-    
+
     // Add error class to input
     const input = document.getElementById(field) || document.querySelector(`[name="${field}"]`);
     if (input) {
@@ -62,7 +62,7 @@ function clearFieldError(field) {
     if (errorElement) {
         errorElement.style.display = 'none';
     }
-    
+
     const input = document.getElementById(field) || document.querySelector(`[name="${field}"]`);
     if (input) {
         input.style.borderColor = '';
@@ -72,11 +72,11 @@ function clearFieldError(field) {
 // Validate student form
 function validateStudentForm() {
     let isValid = true;
-    
+
     const name = document.getElementById('name')?.value.trim();
     const phone = document.getElementById('phone')?.value.trim();
     const batchId = document.getElementById('batch_id')?.value;
-    
+
     // Validate name
     if (!validateRequired(name)) {
         showFieldError('name', 'Student name is required');
@@ -87,7 +87,7 @@ function validateStudentForm() {
     } else {
         clearFieldError('name');
     }
-    
+
     // Validate phone
     if (!validateRequired(phone)) {
         showFieldError('phone', 'Phone number is required');
@@ -98,7 +98,7 @@ function validateStudentForm() {
     } else {
         clearFieldError('phone');
     }
-    
+
     // Validate batch
     if (!batchId || batchId === '') {
         showFieldError('batch_id', 'Please select a batch');
@@ -106,41 +106,41 @@ function validateStudentForm() {
     } else {
         clearFieldError('batch_id');
     }
-    
+
     return isValid;
 }
 
 // Validate batch form
 function validateBatchForm() {
     let isValid = true;
-    
+
     const name = document.getElementById('name')?.value.trim();
-    
+
     if (!validateRequired(name)) {
         showFieldError('name', 'Batch name is required');
         isValid = false;
     } else {
         clearFieldError('name');
     }
-    
+
     return isValid;
 }
 
 // Validate homework form
 function validateHomeworkForm() {
     let isValid = true;
-    
+
     const title = document.getElementById('title')?.value.trim();
     const batchId = document.getElementById('batch_id')?.value;
     const studentId = document.getElementById('student_id')?.value;
-    
+
     if (!validateRequired(title)) {
         showFieldError('title', 'Homework title is required');
         isValid = false;
     } else {
         clearFieldError('title');
     }
-    
+
     if (!batchId && !studentId) {
         showFieldError('batch_id', 'Please select either a batch or student');
         isValid = false;
@@ -148,7 +148,7 @@ function validateHomeworkForm() {
         clearFieldError('batch_id');
         clearFieldError('student_id');
     }
-    
+
     return isValid;
 }
 
@@ -157,20 +157,20 @@ function preventDuplicateSubmission(formId) {
     const form = document.getElementById(formId) || document.querySelector(`form[action*="${formId}"]`);
     if (form) {
         let isSubmitting = false;
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', function (e) {
             if (isSubmitting) {
                 e.preventDefault();
                 return false;
             }
             isSubmitting = true;
-            
+
             // Disable submit button
             const submitBtn = form.querySelector('button[type="submit"]');
             if (submitBtn) {
                 submitBtn.disabled = true;
                 submitBtn.classList.add('btn-loading');
             }
-            
+
             // Re-enable after 3 seconds (in case of error)
             setTimeout(() => {
                 isSubmitting = false;
@@ -187,7 +187,7 @@ function preventDuplicateSubmission(formId) {
 function formatPhoneInput(inputId) {
     const input = document.getElementById(inputId);
     if (input) {
-        input.addEventListener('input', function(e) {
+        input.addEventListener('input', function (e) {
             // Remove non-numeric characters
             this.value = this.value.replace(/[^0-9]/g, '');
             // Limit to 10 digits
@@ -202,7 +202,7 @@ function formatPhoneInput(inputId) {
 function formatNameInput(inputId) {
     const input = document.getElementById(inputId);
     if (input) {
-        input.addEventListener('input', function(e) {
+        input.addEventListener('input', function (e) {
             // Remove numbers and special characters, keep only letters and spaces
             this.value = this.value.replace(/[^a-zA-Z\s\u00C0-\u017F\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]/g, '');
         });
@@ -212,13 +212,13 @@ function formatNameInput(inputId) {
 // Validate batch form
 function validateBatchForm() {
     let isValid = true;
-    
+
     const name = document.getElementById('name')?.value.trim();
     const startTime = document.getElementById('start_time')?.value;
     const endTime = document.getElementById('end_time')?.value;
     const dayCheckboxes = document.querySelectorAll('.day-checkbox');
     const hasDaySelected = Array.from(dayCheckboxes).some(cb => cb.checked);
-    
+
     if (!validateRequired(name)) {
         showFieldError('name', 'Batch name is required');
         isValid = false;
@@ -231,7 +231,7 @@ function validateBatchForm() {
     } else {
         clearFieldError('name');
     }
-    
+
     // Validate time if provided
     if (startTime && endTime) {
         if (startTime >= endTime) {
@@ -241,34 +241,34 @@ function validateBatchForm() {
             clearFieldError('end_time');
         }
     }
-    
+
     return isValid;
 }
 
 // Validate homework form
 function validateHomeworkForm() {
     let isValid = true;
-    
+
     const title = document.getElementById('title')?.value.trim();
     const batchId = document.getElementById('batch_id')?.value;
     const studentId = document.getElementById('student_id')?.value;
     const submissionDate = document.getElementById('submission_date')?.value;
     const fileInput = document.getElementById('file');
-    
+
     if (!validateRequired(title)) {
         showFieldError('title', 'Homework title is required');
         isValid = false;
     } else {
         clearFieldError('title');
     }
-    
+
     if (!submissionDate) {
         showFieldError('submission_date', 'Submission date is required');
         isValid = false;
     } else {
         clearFieldError('submission_date');
     }
-    
+
     // Validate file size if file is selected
     if (fileInput && fileInput.files.length > 0) {
         const file = fileInput.files[0];
@@ -280,18 +280,18 @@ function validateHomeworkForm() {
             clearFieldError('file');
         }
     }
-    
+
     return isValid;
 }
 
 // Initialize form validation on page load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Auto-format phone inputs
     formatPhoneInput('phone');
     formatPhoneInput('mobile');
     formatPhoneInput('mobile-login');
     formatPhoneInput('mobile-signup');
-    
+
     // Auto-format name inputs (student and tutor names only, NOT batch names)
     // Only apply to student forms and tutor profile forms, not batch forms
     const allForms = document.querySelectorAll('form');
@@ -305,35 +305,35 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-    
+
     // Format tutor name if on profile page
     const tutorNameInput = document.querySelector('form[action*="profile"] #tutor_name');
     if (tutorNameInput) {
         formatNameInput('tutor_name'); // Tutor name only
     }
-    
+
     // Prevent duplicate submissions for all forms
     const forms = document.querySelectorAll('form');
     forms.forEach(form => {
         preventDuplicateSubmission(form.id || form.action);
-        
+
         // Add validation based on form action
         if (form.action.includes('add_student') || form.action.includes('edit_student')) {
-            form.addEventListener('submit', function(e) {
+            form.addEventListener('submit', function (e) {
                 if (!validateStudentForm()) {
                     e.preventDefault();
                     return false;
                 }
             });
         } else if (form.action.includes('add_batch') || form.action.includes('edit_batch')) {
-            form.addEventListener('submit', function(e) {
+            form.addEventListener('submit', function (e) {
                 if (!validateBatchForm()) {
                     e.preventDefault();
                     return false;
                 }
             });
         } else if (form.action.includes('share_homework') || form.action.includes('edit_homework')) {
-            form.addEventListener('submit', function(e) {
+            form.addEventListener('submit', function (e) {
                 if (!validateHomeworkForm()) {
                     e.preventDefault();
                     return false;
