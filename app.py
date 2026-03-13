@@ -78,8 +78,9 @@ from blueprints.payments import payments_bp
 from blueprints.student import student_bp
 from blueprints.export import export_bp
 from blueprints.webhooks import webhooks_bp
+from blueprints.public import public_bp
 
-
+app.register_blueprint(public_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(students_bp)

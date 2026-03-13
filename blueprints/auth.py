@@ -17,13 +17,6 @@ def validate_name(name):
     name_pattern = re.compile(r'^[a-zA-Z\s\u00C0-\u017F\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]+$')
     return bool(name_pattern.match(name.strip()))
 
-@auth_bp.route('/')
-def index():
-    """Welcome page"""
-    if 'user_id' in session:
-        return redirect(url_for('dashboard.dashboard'))
-    return redirect(url_for('auth.welcome'))
-
 @auth_bp.route('/welcome')
 def welcome():
     """Welcome page with tutor/student/enterprise selection"""
