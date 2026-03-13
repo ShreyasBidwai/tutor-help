@@ -1,38 +1,105 @@
 {% extends "admin/base_admin.html" %}
 {% block title %}{{ teacher.tuition_name or teacher.mobile }}{% endblock %}
+{% block page_title %}{{ teacher.tuition_name or 'Unnamed' }}{% endblock %}
+{% block breadcrumb %}Home → <a href="{{ url_for('admin.teachers') }}">Teachers</a> → {{ teacher.tuition_name or teacher.mobile }}{% endblock %}
 {% block content %}
-<p style="margin-bottom:0.5rem;"><a href="{{ url_for('admin.teachers') }}">← All Teachers</a></p>
-<h1 class="page-title">{{ teacher.tuition_name or 'Unnamed' }}</h1>
 
+<!-- Info cards -->
 <div class="stats-grid" style="margin-bottom:1.5rem;">
     <div class="stat-card">
-        <div class="label">Mobile</div>
-        <div class="value" style="font-size:1.1rem;">{{ teacher.mobile }}</div>
+        <div class="icon-box icon-indigo">📱</div>
+        <div class="info">
+            <div class="label">Mobile</div>
+            <div class="value" style="font-size:1.1rem;">{{ teacher.mobile }}</div>
+        </div>
     </div>
     <div class="stat-card">
-        <div class="label">Tutor Name</div>
-        <div class="value" style="font-size:1.1rem;">{{ teacher.tutor_name or '—' }}</div>
+        <div class="icon-box icon-violet">👤</div>
+        <div class="info">
+            <div class="label">Tutor Name</div>
+            <div class="value" style="font-size:1.1rem;">{{ teacher.tutor_name or '—' }}</div>
+        </div>
     </div>
     <div class="stat-card">
-        <div class="label">Students</div>
-        <div class="value">{{ students|length }}</div>
+        <div class="icon-box icon-emerald">🧑‍🎓</div>
+        <div class="info">
+            <div class="label">Students</div>
+            <div class="value">{{ students|length }}</div>
+        </div>
     </div>
     <div class="stat-card">
-        <div class="label">Batches</div>
-        <div class="value">{{ batches|length }}</div>
+        <div class="icon-box icon-amber">📚</div>
+        <div class="info">
+            <div class="label">Batches</div>
+            <div class="value">{{ batches|length }}</div>
+        </div>
     </div>
     <div class="stat-card">
-        <div class="label">Attendance Today</div>
-        <div class="value">{{ today_attendance }}</div>
+        <div class="icon-box icon-sky">✅</div>
+        <div class="info">
+            <div class="label">Attendance Today</div>
+            <div class="value">{{ today_attendance }}</div>
+        </div>
     </div>
     <div class="stat-card">
-        <div class="label">This Month</div>
-        <div class="value">{{ month_attendance }}</div>
+        <div class="icon-box icon-rose">📅</div>
+        <div class="info">
+            <div class="label">This Month</div>
+            <div class="value">{{ month_attendance }}</div>
+        </div>
     </div>
 </div>
 
+<div class="grid-2">
+    <!-- Edit teacher form -->
+    <div class="panel">
+        <h2 class="section-title">Edit Teacher Details</h2>
+        <form method="POST" action="{{ url_for('admin.edit_teacher', teacher_id=teacher.id) }}">
+            <div class="form-group">
+                <label>Tutor Name</label>
+                <input type="text" class="form-control" name="tutor_name" value="{{ teacher.tutor_name or '' }}">
+            </div>
+            <div class="form-group">
+                <label>Tuition Name</label>
+                <input type="text" class="form-control" name="tuition_name" value="{{ teacher.tuition_name or '' }}">
+            </div>
+            <div class="form-group">
+                <label>Address</label>
+                <input type="text" class="form-control" name="address" value="{{ teacher.address or '' }}">
+            </div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </form>
+    </div>
+
+    <!-- Actions -->
+    <div>
+        <div class="panel">
+            <h2 class="section-title">Reset Password</h2>
+            <p style="font-size:0.8rem;color:#888;margin-bottom:0.75rem;">Set a new password for this teacher account.</p>
+            <form method="POST" action="{{ url_for('admin.reset_teacher_password', teacher_id=teacher.id) }}">
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" class="form-control" name="new_password" required minlength="4" placeholder="Minimum 4 characters">
+                </div>
+                <button type="submit" class="btn btn-success btn-sm">Reset Password</button>
+            </form>
+        </div>
+
+        <div class="danger-zone">
+            <h4>⚠ Danger Zone</h4>
+            <p>Deleting this teacher will remove all their students, batches, attendance, homework, and fee records.</p>
+            <form id="del-teacher-detail" method="POST" action="{{ url_for('admin.delete_teacher', teacher_id=teacher.id) }}">
+                <button type="button" onclick="confirmDelete('{{ teacher.tutor_name or teacher.mobile }}', 'del-teacher-detail')" class="btn btn-danger btn-sm">Delete Teacher</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Batches -->
 <div class="panel">
-    <h2 class="section-title">Batches ({{ batches|length }})</h2>
+    <div class="panel-header">
+        <h2 class="section-title">Batches ({{ batches|length }})</h2>
+    </div>
     <table>
         <thead>
             <tr>
@@ -45,10 +112,10 @@
         <tbody>
             {% for b in batches %}
             <tr>
-                <td>{{ b.name }}</td>
+                <td><a href="{{ url_for('admin.batch_detail', batch_id=b.id) }}">{{ b.name }}</a></td>
                 <td>{{ b.start_time or '—' }} – {{ b.end_time or '—' }}</td>
                 <td>{{ b.days or '—' }}</td>
-                <td>{{ b.student_count }}</td>
+                <td><span class="badge badge-indigo">{{ b.student_count }}</span></td>
             </tr>
             {% else %}
             <tr>
@@ -59,8 +126,11 @@
     </table>
 </div>
 
+<!-- Students -->
 <div class="panel">
-    <h2 class="section-title">Students ({{ students|length }})</h2>
+    <div class="panel-header">
+        <h2 class="section-title">Students ({{ students|length }})</h2>
+    </div>
     <table>
         <thead>
             <tr>

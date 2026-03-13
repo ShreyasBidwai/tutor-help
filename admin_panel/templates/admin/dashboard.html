@@ -1,64 +1,88 @@
 {% extends "admin/base_admin.html" %}
 {% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard Overview{% endblock %}
+{% block breadcrumb %}Home → Dashboard{% endblock %}
 {% block content %}
-<h1 class="page-title">Dashboard Overview</h1>
-
 <div class="stats-grid">
     <div class="stat-card">
-        <div class="label">Total Teachers</div>
-        <div class="value">{{ total_teachers }}</div>
+        <div class="icon-box icon-indigo">👨‍🏫</div>
+        <div class="info">
+            <div class="label">Total Teachers</div>
+            <div class="value">{{ total_teachers }}</div>
+        </div>
     </div>
     <div class="stat-card">
-        <div class="label">Total Students</div>
-        <div class="value">{{ total_students }}</div>
+        <div class="icon-box icon-emerald">🧑‍🎓</div>
+        <div class="info">
+            <div class="label">Total Students</div>
+            <div class="value">{{ total_students }}</div>
+        </div>
     </div>
     <div class="stat-card">
-        <div class="label">Total Batches</div>
-        <div class="value">{{ total_batches }}</div>
+        <div class="icon-box icon-amber">📚</div>
+        <div class="info">
+            <div class="label">Total Batches</div>
+            <div class="value">{{ total_batches }}</div>
+        </div>
     </div>
     <div class="stat-card">
-        <div class="label">Attendance Today</div>
-        <div class="value">{{ today_attendance }}</div>
+        <div class="icon-box icon-sky">✅</div>
+        <div class="info">
+            <div class="label">Attendance Today</div>
+            <div class="value">{{ today_attendance }}</div>
+        </div>
     </div>
     <div class="stat-card">
-        <div class="label">Active Teachers (7d)</div>
-        <div class="value">{{ active_teachers }}</div>
+        <div class="icon-box icon-violet">🔥</div>
+        <div class="info">
+            <div class="label">Active Teachers (7d)</div>
+            <div class="value">{{ active_teachers }}</div>
+        </div>
     </div>
     <div class="stat-card">
-        <div class="label">New Signups (7d)</div>
-        <div class="value">{{ new_signups }}</div>
+        <div class="icon-box icon-rose">🆕</div>
+        <div class="info">
+            <div class="label">New Signups (7d)</div>
+            <div class="value">{{ new_signups }}</div>
+        </div>
     </div>
 </div>
 
-<div class="panel">
-    <h2 class="section-title">Recent Teacher Signups</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Mobile</th>
-                <th>Tutor Name</th>
-                <th>Tuition Name</th>
-                <th>Signed Up</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for t in recent_teachers %}
-            <tr>
-                <td>{{ t.id }}</td>
-                <td>{{ t.mobile }}</td>
-                <td>{{ t.tutor_name or '—' }}</td>
-                <td>{{ t.tuition_name or '—' }}</td>
-                <td>{{ t.created_at }}</td>
-                <td><a href="{{ url_for('admin.teacher_detail', teacher_id=t.id) }}">View →</a></td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="6" class="muted" style="text-align:center;">No teachers yet</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="grid-2">
+    <!-- Recent signups table -->
+    <div class="panel" style="grid-column: 1 / -1;">
+        <div class="panel-header">
+            <h2 class="section-title">Recent Teacher Signups</h2>
+            <a href="{{ url_for('admin.teachers') }}" class="btn btn-outline btn-sm">View All →</a>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Mobile</th>
+                    <th>Tutor Name</th>
+                    <th>Tuition Name</th>
+                    <th>Signed Up</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in recent_teachers %}
+                <tr>
+                    <td><span class="badge badge-gray">#{{ t.id }}</span></td>
+                    <td>{{ t.mobile }}</td>
+                    <td>{{ t.tutor_name or '—' }}</td>
+                    <td>{{ t.tuition_name or '—' }}</td>
+                    <td>{{ t.created_at }}</td>
+                    <td><a href="{{ url_for('admin.teacher_detail', teacher_id=t.id) }}" class="btn btn-outline btn-xs">View →</a></td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="muted" style="text-align:center; padding:2rem;">No teachers yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}

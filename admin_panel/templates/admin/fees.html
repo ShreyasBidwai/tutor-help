@@ -1,0 +1,95 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Fees Overview{% endblock %}
+{% block page_title %}Fees Overview{% endblock %}
+{% block breadcrumb %}Home → Fees{% endblock %}
+{% block header_actions %}
+<div class="search-bar">
+    <span>🔍</span>
+    <input type="text" id="feeSearch" placeholder="Search fee records..." oninput="tableSearch('feeSearch','feesTable')">
+</div>
+{% endblock %}
+{% block content %}
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="icon-box icon-emerald">✅</div>
+        <div class="info">
+            <div class="label">Total Collected</div>
+            <div class="value">₹{{ '{:,.0f}'.format(total_collected) }}</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="icon-box icon-amber">⏳</div>
+        <div class="info">
+            <div class="label">Total Pending</div>
+            <div class="value">₹{{ '{:,.0f}'.format(total_pending) }}</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="icon-box icon-rose">🚫</div>
+        <div class="info">
+            <div class="label">Overdue</div>
+            <div class="value">₹{{ '{:,.0f}'.format(total_overdue) }}</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="icon-box icon-indigo">📄</div>
+        <div class="info">
+            <div class="label">Total Records</div>
+            <div class="value">{{ total_records }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <h2 class="section-title">Recent Fee Records</h2>
+    </div>
+    <div style="overflow-x:auto;">
+    <table id="feesTable">
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Tuition</th>
+                <th>Month</th>
+                <th>Amount</th>
+                <th>Paid</th>
+                <th>Status</th>
+                <th>Updated</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for f in fee_records %}
+            <tr>
+                <td>{{ f.student_name }}</td>
+                <td>{{ f.tuition_name or '—' }}</td>
+                <td><span class="badge badge-indigo">{{ f.month }}</span></td>
+                <td>₹{{ '{:,.0f}'.format(f.amount) }}</td>
+                <td>₹{{ '{:,.0f}'.format(f.paid_amount) }}</td>
+                <td>
+                    {% if f.status == 'paid' %}
+                    <span class="badge badge-green">Paid</span>
+                    {% elif f.status == 'partial' %}
+                    <span class="badge badge-amber">Partial</span>
+                    {% else %}
+                    <span class="badge badge-red">Pending</span>
+                    {% endif %}
+                </td>
+                <td>{{ f.updated_at }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="muted" style="text-align:center; padding:2rem;">No fee records found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => tableSearch('feeSearch', 'feesTable'));
+</script>
+{% endblock %}
+{% endblock %}

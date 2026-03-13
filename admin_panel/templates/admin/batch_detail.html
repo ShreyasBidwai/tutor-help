@@ -1,0 +1,86 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ batch.name }}{% endblock %}
+{% block page_title %}{{ batch.name }}{% endblock %}
+{% block breadcrumb %}Home → <a href="{{ url_for('admin.batches') }}">Batches</a> → {{ batch.name }}{% endblock %}
+{% block content %}
+
+<div class="stats-grid" style="margin-bottom:1.5rem;">
+    <div class="stat-card">
+        <div class="icon-box icon-indigo">👨‍🏫</div>
+        <div class="info">
+            <div class="label">Tutor</div>
+            <div class="value" style="font-size:1rem;">{{ tutor_name or '—' }}</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="icon-box icon-violet">🏫</div>
+        <div class="info">
+            <div class="label">Tuition</div>
+            <div class="value" style="font-size:1rem;">{{ tuition_name or '—' }}</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="icon-box icon-amber">🕐</div>
+        <div class="info">
+            <div class="label">Schedule</div>
+            <div class="value" style="font-size:0.9rem;">{{ batch.start_time or '?' }} – {{ batch.end_time or '?' }}</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="icon-box icon-sky">📅</div>
+        <div class="info">
+            <div class="label">Days</div>
+            <div class="value" style="font-size:0.9rem;">{{ batch.days or 'Not set' }}</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="icon-box icon-emerald">🧑‍🎓</div>
+        <div class="info">
+            <div class="label">Students</div>
+            <div class="value">{{ students|length }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <h2 class="section-title">Students in this Batch</h2>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>School</th>
+                <th>Standard</th>
+                <th>Joined</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in students %}
+            <tr>
+                <td><span class="badge badge-gray">#{{ s.id }}</span></td>
+                <td>{{ s.name }}</td>
+                <td>{{ s.phone }}</td>
+                <td>{{ s.school_name or '—' }}</td>
+                <td>{{ s.standard or '—' }}</td>
+                <td>{{ s.created_at }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="muted" style="text-align:center; padding:2rem;">No students in this batch</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="danger-zone" style="max-width:400px;">
+    <h4>⚠ Danger Zone</h4>
+    <p>Deleting this batch will fail if it has students. Remove students first.</p>
+    <form id="del-batch-detail" method="POST" action="{{ url_for('admin.delete_batch', batch_id=batch.id) }}">
+        <button type="button" onclick="confirmDelete('{{ batch.name }}', 'del-batch-detail')" class="btn btn-danger btn-sm">Delete Batch</button>
+    </form>
+</div>
+{% endblock %}
